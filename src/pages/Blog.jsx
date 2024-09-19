@@ -1,4 +1,3 @@
-import * as React from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
@@ -13,10 +12,10 @@ export default function Blog() {
 	document.title = "Blog - chy.web"
 	
 	const [mode, toggleColorMode] = AppBarInit();
-	const blogTheme = createTheme(getCustomTheme(mode))
+	const theme = createTheme(getCustomTheme(mode));
 	
 	return (
-		<ThemeProvider theme={blogTheme}>
+		<ThemeProvider theme={theme}>
 			<CssBaseline enableColorScheme/>
 			<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
 			<Container

@@ -67,7 +67,7 @@ export function AppAppBar({mode, toggleColorMode}) {
 	return (
 		<AppBar
 			position="fixed"
-			sx={{boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', mt: 10}}
+			sx={{boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', mt: 3}}
 		>
 			<Container maxWidth="lg">
 				<StyledToolbar variant="dense" disableGutters>
@@ -140,6 +140,9 @@ export function AppAppBar({mode, toggleColorMode}) {
 									</IconButton>
 								</Box>
 								<Divider sx={{my: 3}}/>
+								<Button variant="text" color="info" size="small" onClick={relocate} data-url="/">
+									首页
+								</Button>
 								<Button variant="text" color="info" size="small" onClick={relocate} data-url="/chat">
 									聊天
 								</Button>
