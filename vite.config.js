@@ -7,11 +7,19 @@ import {resolve} from 'path'
 export default defineConfig({
 	plugins: [react()],
 	server: {
-		host: '0.0.0.0'
+		host: '0.0.0.0',
+		proxy: {
+			"/api": {
+				target: 'https://localhost',
+				secure: false,
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api/, ""),
+			},
+		},
 	},
 	resolve: {
 		alias: {
-			'src': resolve(path.resolve(), 'src')
-		}
-	}
+			'src': resolve(path.resolve(), 'src'),
+		},
+	},
 })

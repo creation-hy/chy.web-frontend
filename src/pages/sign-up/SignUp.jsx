@@ -11,10 +11,11 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import {createTheme, styled, ThemeProvider} from '@mui/material/styles';
-import {FacebookIcon, GoogleIcon} from './CustomIcons';
+import {GoogleIcon} from './CustomIcons';
 import getCustomTheme from "src/theme/getCustomTheme.jsx";
 import {AppAppBar, AppBarInit} from "src/components/AppAppBar.jsx";
 import Footer from "src/components/Footer.jsx";
+import {X} from "@mui/icons-material";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -217,9 +218,9 @@ export default function SignUp() {
 							fullWidth
 							variant="outlined"
 							onClick={() => alert('使用Facebook登录')}
-							startIcon={<FacebookIcon/>}
+							startIcon={<X/>}
 						>
-							使用 Facebook 登录
+							使用 Apple 登录
 						</Button>
 					</Box>
 				</Card>

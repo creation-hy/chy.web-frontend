@@ -14,10 +14,13 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import {createTheme, styled, ThemeProvider} from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
-import {FacebookIcon, GoogleIcon} from './CustomIcons';
+import {GoogleIcon} from './CustomIcons';
 import {AppAppBar, AppBarInit} from "src/components/AppAppBar.jsx";
 import getCustomTheme from "src/theme/getCustomTheme.jsx";
 import Footer from "src/components/Footer.jsx";
+import axios from "axios";
+import {SnackbarProvider, useSnackbar} from 'notistack';
+import {X} from "@mui/icons-material";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -60,11 +63,12 @@ const SignInContainer = styled(Stack)(({theme}) => ({
 export default function SignIn() {
 	document.title = "登陆 - chy.web";
 	
-	const [emailError, setEmailError] = React.useState(false);
-	const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
+	const [usernameError, setUsernameError] = React.useState(false);
+	const [usernameErrorMessage, setUsernameErrorMessage] = React.useState('');
 	const [passwordError, setPasswordError] = React.useState(false);
 	const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
 	const [open, setOpen] = React.useState(false);
+	const {enqueueSnackbar} = useSnackbar();
 	
 	const handleClickOpen = () => {
 		setOpen(true);
@@ -74,38 +78,43 @@ export default function SignIn() {
 		setOpen(false);
 	};
 	
-	const handleSubmit = (event) => {
-		event.preventDefault();
-		const data = new FormData(event.currentTarget);
-		console.log({
-			email: data.get('email'),
-			password: data.get('password'),
-		});
-	};
-	
-	const validateInputs = () => {
-		const email = document.getElementById('email');
+	const logIn = () => {
+		const username = document.getElementById('username');
 		const password = document.getElementById('password');
 		
 		let isValid = true;
 		
-		if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-			setEmailError(true);
-			setEmailErrorMessage('请输入合法的邮箱地址。');
+		if (!username.value) {
+			setUsernameError(true);
+			setUsernameErrorMessage('用户名或邮箱不能为空。');
 			isValid = false;
 		} else {
-			setEmailError(false);
-			setEmailErrorMessage('');
+			setUsernameError(false);
+			setUsernameErrorMessage('');
 		}
 		
-		if (!password.value || password.value.length < 6) {
+		if (!password.value) {
 			setPasswordError(true);
-			setPasswordErrorMessage('密码长度不得低于6。');
+			setPasswordErrorMessage('密码不能为空。');
 			isValid = false;
 		} else {
 			setPasswordError(false);
 			setPasswordErrorMessage('');
 		}
+		
+		if (isValid)
+			axios.post("/api/login/api", new FormData(document.getElementById('data-form')), {
+				headers: {
+					'Content-Type': 'application/json',
+				}
+			}).then(res => {
+				const data = res.data;
+				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
+				if (data["status"] === 1) {
+					document.cookie = "username=" + data["username"] + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+					document.cookie = "user_token=" + data["user_token"] + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+				}
+			});
 		
 		return isValid;
 	};
@@ -115,89 +124,91 @@ export default function SignIn() {
 	
 	return (
 		<ThemeProvider theme={theme}>
-			<CssBaseline enableColorScheme/>
-			<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
-			<SignInContainer direction="column" justifyContent="space-between">
-				<Card variant="outlined">
-					<Typography
-						component="h1"
-						variant="h4"
-						sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
-					>
-						登陆
-					</Typography>
-					<Box
-						component="form"
-						onSubmit={handleSubmit}
-						noValidate
-						sx={{
-							display: 'flex',
-							flexDirection: 'column',
-							width: '100%',
-							gap: 2,
-						}}
-					>
-						<FormControl>
-							<FormLabel htmlFor="email">邮箱</FormLabel>
-							<TextField
-								error={emailError}
-								helperText={emailErrorMessage}
-								id="email"
-								type="email"
-								name="email"
-								placeholder="your@email.com"
-								autoComplete="email"
-								autoFocus
-								required
-								fullWidth
-								variant="outlined"
-								color={emailError ? 'error' : 'primary'}
-								sx={{ariaLabel: 'email'}}
-							/>
-						</FormControl>
-						<FormControl>
-							<Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-								<FormLabel htmlFor="password">密码</FormLabel>
-								<Link
-									component="button"
-									onClick={handleClickOpen}
-									variant="body2"
-									sx={{alignSelf: 'baseline'}}
-								>
-									忘记了密码？
-								</Link>
-							</Box>
-							<TextField
-								error={passwordError}
-								helperText={passwordErrorMessage}
-								name="password"
-								placeholder="••••••"
-								type="password"
-								id="password"
-								autoComplete="current-password"
-								autoFocus
-								required
-								fullWidth
-								variant="outlined"
-								color={passwordError ? 'error' : 'primary'}
-							/>
-						</FormControl>
-						<FormControlLabel
-							control={<Checkbox value="remember" color="primary"/>}
-							label="记住我"
-						/>
-						<ForgotPassword open={open} handleClose={handleClose}/>
-						<Button
-							type="submit"
-							fullWidth
-							variant="contained"
-							onClick={validateInputs}
+			<SnackbarProvider>
+				<CssBaseline enableColorScheme/>
+				<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
+				<SignInContainer direction="column" justifyContent="space-between">
+					<Card variant="outlined">
+						<Typography
+							component="h1"
+							variant="h4"
+							sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
 						>
 							登陆
-						</Button>
-						<Typography sx={{textAlign: 'center'}}>
-							还没有账号？{' '}
-							<span>
+						</Typography>
+						<Box
+							component="form"
+							id="data-form"
+							onSubmit={null}
+							noValidate
+							sx={{
+								display: 'flex',
+								flexDirection: 'column',
+								width: '100%',
+								gap: 2,
+							}}
+						>
+							<FormControl>
+								<FormLabel htmlFor="username">用户名或邮箱</FormLabel>
+								<TextField
+									error={usernameError}
+									helperText={usernameErrorMessage}
+									id="username"
+									type="text"
+									name="username"
+									placeholder="user"
+									autoComplete="username"
+									autoFocus
+									required
+									fullWidth
+									variant="outlined"
+									color={usernameError ? 'error' : 'primary'}
+									sx={{ariaLabel: 'username'}}
+								/>
+							</FormControl>
+							<FormControl>
+								<Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+									<FormLabel htmlFor="password">密码</FormLabel>
+									<Link
+										component="button"
+										onClick={handleClickOpen}
+										variant="body2"
+										sx={{alignSelf: 'baseline'}}
+									>
+										忘记了密码？
+									</Link>
+								</Box>
+								<TextField
+									error={passwordError}
+									helperText={passwordErrorMessage}
+									name="password"
+									placeholder="••••••"
+									type="password"
+									id="password"
+									autoComplete="current-password"
+									autoFocus
+									required
+									fullWidth
+									variant="outlined"
+									color={passwordError ? 'error' : 'primary'}
+								/>
+							</FormControl>
+							<FormControlLabel
+								control={<Checkbox value="remember" color="primary"/>}
+								label="记住我"
+							/>
+							<ForgotPassword open={open} handleClose={handleClose}/>
+							<Button
+								type="button"
+								fullWidth
+								variant="contained"
+								onClick={logIn}
+							>
+								登陆
+							</Button>
+							<Typography sx={{textAlign: 'center'}}>
+								还没有账号？{' '}
+								<span>
 				                <Link
 					                href="/register"
 					                variant="body2"
@@ -206,32 +217,33 @@ export default function SignIn() {
 				                  注册
 				                </Link>
                             </span>
-						</Typography>
-					</Box>
-					<Divider>或者</Divider>
-					<Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
-						<Button
-							type="submit"
-							fullWidth
-							variant="outlined"
-							onClick={() => alert('使用Google登录')}
-							startIcon={<GoogleIcon/>}
-						>
-							使用 Google 登录
-						</Button>
-						<Button
-							type="submit"
-							fullWidth
-							variant="outlined"
-							onClick={() => alert('使用Facebook登录')}
-							startIcon={<FacebookIcon/>}
-						>
-							使用 Facebook 登录
-						</Button>
-					</Box>
-				</Card>
-			</SignInContainer>
-			<Footer/>
+							</Typography>
+						</Box>
+						<Divider>或者</Divider>
+						<Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
+							<Button
+								type="submit"
+								fullWidth
+								variant="outlined"
+								onClick={() => alert('使用Google登录')}
+								startIcon={<GoogleIcon/>}
+							>
+								使用 Google 登录
+							</Button>
+							<Button
+								type="submit"
+								fullWidth
+								variant="outlined"
+								onClick={() => alert('使用Facebook登录')}
+								startIcon={<X/>}
+							>
+								使用 Apple 登录
+							</Button>
+						</Box>
+					</Card>
+				</SignInContainer>
+				<Footer/>
+			</SnackbarProvider>
 		</ThemeProvider>
 	);
 }

@@ -168,12 +168,12 @@ export function AppAppBar({mode, toggleColorMode}) {
 									Blog
 								</Button>
 								<MenuItem>
-									<Button color="primary" variant="contained" fullWidth>
+									<Button color="primary" variant="contained" fullWidth onClick={relocate} data-url="/register">
 										注册
 									</Button>
 								</MenuItem>
 								<MenuItem>
-									<Button color="primary" variant="outlined" fullWidth>
+									<Button color="primary" variant="outlined" fullWidth onClick={relocate} data-url="/login">
 										登录
 									</Button>
 								</MenuItem>

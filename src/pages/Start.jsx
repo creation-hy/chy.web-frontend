@@ -22,11 +22,6 @@ export default function Start() {
 				sx={{display: 'flex', flexDirection: 'column', mt: 16, gap: 4}}
 			>
 				<Box textAlign="left">
-					<Typography variant="h4">兼容情况</Typography>
-					<Typography>
-						Firefox无法正常显示按钮点击时的波纹动画，并且ChyBench无法正确识别到较新的GPU型号。其他浏览器均无此问题。<br/>
-						为了防止被恶意注入脚本，社交类项目对html标签做了特殊处理。
-					</Typography><br/>
 					<Typography variant="h4">私聊</Typography>
 					<Typography>
 						点击加号添加联系人，蓝点表示用户在线，红点表示有新消息。最新版本已实现基于WebSocket的实时通讯。<br/>
@@ -46,10 +41,10 @@ export default function Start() {
 						道具介绍：<br/>
 						薯条：长度+1；绿色药水：长度-1；炸弹：失败；加号：倒计时加十秒钟；减号：倒计时减十秒钟。
 					</Typography><br/>
-					<Typography variant="h4">一些更底层的东西</Typography>
+					<Typography variant="h4">关于</Typography>
 					<Typography>
-						目前结构是Web MVC（Spring MVC），偏向后端，后端采用Spring Boot + JPA，前端采用Vanilla JS + Thymeleaf。<br/>
-						你看到的这个页面是用前后端分离写的，前端框架为Vite + React。
+						当前版本：V5.0.0 Alpha<br/>
+						前后端已分离！后端采用Spring Boot + Spring MVC + JPA，前端采用React.js，生产环境为Nginx，开发环境为Node.js + Vite。<br/>
 					</Typography><br/>
 				</Box>
 			</Container>

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -21,12 +20,13 @@ function Copyright() {
 export default function Footer() {
 	return (
 		<React.Fragment>
-			<Divider/>
 			<Container
 				sx={{
 					display: 'flex',
 					flexDirection: 'column',
 					alignItems: 'center',
+					gap: {xs: 4, sm: 8},
+					py: {xs: 4, sm: 4},
 					textAlign: {sm: 'center', md: 'left'},
 				}}
 			>
@@ -34,7 +34,10 @@ export default function Footer() {
 					sx={{
 						display: 'flex',
 						justifyContent: 'space-between',
+						pt: {xs: 4, sm: 4},
 						width: '100%',
+						borderTop: '1px solid',
+						borderColor: 'divider',
 					}}
 				>
 					<div>

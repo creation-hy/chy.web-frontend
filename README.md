@@ -1,8 +1,9 @@
-# React + Vite
+# chy.web 前端仓库
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+框架为Vite + React，还用了Material-UI现成的一些组件。
 
-Currently, two official plugins are available:
+本项目部署在服务器的8080端口，未来正式上线后会把后端改到8080，前端用443。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+项目里没什么敏感信息，所以就公开了（
+
+目前是Alpha版本，页面都不齐，功能也没怎么做（小声）
