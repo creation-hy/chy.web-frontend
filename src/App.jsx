@@ -4,6 +4,7 @@ import Blog from "src/pages/Blog.jsx";
 import Start from "src/pages/Start.jsx";
 import SignIn from "src/pages/sign-in/SignIn.jsx";
 import SignUp from "src/pages/sign-up/SignUp.jsx";
+import Chat from "src/pages/Chat.jsx";
 
 export default function App() {
 	return (
@@ -13,6 +14,7 @@ export default function App() {
 				<Route path="/blog" element={<Blog/>}/>
 				<Route path="/login" element={<SignIn/>}/>
 				<Route path="/register" element={<SignUp/>}/>
+				<Route path="/chat" element={<Chat/>}/>
 			</Routes>
 		</BrowserRouter>
 	);

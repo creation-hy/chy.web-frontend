@@ -16,6 +16,10 @@ import getCustomTheme from "src/theme/getCustomTheme.jsx";
 import {AppAppBar, AppBarInit} from "src/components/AppAppBar.jsx";
 import Footer from "src/components/Footer.jsx";
 import {X} from "@mui/icons-material";
+import Grid from "@mui/material/Grid2";
+import axios from "axios";
+import {enqueueSnackbar, SnackbarProvider} from "notistack";
+import Cookies from "js-cookie";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -65,10 +69,10 @@ export default function SignUp() {
 	const [nameError, setNameError] = React.useState(false);
 	const [nameErrorMessage, setNameErrorMessage] = React.useState('');
 	
-	const validateInputs = () => {
+	const register = () => {
 		const email = document.getElementById('email');
 		const password = document.getElementById('password');
-		const name = document.getElementById('name');
+		const username = document.getElementById('username');
 		
 		let isValid = true;
 		
@@ -81,36 +85,62 @@ export default function SignUp() {
 			setEmailErrorMessage('');
 		}
 		
-		if (!password.value || password.value.length < 6) {
+		if (!password.value || password.value.length < 4) {
 			setPasswordError(true);
-			setPasswordErrorMessage('密码长度不得低于6。');
+			setPasswordErrorMessage('密码长度不能低于4。');
 			isValid = false;
 		} else {
 			setPasswordError(false);
 			setPasswordErrorMessage('');
 		}
 		
-		if (!name.value || name.value.length < 1) {
+		if (!username.value || username.value.length < 1) {
 			setNameError(true);
-			setNameErrorMessage('用户名不得为空。');
+			setNameErrorMessage('用户名不能为空。');
 			isValid = false;
 		} else {
 			setNameError(false);
 			setNameErrorMessage('');
 		}
 		
-		return isValid;
+		if (isValid)
+			axios.post("/api/register", new FormData(document.getElementById("data-form")), {
+				headers: {
+					'Content-Type': 'application/json',
+				}
+			}).then(res => {
+				const data = res.data;
+				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
+				if (data["status"] === 1) {
+					Cookies.set("username", data["username"], {expires: 30, path: "/"});
+					Cookies.set("user_token", data["user_token"], {expires: 30, path: "/"});
+				}
+			});
 	};
 	
-	const handleSubmit = (event) => {
-		event.preventDefault();
-		const data = new FormData(event.currentTarget);
-		console.log({
-			name: data.get('name'),
-			lastName: data.get('lastName'),
-			email: data.get('email'),
-			password: data.get('password'),
-		});
+	const verify = () => {
+		const email = document.getElementById('email');
+		
+		let isValid = true;
+		
+		if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+			setEmailError(true);
+			setEmailErrorMessage('请输入合法的邮箱地址。');
+			isValid = false;
+		} else {
+			setEmailError(false);
+			setEmailErrorMessage('');
+		}
+		
+		if (isValid)
+			axios.post("/api/account/send-verification", {email: email.value}, {
+				headers: {
+					'Content-Type': 'application/json',
+				}
+			}).then(res => {
+				const data = res.data;
+				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
+			});
 	};
 	
 	const [mode, toggleColorMode] = AppBarInit();
@@ -118,6 +148,7 @@ export default function SignUp() {
 	
 	return (
 		<ThemeProvider theme={theme}>
+			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
 			<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
 			<SignUpContainer direction="column" justifyContent="space-between">
@@ -131,36 +162,22 @@ export default function SignUp() {
 					</Typography>
 					<Box
 						component="form"
-						onSubmit={handleSubmit}
+						id="data-form"
+						onSubmit={null}
 						sx={{display: 'flex', flexDirection: 'column', gap: 2}}
 					>
 						<FormControl>
-							<FormLabel htmlFor="name">用户名</FormLabel>
+							<FormLabel htmlFor="username">用户名</FormLabel>
 							<TextField
-								autoComplete="name"
-								name="name"
+								autoComplete="username"
+								name="username"
 								required
 								fullWidth
-								id="name"
-								placeholder="username"
+								id="username"
+								placeholder="中英文、下划线、横杠、点"
 								error={nameError}
 								helperText={nameErrorMessage}
 								color={nameError ? 'error' : 'primary'}
-							/>
-						</FormControl>
-						<FormControl>
-							<FormLabel htmlFor="email">邮箱</FormLabel>
-							<TextField
-								required
-								fullWidth
-								id="email"
-								placeholder="your@email.com"
-								name="email"
-								autoComplete="email"
-								variant="outlined"
-								error={emailError}
-								helperText={emailErrorMessage}
-								color={passwordError ? 'error' : 'primary'}
 							/>
 						</FormControl>
 						<FormControl>
@@ -179,25 +196,64 @@ export default function SignUp() {
 								color={passwordError ? 'error' : 'primary'}
 							/>
 						</FormControl>
+						<FormControl>
+							<FormLabel htmlFor="email">邮箱</FormLabel>
+							<Grid container spacing={0.5} flexWrap="nowrap">
+								<Grid flexGrow={1}>
+									<TextField
+										required
+										fullWidth
+										id="email"
+										placeholder="your@email.com"
+										name="email"
+										autoComplete="email"
+										variant="outlined"
+										error={emailError}
+										helperText={emailErrorMessage}
+										color={passwordError ? 'error' : 'primary'}
+									/>
+								</Grid>
+								<Grid>
+									<Button
+										type="button"
+										variant="contained"
+										onClick={verify}
+									>
+										验证
+									</Button>
+								</Grid>
+							</Grid>
+						</FormControl>
+						<FormControl>
+							<FormLabel htmlFor="verification">验证码</FormLabel>
+							<TextField
+								autoComplete="verification"
+								name="verification"
+								required
+								fullWidth
+								id="verification"
+								placeholder="6位数字"
+							/>
+						</FormControl>
 						<Button
-							type="submit"
+							type="button"
 							fullWidth
 							variant="contained"
-							onClick={validateInputs}
+							onClick={register}
 						>
 							注册
 						</Button>
 						<Typography sx={{textAlign: 'center'}}>
 							已经有账号了？{' '}
 							<span>
-				                    <Link
-					                    href="/login"
-					                    variant="body2"
-					                    sx={{alignSelf: 'center'}}
-				                    >
-				                        登陆
-				                    </Link>
-								</span>
+			                    <Link
+				                    href="/login"
+				                    variant="body2"
+				                    sx={{alignSelf: 'center'}}
+			                    >
+			                        登陆
+			                    </Link>
+							</span>
 						</Typography>
 					</Box>
 					<Divider>
@@ -208,19 +264,19 @@ export default function SignUp() {
 							type="submit"
 							fullWidth
 							variant="outlined"
-							onClick={() => alert('使用Google登陆')}
+							onClick={() => alert('使用Google注册')}
 							startIcon={<GoogleIcon/>}
 						>
-							使用 Google 登陆
+							使用 Google 注册
 						</Button>
 						<Button
 							type="submit"
 							fullWidth
 							variant="outlined"
-							onClick={() => alert('使用Facebook登录')}
+							onClick={() => alert('使用Facebook注册')}
 							startIcon={<X/>}
 						>
-							使用 Apple 登录
+							使用 Apple 注册
 						</Button>
 					</Box>
 				</Card>

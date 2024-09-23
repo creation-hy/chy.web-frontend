@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useEffect, useState} from 'react';
 import {alpha, styled} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
@@ -14,6 +15,7 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ToggleColorMode from "./ToggleColorMode.jsx";
 import PropTypes from "prop-types";
 import Avatar from "@mui/material/Avatar";
+import axios from "axios";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -30,7 +32,7 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 }));
 
 export function AppBarInit() {
-	const [mode, setMode] = React.useState('light');
+	const [mode, setMode] = useState('light');
 	
 	React.useEffect(() => {
 		const savedMode = localStorage.getItem('themeMode');
@@ -54,15 +56,26 @@ export function AppBarInit() {
 }
 
 const relocate = (event) => {
-	window.location.href = event.target.getAttribute('data-url');
+	window.location.href = event.currentTarget.getAttribute('data-url');
 }
 
 export function AppAppBar({mode, toggleColorMode}) {
-	const [open, setOpen] = React.useState(false);
+	const [open, setOpen] = useState(false);
 	
 	const toggleDrawer = (newOpen) => () => {
 		setOpen(newOpen);
 	};
+	
+	let [username, setUsername] = useState(null);
+	
+	useEffect(() => {
+		axios.get("/api/account/check").then(res => {
+			const data = res.data;
+			if (data["status"] === 1)
+				setUsername(data["username"]);
+		});
+	}, [username]);
+	console.log(username);
 	
 	return (
 		<AppBar
@@ -110,12 +123,18 @@ export function AppAppBar({mode, toggleColorMode}) {
 							alignItems: 'center',
 						}}
 					>
-						<Button color="primary" variant="text" size="small" onClick={relocate} data-url="/login">
-							登陆
-						</Button>
-						<Button color="primary" variant="contained" size="small" onClick={relocate} data-url="/register">
-							注册
-						</Button>
+						{username == null ? (
+							<Box>
+								<Button color="primary" variant="text" size="small" onClick={relocate} data-url="/login">
+									登陆
+								</Button>
+								<Button color="primary" variant="contained" size="small" onClick={relocate} data-url="/register">
+									注册
+								</Button>
+							</Box>
+						) : (
+							<Avatar src={"/usericon/" + username + ".png"} sx={{width: 35, height: 35}} onClick={relocate} data-url={"/user/" + username}/>
+						)}
 						<ToggleColorMode
 							data-screenshot="toggle-mode"
 							mode={mode}
@@ -167,16 +186,26 @@ export function AppAppBar({mode, toggleColorMode}) {
 								<Button variant="text" color="info" size="small" onClick={relocate} data-url="/blog">
 									Blog
 								</Button>
-								<MenuItem>
-									<Button color="primary" variant="contained" fullWidth onClick={relocate} data-url="/register">
-										注册
-									</Button>
-								</MenuItem>
-								<MenuItem>
-									<Button color="primary" variant="outlined" fullWidth onClick={relocate} data-url="/login">
-										登录
-									</Button>
-								</MenuItem>
+								
+								{username == null ? (
+									<Box>
+										<MenuItem>
+											<Button color="primary" variant="contained" fullWidth onClick={relocate} data-url="/register">
+												注册
+											</Button>
+										</MenuItem>
+										<MenuItem>
+											<Button color="primary" variant="outlined" fullWidth onClick={relocate} data-url="/login">
+												登录
+											</Button>
+										</MenuItem>
+									</Box>
+								) : (
+									<Box display="flex" justifyContent="center">
+										<Avatar src={"/usericon/" + username + ".png"} sx={{width: 35, height: 35, mt: 1}} onClick={relocate}
+										        data-url={"/user/" + username}/>
+									</Box>
+								)}
 							</Box>
 						</Drawer>
 					</Box>

@@ -43,7 +43,7 @@ export default function Start() {
 					</Typography><br/>
 					<Typography variant="h4">关于</Typography>
 					<Typography>
-						当前版本：V5.0.0 Alpha<br/>
+						当前版本：V4.4.0 Alpha<br/>
 						前后端已分离！后端采用Spring Boot + Spring MVC + JPA，前端采用React.js，生产环境为Nginx，开发环境为Node.js + Vite。<br/>
 					</Typography><br/>
 				</Box>

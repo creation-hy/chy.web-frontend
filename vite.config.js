@@ -10,11 +10,17 @@ export default defineConfig({
 		host: '0.0.0.0',
 		proxy: {
 			"/api": {
-				target: 'https://localhost',
+				target: 'https://localhost:8080/',
 				secure: false,
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, ""),
 			},
+			"/usericon": {
+				target: 'https://localhost:8080/usericon/',
+				secure: false,
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/usericon/, ""),
+			}
 		},
 	},
 	resolve: {

@@ -1,9 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
 import CssBaseline from '@mui/material/CssBaseline';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
@@ -19,8 +17,9 @@ import {AppAppBar, AppBarInit} from "src/components/AppAppBar.jsx";
 import getCustomTheme from "src/theme/getCustomTheme.jsx";
 import Footer from "src/components/Footer.jsx";
 import axios from "axios";
-import {SnackbarProvider, useSnackbar} from 'notistack';
+import {enqueueSnackbar, SnackbarProvider} from 'notistack';
 import {X} from "@mui/icons-material";
+import Cookies from "js-cookie";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -68,7 +67,6 @@ export default function SignIn() {
 	const [passwordError, setPasswordError] = React.useState(false);
 	const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
 	const [open, setOpen] = React.useState(false);
-	const {enqueueSnackbar} = useSnackbar();
 	
 	const handleClickOpen = () => {
 		setOpen(true);
@@ -103,7 +101,7 @@ export default function SignIn() {
 		}
 		
 		if (isValid)
-			axios.post("/api/login/api", new FormData(document.getElementById('data-form')), {
+			axios.post("/api/login", new FormData(document.getElementById('data-form')), {
 				headers: {
 					'Content-Type': 'application/json',
 				}
@@ -111,8 +109,8 @@ export default function SignIn() {
 				const data = res.data;
 				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
 				if (data["status"] === 1) {
-					document.cookie = "username=" + data["username"] + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
-					document.cookie = "user_token=" + data["user_token"] + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+					Cookies.set("username", data["username"], {expires: 30, path: "/"});
+					Cookies.set("user_token", data["user_token"], {expires: 30, path: "/"});
 				}
 			});
 		
@@ -124,91 +122,87 @@ export default function SignIn() {
 	
 	return (
 		<ThemeProvider theme={theme}>
-			<SnackbarProvider>
-				<CssBaseline enableColorScheme/>
-				<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
-				<SignInContainer direction="column" justifyContent="space-between">
-					<Card variant="outlined">
-						<Typography
-							component="h1"
-							variant="h4"
-							sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
+			<SnackbarProvider/>
+			<CssBaseline enableColorScheme/>
+			<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
+			<SignInContainer direction="column" justifyContent="space-between">
+				<Card variant="outlined">
+					<Typography
+						component="h1"
+						variant="h4"
+						sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
+					>
+						登陆
+					</Typography>
+					<Box
+						component="form"
+						id="data-form"
+						onSubmit={null}
+						noValidate
+						sx={{
+							display: 'flex',
+							flexDirection: 'column',
+							width: '100%',
+							gap: 2,
+						}}
+					>
+						<FormControl>
+							<FormLabel htmlFor="username">用户名或邮箱</FormLabel>
+							<TextField
+								error={usernameError}
+								helperText={usernameErrorMessage}
+								id="username"
+								type="text"
+								name="username"
+								placeholder="用户名或邮箱"
+								autoComplete="username"
+								autoFocus
+								required
+								fullWidth
+								variant="outlined"
+								color={usernameError ? 'error' : 'primary'}
+								sx={{ariaLabel: 'username'}}
+							/>
+						</FormControl>
+						<FormControl>
+							<Box sx={{display: 'flex', justifyContent: 'space-between'}}>
+								<FormLabel htmlFor="password">密码</FormLabel>
+								<Link
+									component="button"
+									onClick={handleClickOpen}
+									variant="body2"
+									sx={{alignSelf: 'baseline'}}
+								>
+									忘记了密码？
+								</Link>
+							</Box>
+							<TextField
+								error={passwordError}
+								helperText={passwordErrorMessage}
+								name="password"
+								placeholder="••••••"
+								type="password"
+								id="password"
+								autoComplete="current-password"
+								autoFocus
+								required
+								fullWidth
+								variant="outlined"
+								color={passwordError ? 'error' : 'primary'}
+							/>
+						</FormControl>
+						<ForgotPassword open={open} handleClose={handleClose}/>
+						<Button
+							type="button"
+							fullWidth
+							variant="contained"
+							onClick={logIn}
 						>
 							登陆
-						</Typography>
-						<Box
-							component="form"
-							id="data-form"
-							onSubmit={null}
-							noValidate
-							sx={{
-								display: 'flex',
-								flexDirection: 'column',
-								width: '100%',
-								gap: 2,
-							}}
-						>
-							<FormControl>
-								<FormLabel htmlFor="username">用户名或邮箱</FormLabel>
-								<TextField
-									error={usernameError}
-									helperText={usernameErrorMessage}
-									id="username"
-									type="text"
-									name="username"
-									placeholder="user"
-									autoComplete="username"
-									autoFocus
-									required
-									fullWidth
-									variant="outlined"
-									color={usernameError ? 'error' : 'primary'}
-									sx={{ariaLabel: 'username'}}
-								/>
-							</FormControl>
-							<FormControl>
-								<Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-									<FormLabel htmlFor="password">密码</FormLabel>
-									<Link
-										component="button"
-										onClick={handleClickOpen}
-										variant="body2"
-										sx={{alignSelf: 'baseline'}}
-									>
-										忘记了密码？
-									</Link>
-								</Box>
-								<TextField
-									error={passwordError}
-									helperText={passwordErrorMessage}
-									name="password"
-									placeholder="••••••"
-									type="password"
-									id="password"
-									autoComplete="current-password"
-									autoFocus
-									required
-									fullWidth
-									variant="outlined"
-									color={passwordError ? 'error' : 'primary'}
-								/>
-							</FormControl>
-							<FormControlLabel
-								control={<Checkbox value="remember" color="primary"/>}
-								label="记住我"
-							/>
-							<ForgotPassword open={open} handleClose={handleClose}/>
-							<Button
-								type="button"
-								fullWidth
-								variant="contained"
-								onClick={logIn}
-							>
-								登陆
-							</Button>
-							<Typography sx={{textAlign: 'center'}}>
-								还没有账号？{' '}
-								<span>
+						</Button>
+						<Typography sx={{textAlign: 'center'}}>
+							还没有账号？{' '}
+							<span>
 				                <Link
 					                href="/register"
 					                variant="body2"
@@ -217,33 +211,32 @@ export default function SignIn() {
 				                  注册
 				                </Link>
                             </span>
-							</Typography>
-						</Box>
-						<Divider>或者</Divider>
-						<Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
-							<Button
-								type="submit"
-								fullWidth
-								variant="outlined"
-								onClick={() => alert('使用Google登录')}
-								startIcon={<GoogleIcon/>}
-							>
-								使用 Google 登录
-							</Button>
-							<Button
-								type="submit"
-								fullWidth
-								variant="outlined"
-								onClick={() => alert('使用Facebook登录')}
-								startIcon={<X/>}
-							>
-								使用 Apple 登录
-							</Button>
-						</Box>
-					</Card>
-				</SignInContainer>
-				<Footer/>
-			</SnackbarProvider>
+						</Typography>
+					</Box>
+					<Divider>或者</Divider>
+					<Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
+						<Button
+							type="submit"
+							fullWidth
+							variant="outlined"
+							onClick={() => alert('使用Google登录')}
+							startIcon={<GoogleIcon/>}
+						>
+							使用 Google 登录
+						</Button>
+						<Button
+							type="submit"
+							fullWidth
+							variant="outlined"
+							onClick={() => alert('使用Facebook登录')}
+							startIcon={<X/>}
+						>
+							使用 Apple 登录
+						</Button>
+					</Box>
+				</Card>
+			</SignInContainer>
+			<Footer/>
 		</ThemeProvider>
 	);
 }
