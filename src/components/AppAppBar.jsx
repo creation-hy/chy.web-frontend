@@ -16,6 +16,7 @@ import ToggleColorMode from "./ToggleColorMode.jsx";
 import PropTypes from "prop-types";
 import Avatar from "@mui/material/Avatar";
 import axios from "axios";
+import Grid from "@mui/material/Grid2";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -32,7 +33,9 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 }));
 
 export function AppBarInit() {
-	const [mode, setMode] = useState('light');
+	if (localStorage.getItem('themeMode') == null)
+		localStorage.setItem('themeMode', 'light');
+	const [mode, setMode] = useState(localStorage.getItem('themeMode'));
 	
 	React.useEffect(() => {
 		const savedMode = localStorage.getItem('themeMode');
@@ -73,9 +76,10 @@ export function AppAppBar({mode, toggleColorMode}) {
 			const data = res.data;
 			if (data["status"] === 1)
 				setUsername(data["username"]);
+			else
+				setUsername("");
 		});
-	}, [username]);
-	console.log(username);
+	}, []);
 	
 	return (
 		<AppBar
@@ -123,7 +127,7 @@ export function AppAppBar({mode, toggleColorMode}) {
 							alignItems: 'center',
 						}}
 					>
-						{username == null ? (
+						{username === "" ? (
 							<Box>
 								<Button color="primary" variant="text" size="small" onClick={relocate} data-url="/login">
 									登陆
@@ -132,9 +136,10 @@ export function AppAppBar({mode, toggleColorMode}) {
 									注册
 								</Button>
 							</Box>
-						) : (
-							<Avatar src={"/usericon/" + username + ".png"} sx={{width: 35, height: 35}} onClick={relocate} data-url={"/user/" + username}/>
-						)}
+						) : (username != null ? (
+							<Avatar src={"/usericon/" + username + ".png"} sx={{width: 35, height: 35, cursor: "pointer"}} onClick={relocate}
+							        data-url={"/user/" + username}/>
+						) : (<Box/>))}
 						<ToggleColorMode
 							data-screenshot="toggle-mode"
 							mode={mode}
@@ -142,9 +147,16 @@ export function AppAppBar({mode, toggleColorMode}) {
 						/>
 					</Box>
 					<Box sx={{display: {sm: 'flex', md: 'none'}}}>
-						<IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
-							<MenuIcon/>
-						</IconButton>
+						<Grid container spacing={1} justify="center" alignItems="center">
+							<ToggleColorMode
+								data-screenshot="toggle-mode"
+								mode={mode}
+								toggleColorMode={toggleColorMode}
+							/>
+							<IconButton aria-label="Menu button" onClick={toggleDrawer(true)} sx={{width: 36, height: 36}}>
+								<MenuIcon/>
+							</IconButton>
+						</Grid>
 						<Drawer anchor="top" open={open} onClose={toggleDrawer(false)}>
 							<Box sx={{p: 2, backgroundColor: 'background.default'}}>
 								<Box
@@ -187,7 +199,7 @@ export function AppAppBar({mode, toggleColorMode}) {
 									Blog
 								</Button>
 								
-								{username == null ? (
+								{username === "" ? (
 									<Box>
 										<MenuItem>
 											<Button color="primary" variant="contained" fullWidth onClick={relocate} data-url="/register">
@@ -200,12 +212,12 @@ export function AppAppBar({mode, toggleColorMode}) {
 											</Button>
 										</MenuItem>
 									</Box>
-								) : (
+								) : (username != null ? (
 									<Box display="flex" justifyContent="center">
-										<Avatar src={"/usericon/" + username + ".png"} sx={{width: 35, height: 35, mt: 1}} onClick={relocate}
+										<Avatar src={"/usericon/" + username + ".png"} sx={{width: 35, height: 35, mt: 1, cursor: "pointer"}} onClick={relocate}
 										        data-url={"/user/" + username}/>
 									</Box>
-								)}
+								) : (<Box/>))}
 							</Box>
 						</Drawer>
 					</Box>

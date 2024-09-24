@@ -19,7 +19,7 @@ export default function Start() {
 			<Container
 				maxWidth="lg"
 				component="main"
-				sx={{display: 'flex', flexDirection: 'column', mt: 16, gap: 4}}
+				sx={{display: 'flex', flexDirection: 'column', mt: 13, gap: 4}}
 			>
 				<Box textAlign="left">
 					<Typography variant="h4">私聊</Typography>

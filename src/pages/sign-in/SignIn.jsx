@@ -111,6 +111,7 @@ export default function SignIn() {
 				if (data["status"] === 1) {
 					Cookies.set("username", data["username"], {expires: 30, path: "/"});
 					Cookies.set("user_token", data["user_token"], {expires: 30, path: "/"});
+					window.location.href = "/";
 				}
 			});
 		
@@ -169,6 +170,7 @@ export default function SignIn() {
 								<FormLabel htmlFor="password">密码</FormLabel>
 								<Link
 									component="button"
+									type="button"
 									onClick={handleClickOpen}
 									variant="body2"
 									sx={{alignSelf: 'baseline'}}
