@@ -4,7 +4,7 @@ import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import {GitHub, LinkedIn, X} from "@mui/icons-material";
+import {Facebook, GitHub, LinkedIn, X} from "@mui/icons-material";
 
 function Copyright() {
 	return (
@@ -66,6 +66,15 @@ export default function Footer() {
 							sx={{alignSelf: 'center'}}
 						>
 							<X/>
+						</IconButton>
+						<IconButton
+							color="inherit"
+							size="small"
+							href="https://www.facebook.com/profile.php?id=61566312665119"
+							aria-label="Facebook"
+							sx={{alignSelf: 'center'}}
+						>
+							<Facebook/>
 						</IconButton>
 						<IconButton
 							color="inherit"

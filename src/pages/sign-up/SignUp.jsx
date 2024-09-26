@@ -1,24 +1,18 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
-import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
-import {createTheme, styled, ThemeProvider} from '@mui/material/styles';
-import {GoogleIcon} from './CustomIcons';
-import getCustomTheme from "src/theme/getCustomTheme.jsx";
-import {AppAppBar, AppBarInit} from "src/components/AppAppBar.jsx";
-import Footer from "src/components/Footer.jsx";
+import {styled} from '@mui/material/styles';
+import {GoogleIcon} from 'src/pages/sign-in/CustomIcons';
 import {X} from "@mui/icons-material";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
-import {enqueueSnackbar, SnackbarProvider} from "notistack";
+import {enqueueSnackbar} from "notistack";
 import Cookies from "js-cookie";
 
 const Card = styled(MuiCard)(({theme}) => ({
@@ -38,25 +32,6 @@ const Card = styled(MuiCard)(({theme}) => ({
 		boxShadow:
 			'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
 	}),
-}));
-
-const SignUpContainer = styled(Stack)(({theme}) => ({
-	padding: 20,
-	marginTop: '10vh',
-	'&::before': {
-		content: '""',
-		display: 'block',
-		position: 'absolute',
-		zIndex: -1,
-		inset: 0,
-		backgroundImage:
-			'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
-		backgroundRepeat: 'no-repeat',
-		...theme.applyStyles('dark', {
-			backgroundImage:
-				'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
-		}),
-	},
 }));
 
 export default function SignUp() {
@@ -143,109 +118,101 @@ export default function SignUp() {
 			});
 	};
 	
-	const [mode, toggleColorMode] = AppBarInit();
-	const theme = createTheme(getCustomTheme(mode));
-	
 	return (
-		<ThemeProvider theme={theme}>
-			<SnackbarProvider/>
-			<CssBaseline enableColorScheme/>
-			<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
-			<SignUpContainer direction="column" justifyContent="space-between">
-				<Card variant="outlined">
-					<Typography
-						component="h1"
-						variant="h4"
-						sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
-					>
-						注册
-					</Typography>
-					<Box
-						component="form"
-						id="data-form"
-						onSubmit={null}
-						sx={{display: 'flex', flexDirection: 'column', gap: 2}}
-					>
-						<FormControl>
-							<FormLabel htmlFor="username">用户名</FormLabel>
+		<Card variant="outlined">
+			<Typography
+				component="h1"
+				variant="h4"
+				sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
+			>
+				注册
+			</Typography>
+			<Box
+				component="form"
+				id="data-form"
+				onSubmit={null}
+				sx={{display: 'flex', flexDirection: 'column', gap: 2}}
+			>
+				<FormControl>
+					<TextField
+						autoComplete="username"
+						name="username"
+						required
+						fullWidth
+						id="username"
+						placeholder="中英文、下划线、横杠、点"
+						error={nameError}
+						helperText={nameErrorMessage}
+						color={nameError ? 'error' : 'primary'}
+						label="用户名"
+					/>
+				</FormControl>
+				<FormControl>
+					<TextField
+						required
+						fullWidth
+						name="password"
+						placeholder="••••••"
+						type="password"
+						id="password"
+						autoComplete="new-password"
+						variant="outlined"
+						error={passwordError}
+						helperText={passwordErrorMessage}
+						color={passwordError ? 'error' : 'primary'}
+						label="密码"
+					/>
+				</FormControl>
+				<FormControl>
+					<Grid container spacing={0.5} flexWrap="nowrap">
+						<Grid flexGrow={1}>
 							<TextField
-								autoComplete="username"
-								name="username"
 								required
 								fullWidth
-								id="username"
-								placeholder="中英文、下划线、横杠、点"
-								error={nameError}
-								helperText={nameErrorMessage}
-								color={nameError ? 'error' : 'primary'}
-							/>
-						</FormControl>
-						<FormControl>
-							<FormLabel htmlFor="password">密码</FormLabel>
-							<TextField
-								required
-								fullWidth
-								name="password"
-								placeholder="••••••"
-								type="password"
-								id="password"
-								autoComplete="new-password"
+								id="email"
+								placeholder="your@email.com"
+								name="email"
+								autoComplete="email"
 								variant="outlined"
-								error={passwordError}
-								helperText={passwordErrorMessage}
+								error={emailError}
+								helperText={emailErrorMessage}
 								color={passwordError ? 'error' : 'primary'}
+								label="邮箱"
 							/>
-						</FormControl>
-						<FormControl>
-							<FormLabel htmlFor="email">邮箱</FormLabel>
-							<Grid container spacing={0.5} flexWrap="nowrap">
-								<Grid flexGrow={1}>
-									<TextField
-										required
-										fullWidth
-										id="email"
-										placeholder="your@email.com"
-										name="email"
-										autoComplete="email"
-										variant="outlined"
-										error={emailError}
-										helperText={emailErrorMessage}
-										color={passwordError ? 'error' : 'primary'}
-									/>
-								</Grid>
-								<Grid>
-									<Button
-										type="button"
-										variant="contained"
-										onClick={verify}
-									>
-										验证
-									</Button>
-								</Grid>
-							</Grid>
-						</FormControl>
-						<FormControl>
-							<FormLabel htmlFor="verification">验证码</FormLabel>
-							<TextField
-								autoComplete="verification"
-								name="verification"
-								required
-								fullWidth
-								id="verification"
-								placeholder="6位数字"
-							/>
-						</FormControl>
-						<Button
-							type="button"
-							fullWidth
-							variant="contained"
-							onClick={register}
-						>
-							注册
-						</Button>
-						<Typography sx={{textAlign: 'center'}}>
-							已经有账号了？{' '}
-							<span>
+						</Grid>
+						<Grid display="flex">
+							<Button
+								type="button"
+								variant="contained"
+								onClick={verify}
+							>
+								验证
+							</Button>
+						</Grid>
+					</Grid>
+				</FormControl>
+				<FormControl>
+					<TextField
+						autoComplete="verification"
+						name="verification"
+						required
+						fullWidth
+						id="verification"
+						placeholder="6位数字"
+						label="验证码"
+					/>
+				</FormControl>
+				<Button
+					type="button"
+					fullWidth
+					variant="contained"
+					onClick={register}
+				>
+					注册
+				</Button>
+				<Typography sx={{textAlign: 'center'}}>
+					已经有账号了？{' '}
+					<span>
 			                    <Link
 				                    href="/login"
 				                    variant="body2"
@@ -254,34 +221,31 @@ export default function SignUp() {
 			                        登陆
 			                    </Link>
 							</span>
-						</Typography>
-					</Box>
-					<Divider>
-						<Typography sx={{color: 'text.secondary'}}>或者</Typography>
-					</Divider>
-					<Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
-						<Button
-							type="submit"
-							fullWidth
-							variant="outlined"
-							onClick={() => alert('使用Google注册')}
-							startIcon={<GoogleIcon/>}
-						>
-							使用 Google 注册
-						</Button>
-						<Button
-							type="submit"
-							fullWidth
-							variant="outlined"
-							onClick={() => alert('使用Facebook注册')}
-							startIcon={<X/>}
-						>
-							使用 Apple 注册
-						</Button>
-					</Box>
-				</Card>
-			</SignUpContainer>
-			<Footer/>
-		</ThemeProvider>
+				</Typography>
+			</Box>
+			<Divider>
+				<Typography sx={{color: 'text.secondary'}}>或者</Typography>
+			</Divider>
+			<Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
+				<Button
+					type="submit"
+					fullWidth
+					variant="outlined"
+					onClick={() => alert('敬请期待！')}
+					startIcon={<GoogleIcon/>}
+				>
+					使用 Google 注册
+				</Button>
+				<Button
+					type="submit"
+					fullWidth
+					variant="outlined"
+					onClick={() => alert('敬请期待！')}
+					startIcon={<X/>}
+				>
+					使用 Apple 注册
+				</Button>
+			</Box>
+		</Card>
 	);
 }

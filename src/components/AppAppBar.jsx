@@ -17,6 +17,7 @@ import PropTypes from "prop-types";
 import Avatar from "@mui/material/Avatar";
 import axios from "axios";
 import Grid from "@mui/material/Grid2";
+import Cookies from "js-cookie";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -69,15 +70,18 @@ export function AppAppBar({mode, toggleColorMode}) {
 		setOpen(newOpen);
 	};
 	
-	let [username, setUsername] = useState(null);
+	const [username, setUsername] = useState(null);
 	
 	useEffect(() => {
 		axios.get("/api/account/check").then(res => {
 			const data = res.data;
 			if (data["status"] === 1)
 				setUsername(data["username"]);
-			else
+			else {
 				setUsername("");
+				Cookies.remove("username");
+				Cookies.remove("user_token");
+			}
 		});
 	}, []);
 	
@@ -137,8 +141,14 @@ export function AppAppBar({mode, toggleColorMode}) {
 								</Button>
 							</Box>
 						) : (username != null ? (
-							<Avatar src={"/usericon/" + username + ".png"} sx={{width: 35, height: 35, cursor: "pointer"}} onClick={relocate}
-							        data-url={"/user/" + username}/>
+							<Box>
+								<Avatar
+									src={"/usericon/" + username + ".png"}
+									sx={{width: 35, height: 35, cursor: "pointer"}}
+									onClick={relocate}
+									data-url={"/user/" + username}
+								/>
+							</Box>
 						) : (<Box/>))}
 						<ToggleColorMode
 							data-screenshot="toggle-mode"
