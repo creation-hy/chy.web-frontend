@@ -51,7 +51,9 @@ export default function SignIn() {
 		setOpen(false);
 	};
 	
-	const logIn = () => {
+	const logIn = (event) => {
+		event.preventDefault();
+		
 		const username = document.getElementById('username');
 		const password = document.getElementById('password');
 		
@@ -90,7 +92,7 @@ export default function SignIn() {
 				}
 			});
 		
-		return isValid;
+		return false;
 	};
 	
 	return (
@@ -105,7 +107,7 @@ export default function SignIn() {
 			<Box
 				component="form"
 				id="data-form"
-				onSubmit={null}
+				onSubmit={logIn}
 				noValidate
 				sx={{
 					display: 'flex',
@@ -160,24 +162,23 @@ export default function SignIn() {
 				</FormControl>
 				<ForgotPassword open={open} handleClose={handleClose}/>
 				<Button
-					type="button"
+					type="submit"
 					fullWidth
 					variant="contained"
-					onClick={logIn}
 				>
 					登陆
 				</Button>
 				<Typography sx={{textAlign: 'center'}}>
 					还没有账号？{' '}
 					<span>
-				                <Link
-					                href="/register"
-					                variant="body2"
-					                sx={{alignSelf: 'center'}}
-				                >
-				                  注册
-				                </Link>
-                            </span>
+		                <Link
+			                href="/register"
+			                variant="body2"
+			                sx={{alignSelf: 'center'}}
+		                >
+		                  注册
+		                </Link>
+					</span>
 				</Typography>
 			</Box>
 			<Divider>或者</Divider>

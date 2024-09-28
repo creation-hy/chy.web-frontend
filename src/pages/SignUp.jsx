@@ -44,7 +44,9 @@ export default function SignUp() {
 	const [nameError, setNameError] = React.useState(false);
 	const [nameErrorMessage, setNameErrorMessage] = React.useState('');
 	
-	const register = () => {
+	const register = (event) => {
+		event.preventDefault();
+		
 		const email = document.getElementById('email');
 		const password = document.getElementById('password');
 		const username = document.getElementById('username');
@@ -89,11 +91,14 @@ export default function SignUp() {
 				if (data["status"] === 1) {
 					Cookies.set("username", data["username"], {expires: 30, path: "/"});
 					Cookies.set("user_token", data["user_token"], {expires: 30, path: "/"});
+					window.location.href = "/";
 				}
 			});
+		
+		return false;
 	};
 	
-	const verify = () => {
+	const verify = (event) => {
 		const email = document.getElementById('email');
 		
 		let isValid = true;
@@ -107,7 +112,7 @@ export default function SignUp() {
 			setEmailErrorMessage('');
 		}
 		
-		if (isValid)
+		if (isValid) {
 			axios.post("/api/account/send-verification", {email: email.value}, {
 				headers: {
 					'Content-Type': 'application/json',
@@ -116,6 +121,7 @@ export default function SignUp() {
 				const data = res.data;
 				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
 			});
+		}
 	};
 	
 	return (
@@ -130,7 +136,7 @@ export default function SignUp() {
 			<Box
 				component="form"
 				id="data-form"
-				onSubmit={null}
+				onSubmit={register}
 				sx={{display: 'flex', flexDirection: 'column', gap: 2}}
 			>
 				<FormControl>
@@ -203,10 +209,9 @@ export default function SignUp() {
 					/>
 				</FormControl>
 				<Button
-					type="button"
+					type="submit"
 					fullWidth
 					variant="contained"
-					onClick={register}
 				>
 					注册
 				</Button>

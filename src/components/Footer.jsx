@@ -4,7 +4,7 @@ import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import {Facebook, GitHub, LinkedIn, X} from "@mui/icons-material";
+import {Facebook, GitHub, X} from "@mui/icons-material";
 
 function Copyright() {
 	return (
@@ -12,7 +12,7 @@ function Copyright() {
 			{'Copyright © '}
 			chy.web
 			&nbsp;
-			{new Date().getFullYear()}
+			2021-{new Date().getFullYear()}
 		</Typography>
 	);
 }
@@ -75,15 +75,6 @@ export default function Footer() {
 							sx={{alignSelf: 'center'}}
 						>
 							<Facebook/>
-						</IconButton>
-						<IconButton
-							color="inherit"
-							size="small"
-							href="https://www.linkedin.com/in/hy-creation-4b46a3329"
-							aria-label="LinkedIn"
-							sx={{alignSelf: 'center'}}
-						>
-							<LinkedIn/>
 						</IconButton>
 					</Stack>
 				</Box>

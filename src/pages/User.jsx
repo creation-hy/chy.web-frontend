@@ -14,7 +14,6 @@ import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
 import {Verified} from "@mui/icons-material";
-import "react-markdown";
 import Markdown from "react-markdown";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -68,11 +67,11 @@ function InfoContainer({value, username}) {
 								{item["time"]}
 							</Typography>
 						</Grid>
-						<Typography fontSize={16} sx={{wordWrap: "break-word"}}>
+						<Box fontSize={16} sx={{wordWrap: "break-word"}}>
 							<Markdown>
 								{item["html"]}
 							</Markdown>
-						</Typography>
+						</Box>
 					</Box>
 				))}
 			</Grid>
@@ -116,7 +115,7 @@ export default function User() {
 	};
 	
 	const {data, isLoading, error} = useQuery({
-		queryKey: ["init"],
+		queryKey: ["user-init"],
 		queryFn: () => axios.get("/api/user/" + username + "/info").then(res => res.data),
 	});
 	
@@ -178,13 +177,17 @@ export default function User() {
 							</Typography>
 							<Button variant="contained" sx={{display: isMe ? "none" : "flex", height: 30}} id="do-follow" onClick={doFollow}></Button>
 							<Box id="my-container" display={isMe ? "flex" : "none"} gap={1}>
-								<Button variant="contained" id="logout" sx={{height: 30}} onClick={() => setModifying(true)}>修改信息</Button>
+								<Button variant="contained" id="logout" sx={{height: 30}} onClick={() => setModifying(true)}>
+									修改信息
+								</Button>
 								<Button variant="contained" id="logout" sx={{height: 30}} onClick={logOut}>登出</Button>
 							</Box>
 						</Grid>
-						<Typography sx={{color: 'text.secondary'}} id="intro">
-							<Markdown>{!isLoading ? data["intro"] : null}</Markdown>
-						</Typography>
+						<Box sx={{color: 'text.secondary'}} id="intro">
+							<Markdown>
+								{!isLoading ? data["intro"] : null}
+							</Markdown>
+						</Box>
 					</Grid>
 				</CardContent>
 			</Card>
@@ -220,7 +223,7 @@ export default function User() {
 				<DialogContent>
 					<Box>
 						<InputLabel id="select-sex-label">性别</InputLabel>
-						<Select labelId="select-sex-label" variant="outlined" defaultValue={!isLoading && data["sex"]} name="sex">
+						<Select labelId="select-sex-label" variant="outlined" value={!isLoading && data["sex"]} name="sex">
 							<MenuItem value="未知">未知</MenuItem>
 							<MenuItem value="男">男</MenuItem>
 							<MenuItem value="女">女</MenuItem>
@@ -239,7 +242,7 @@ export default function User() {
 					</Box><br/>
 					<Box>
 						<InputLabel id="intro-label">简介</InputLabel>
-						<TextField fullWidth multiline name="intro" defaultValue={!isLoading && data["intro"]}/>
+						<TextField fullWidth multiline name="intro" value={!isLoading && data["intro"]}/>
 					</Box>
 				</DialogContent>
 				<DialogActions>
