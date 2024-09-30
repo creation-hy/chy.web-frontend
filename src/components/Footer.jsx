@@ -19,66 +19,64 @@ function Copyright() {
 
 export default function Footer() {
 	return (
-		<React.Fragment>
-			<Container
+		<Container
+			id="footer"
+			sx={{
+				display: 'flex',
+				flexDirection: 'column',
+				alignItems: 'center',
+				gap: 4,
+				pb: 4,
+				pt: 3,
+				textAlign: {sm: 'center', md: 'left'},
+			}}
+		>
+			<Box
 				sx={{
 					display: 'flex',
-					flexDirection: 'column',
-					alignItems: 'center',
-					gap: {xs: 4, sm: 8},
-					py: {xs: 4, sm: 4},
-					textAlign: {sm: 'center', md: 'left'},
+					justifyContent: 'space-between',
+					pt: {xs: 4, sm: 4},
+					width: '100%',
+					borderTop: '1px solid',
+					borderColor: 'divider',
 				}}
 			>
-				<Box
-					sx={{
-						display: 'flex',
-						justifyContent: 'space-between',
-						pt: {xs: 4, sm: 4},
-						width: '100%',
-						borderTop: '1px solid',
-						borderColor: 'divider',
-					}}
+				<Copyright/>
+				<Stack
+					direction="row"
+					spacing={1}
+					useFlexGap
+					sx={{justifyContent: 'left', color: 'text.secondary'}}
 				>
-					<div>
-						<Copyright/>
-					</div>
-					<Stack
-						direction="row"
-						spacing={1}
-						useFlexGap
-						sx={{justifyContent: 'left', color: 'text.secondary'}}
+					<IconButton
+						color="inherit"
+						size="small"
+						href="https://github.com/creation-hy"
+						aria-label="GitHub"
+						sx={{alignSelf: 'center'}}
 					>
-						<IconButton
-							color="inherit"
-							size="small"
-							href="https://github.com/creation-hy"
-							aria-label="GitHub"
-							sx={{alignSelf: 'center'}}
-						>
-							<GitHub/>
-						</IconButton>
-						<IconButton
-							color="inherit"
-							size="small"
-							href="https://x.com/creation_hy64"
-							aria-label="X"
-							sx={{alignSelf: 'center'}}
-						>
-							<X/>
-						</IconButton>
-						<IconButton
-							color="inherit"
-							size="small"
-							href="https://www.facebook.com/profile.php?id=61566312665119"
-							aria-label="Facebook"
-							sx={{alignSelf: 'center'}}
-						>
-							<Facebook/>
-						</IconButton>
-					</Stack>
-				</Box>
-			</Container>
-		</React.Fragment>
+						<GitHub/>
+					</IconButton>
+					<IconButton
+						color="inherit"
+						size="small"
+						href="https://x.com/creation_hy64"
+						aria-label="X"
+						sx={{alignSelf: 'center'}}
+					>
+						<X/>
+					</IconButton>
+					<IconButton
+						color="inherit"
+						size="small"
+						href="https://www.facebook.com/profile.php?id=61566312665119"
+						aria-label="Facebook"
+						sx={{alignSelf: 'center'}}
+					>
+						<Facebook/>
+					</IconButton>
+				</Stack>
+			</Box>
+		</Container>
 	);
 }

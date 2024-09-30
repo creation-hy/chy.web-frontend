@@ -43,9 +43,9 @@ function InfoContainer({value, username}) {
 	if (value === 0)
 		return (
 			<Typography fontSize={16}>
-				用户编号：{data["user_id"]}<br/>
+				用户编号：{data["userId"]}<br/>
 				性别：{data["sex"]}<br/>
-				注册时间：{data["reg_time"]}
+				注册时间：{data["regTime"]}
 			</Typography>
 		);
 	
@@ -100,6 +100,34 @@ InfoContainer.propTypes = {
 	username: PropTypes.string.isRequired,
 }
 
+const doFollow = (username) => {
+	axios.get("/api/user/" + username + "/follow").then(res => {
+		enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 0 ? "error" : "success"});
+		if (res.data["status"] === 1)
+			document.getElementById("do-follow").innerHTML = "取关";
+		else if (res.data["status"] === 2)
+			document.getElementById("do-follow").innerHTML = "关注";
+	})
+};
+
+const logOut = () => {
+	Cookies.remove("username");
+	Cookies.remove("userToken");
+	window.location.href = "/";
+}
+
+const uploadAvatar = (event) => {
+	const formData = new FormData();
+	formData.append("avatar", event.target.files[0]);
+	axios.post("/api/account/upload-avatar", formData, {
+		headers: {
+			"Content-Type": "multipart/form-data",
+		},
+	}).then((res) => {
+		enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 0 ? "error" : "success"});
+	});
+}
+
 export default function User() {
 	const {username} = useParams();
 	
@@ -120,43 +148,15 @@ export default function User() {
 	});
 	
 	if (!isLoading && !error && !inited) {
-		if (data["user_id"] == null)
+		if (data["userId"] == null)
 			return (
 				<Alert severity="error">用户不存在！</Alert>
 			);
-		document.getElementById("tab-following").innerHTML += "(" + data["following_count"] + ")";
-		document.getElementById("tab-follower").innerHTML += "(" + data["follower_count"] + ")";
-		document.getElementById("do-follow").innerHTML = data["already_following"] ? "取关" : "关注";
+		document.getElementById("tab-following").innerHTML += "(" + data["followingCount"] + ")";
+		document.getElementById("tab-follower").innerHTML += "(" + data["followerCount"] + ")";
+		document.getElementById("do-follow").innerHTML = data["alreadyFollowing"] ? "取关" : "关注";
 		setIsMe(username === Cookies.get("username"));
 		setInited(true);
-	}
-	
-	const doFollow = () => {
-		axios.get("/api/user/" + username + "/follow").then(res => {
-			enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 0 ? "error" : "success"});
-			if (res.data["status"] === 1)
-				document.getElementById("do-follow").innerHTML = "取关";
-			else if (res.data["status"] === 2)
-				document.getElementById("do-follow").innerHTML = "关注";
-		})
-	};
-	
-	const logOut = () => {
-		Cookies.remove("username");
-		Cookies.remove("user_token");
-		window.location.href = "/";
-	}
-	
-	const uploadAvatar = (event) => {
-		const formData = new FormData();
-		formData.append("avatar", event.target.files[0]);
-		axios.post("/api/account/upload-avatar", formData, {
-			headers: {
-				"Content-Type": "multipart/form-data",
-			},
-		}).then((res) => {
-			enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 0 ? "error" : "success"});
-		});
 	}
 	
 	return (
@@ -175,7 +175,8 @@ export default function User() {
 							<Typography gutterBottom variant="h5" display="flex" gap={0.5} alignItems="center">
 								{username}{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
 							</Typography>
-							<Button variant="contained" sx={{display: isMe ? "none" : "flex", height: 30}} id="do-follow" onClick={doFollow}></Button>
+							<Button variant="contained" sx={{display: isMe ? "none" : "flex", height: 30}} id="do-follow"
+							        onClick={() => doFollow(username)}/>
 							<Box id="my-container" display={isMe ? "flex" : "none"} gap={1}>
 								<Button variant="contained" id="logout" sx={{height: 30}} onClick={() => setModifying(true)}>
 									修改信息
@@ -184,9 +185,8 @@ export default function User() {
 							</Box>
 						</Grid>
 						<Box sx={{color: 'text.secondary'}} id="intro">
-							<Markdown>
-								{!isLoading ? data["intro"] : null}
-							</Markdown>
+							<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
+							<Markdown>{!isLoading ? data["intro"] : null}</Markdown>
 						</Box>
 					</Grid>
 				</CardContent>

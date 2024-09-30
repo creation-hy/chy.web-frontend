@@ -36,7 +36,7 @@ export default function ChybenchRanking() {
 					</TableHead>
 					<TableBody>
 						{data["result"]["data"].map((item, index) => (
-							<TableRow key={index} selected={item["is-me"]}>
+							<TableRow key={index} selected={item["isMe"]}>
 								{item["row"].map((item, index) => (
 									<TableCell key={index}>{item}</TableCell>
 								))}

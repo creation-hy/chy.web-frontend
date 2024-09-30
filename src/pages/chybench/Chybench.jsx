@@ -9,7 +9,7 @@ import Box from "@mui/material/Box";
 import {LinearProgress, Switch} from "@mui/material";
 import PropTypes from "prop-types";
 import React, {useState} from "react";
-import {Leaderboard} from "@mui/icons-material";
+import {Leaderboard, PlayArrow} from "@mui/icons-material";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 
@@ -139,6 +139,42 @@ const gpu_name = webgl.getParameter(webgl.getExtension("WEBGL_debug_renderer_inf
 	.replace(/ANGLE [(].*, (.*) [(]0x.*, .*[)]/g, "$1").replace(/ANGLE [(].*, (.*), OpenGL.*[)]/g, "$1")
 	.replace(/ANGLE [(].*, (.*) (Direct).*[)], or similar/g, "$1").replace(/(.*), or similar/g, "$1").replace(/ANGLE [(]Apple, ANGLE Metal Renderer: (.*), (.*)[)]/g, "$1");
 
+const workerFunc = () => {
+	const generateMatrix = (size) => {
+		const matrix = [];
+		for (let y = 0; y < size; y++) {
+			matrix.push([]);
+			for (let x = 0; x < size; x++)
+				matrix[y].push(Math.random());
+		}
+		return matrix;
+	}
+	
+	const MatrixMultiplicationCPU = (a, b, size) => {
+		let productRow = Array.apply(null, new Array(size)).map(Number.prototype.valueOf, 0);
+		let product = new Array(size);
+		
+		for (let p = 0; p < size; p++)
+			product[p] = productRow.slice();
+		
+		for (let i = 0; i < size; i++)
+			for (let j = 0; j < size; j++)
+				for (let k = 0; k < size; k++)
+					product[i][j] += a[i][k] * b[k][j];
+	}
+	
+	const A = generateMatrix(150), B = generateMatrix(150);
+	
+	while (true) {
+		MatrixMultiplicationCPU(A, B, 150);
+		postMessage("done");
+	}
+};
+
+let workerCode = workerFunc.toString();
+workerCode = workerCode.substring(workerCode.indexOf("{") + 1, workerCode.lastIndexOf("}"));
+const workerScript = URL.createObjectURL(new Blob([workerCode], {type: "application/javascript"}));
+
 export default function Chybench() {
 	document.title = "Chybench - chy.web";
 	
@@ -169,6 +205,7 @@ export default function Chybench() {
 				await sleep(100);
 			}
 			document.getElementById("score-checkCPUSingle").innerHTML = cpuSingleScore.toString();
+			await sleep(50);
 		}
 		
 		if (document.getElementById("checkCPUMulti").checked) {
@@ -176,7 +213,7 @@ export default function Chybench() {
 			
 			let workers = new Array(cores);
 			for (let i = 0; i < cores; i++)
-				workers[i] = new Worker("public/cpu-multi-benchmark.js");
+				workers[i] = new Worker(workerScript);
 			for (let i = 0; i < cores; i++)
 				workers[i].onmessage = () => cpuMultiScore++;
 			
@@ -190,6 +227,7 @@ export default function Chybench() {
 				workers[i].terminate();
 			cpuMultiScore = result;
 			document.getElementById("score-checkCPUMulti").innerHTML = cpuMultiScore.toString();
+			await sleep(50);
 		}
 		
 		if (document.getElementById("checkGPU").checked) {
@@ -199,6 +237,7 @@ export default function Chybench() {
 				await sleep(100);
 			}
 			document.getElementById("score-checkGPU").innerHTML = gpuScore.toString();
+			await sleep(50);
 		}
 		
 		if (document.getElementById("checkMemory").checked) {
@@ -255,7 +294,9 @@ export default function Chybench() {
 					<MenuItem value={10}>常规测试</MenuItem>
 					<MenuItem value={30}>深度测试</MenuItem>
 				</Select>
-				<Button variant="contained" onClick={() => benchmark(size, rounds)}>启动！</Button>
+				<Button variant="contained" onClick={() => benchmark(size, rounds)}>
+					<PlayArrow/>
+				</Button>
 			</Grid>
 			<Grid container direction="column" spacing={3} sx={{width: "100%", maxWidth: 800}}>
 				<Box>

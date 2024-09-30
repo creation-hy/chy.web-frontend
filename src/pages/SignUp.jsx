@@ -90,7 +90,7 @@ export default function SignUp() {
 				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
 				if (data["status"] === 1) {
 					Cookies.set("username", data["username"], {expires: 30, path: "/"});
-					Cookies.set("user_token", data["user_token"], {expires: 30, path: "/"});
+					Cookies.set("userToken", data["userToken"], {expires: 30, path: "/"});
 					window.location.href = "/";
 				}
 			});
@@ -98,7 +98,7 @@ export default function SignUp() {
 		return false;
 	};
 	
-	const verify = (event) => {
+	const verify = () => {
 		const email = document.getElementById('email');
 		
 		let isValid = true;
@@ -218,14 +218,14 @@ export default function SignUp() {
 				<Typography sx={{textAlign: 'center'}}>
 					已经有账号了？{' '}
 					<span>
-			                    <Link
-				                    href="/login"
-				                    variant="body2"
-				                    sx={{alignSelf: 'center'}}
-			                    >
-			                        登陆
-			                    </Link>
-							</span>
+	                    <Link
+		                    href="/login"
+		                    variant="body2"
+		                    sx={{alignSelf: 'center'}}
+	                    >
+	                        登陆
+	                    </Link>
+					</span>
 				</Typography>
 			</Box>
 			<Divider>

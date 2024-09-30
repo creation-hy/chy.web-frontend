@@ -20,6 +20,8 @@ import AIDrawResult from "src/pages/AIDrawResult.jsx";
 import Chybench from "src/pages/chybench/Chybench.jsx";
 import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
 import Error from "src/pages/Error.jsx";
+import Minesweeper from "src/pages/minesweeper/Minesweeper.jsx";
+import Box from "@mui/material/Box";
 
 export default function App() {
 	const [mode, toggleColorMode] = AppBarInit();
@@ -28,32 +30,31 @@ export default function App() {
 		<ThemeProvider theme={createTheme(getDefaultTheme(mode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
-			<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
-			<Container
-				maxWidth="lg"
-				component="main"
-				sx={{display: 'flex', flexDirection: 'column', mt: 13, gap: 1}}
-			>
-				<QueryClientProvider client={new QueryClient()}>
-					<BrowserRouter>
-						<Routes>
-							<Route path="/" element={<Start/>}/>
-							<Route path="/blog" element={<Blog/>}/>
-							<Route path="/login" element={<SignIn/>}/>
-							<Route path="/register" element={<SignUp/>}/>
-							<Route path="/user/:username" element={<User/>}/>
-							<Route path="/ranking" element={<Ranking/>}/>
-							<Route path="/ai-draw" element={<AIDraw/>}/>
-							<Route path="/ai-draw/result" element={<AIDrawResult/>}/>
-							<Route path="/chybench" element={<Chybench/>}/>
-							<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
-							<Route path="/chat" element={<Chat/>}/>
-							<Route path="*" element={<Error/>}/>
-						</Routes>
-					</BrowserRouter>
-				</QueryClientProvider>
-			</Container>
-			<Footer/>
+			<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
+				<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
+				<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
+					<QueryClientProvider client={new QueryClient()}>
+						<BrowserRouter>
+							<Routes>
+								<Route path="/" element={<Start/>}/>
+								<Route path="/blog" element={<Blog/>}/>
+								<Route path="/login" element={<SignIn/>}/>
+								<Route path="/register" element={<SignUp/>}/>
+								<Route path="/user/:username" element={<User/>}/>
+								<Route path="/ranking" element={<Ranking/>}/>
+								<Route path="/ai-draw" element={<AIDraw/>}/>
+								<Route path="/ai-draw/result" element={<AIDrawResult/>}/>
+								<Route path="/chybench" element={<Chybench/>}/>
+								<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
+								<Route path="/minesweeper" element={<Minesweeper/>}/>
+								<Route path="/chat" element={<Chat/>}/>
+								<Route path="*" element={<Error/>}/>
+							</Routes>
+						</BrowserRouter>
+					</QueryClientProvider>
+				</Container>
+				<Footer/>
+			</Box>
 		</ThemeProvider>
 	);
 }

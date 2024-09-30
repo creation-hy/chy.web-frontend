@@ -87,7 +87,7 @@ export default function SignIn() {
 				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
 				if (data["status"] === 1) {
 					Cookies.set("username", data["username"], {expires: 30, path: "/"});
-					Cookies.set("user_token", data["user_token"], {expires: 30, path: "/"});
+					Cookies.set("user_token", data["userToken"], {expires: 30, path: "/"});
 					window.location.href = "/";
 				}
 			});

@@ -29,7 +29,7 @@ export default function Ranking() {
 					</TableHead>
 					<TableBody>
 						{item["data"].map((item, index) => (
-							<TableRow key={index} selected={item["is-me"]}>
+							<TableRow key={index} selected={item["isMe"]}>
 								{item["row"].map((item, index) => (
 									<TableCell key={index}>{item}</TableCell>
 								))}
