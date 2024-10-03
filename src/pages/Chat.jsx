@@ -1,7 +1,7 @@
 import {Fragment, useEffect, useState} from "react";
-import {useQuery} from "@tanstack/react-query";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
-import {Alert, Badge, List, ListItemAvatar, ListItemButton, ListItemText, Paper, useMediaQuery} from "@mui/material";
+import {Alert, Badge, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, useMediaQuery} from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
@@ -13,6 +13,9 @@ import {
 	AddPhotoAlternateOutlined,
 	AddReactionOutlined,
 	ArrowBack,
+	ContentCopyOutlined,
+	DeleteOutline,
+	FormatQuoteOutlined,
 	MoreHoriz,
 	SearchOutlined,
 	Send,
@@ -27,6 +30,11 @@ import {useTheme} from "@mui/material/styles";
 import {flushSync} from "react-dom";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import InputAdornment from "@mui/material/InputAdornment";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import SockJS from "sockjs-client";
+import {Stomp} from "@stomp/stompjs";
+import Cookies from "js-cookie";
 
 function UserItem({username, info}) {
 	return (
@@ -82,6 +90,9 @@ UserItem.propTypes = {
 }
 
 const Message = ({isMe, username, content, timestamp}) => {
+	const [selectedText, setSelectedText] = useState("");
+	const [contextMenu, setContextMenu] = useState(null);
+	
 	return (
 		<Box
 			display="flex"
@@ -89,7 +100,7 @@ const Message = ({isMe, username, content, timestamp}) => {
 			alignItems="flex-start"
 			mb={2}
 		>
-			{!isMe && <Avatar src={"/usericon/" + username + ".png"} alt={username} sx={{mr: 2}}/>}
+			{!isMe && <Avatar src={"/usericon/" + username + ".png"} alt={username} sx={{mr: 1.5}}/>}
 			<Paper
 				elevation={3}
 				sx={{
@@ -100,16 +111,56 @@ const Message = ({isMe, username, content, timestamp}) => {
 					color: isMe ? 'white' : 'normal',
 					wordBreak: 'break-word',
 				}}
+				onContextMenu={(event) => {
+					event.preventDefault();
+					setSelectedText(window.getSelection().toString());
+					setContextMenu(contextMenu ? null : {
+						mouseX: event.clientX + 2,
+						mouseY: event.clientY - 6,
+					});
+				}}
 			>
 				<Box>
 					<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
-					<Markdown>{content}</Markdown>
+					<Markdown>{content.replace(/\n/g, "  \n")}</Markdown>
 				</Box>
 				<Typography variant="caption" display="block" textAlign="right" mt={1}>
 					{new Date(timestamp).toLocaleString()}
 				</Typography>
+				<Menu
+					open={Boolean(contextMenu)}
+					onClose={() => setContextMenu(null)}
+					onClick={() => setContextMenu(null)}
+					anchorReference="anchorPosition"
+					anchorPosition={contextMenu ? {top: contextMenu.mouseY, left: contextMenu.mouseX} : undefined}
+				>
+					<MenuItem onClick={() => navigator.clipboard.writeText(selectedText)}>
+						<ListItemIcon>
+							<ContentCopyOutlined/>
+						</ListItemIcon>
+						<Typography>
+							复制
+						</Typography>
+					</MenuItem>
+					<MenuItem>
+						<ListItemIcon>
+							<FormatQuoteOutlined/>
+						</ListItemIcon>
+						<Typography>
+							引用
+						</Typography>
+					</MenuItem>
+					<MenuItem>
+						<ListItemIcon>
+							<DeleteOutline/>
+						</ListItemIcon>
+						<Typography>
+							删除
+						</Typography>
+					</MenuItem>
+				</Menu>
 			</Paper>
-			{isMe && <Avatar src={"/usericon/" + username + ".png"} alt={username} sx={{ml: 2}}/>}
+			{isMe && <Avatar src={"/usericon/" + username + ".png"} alt={username} sx={{ml: 1.5}}/>}
 		</Box>
 	);
 };
@@ -126,19 +177,27 @@ export default function Chat() {
 	
 	const [users, setUsers] = useState([]);
 	const [publicChannel, setPublicChannel] = useState([]);
-	const [logged, setLogged] = useState(true);
+	const [logged, setLogged] = useState(null);
 	const [currentUser, setCurrentUser] = useState("");
 	const [messages, setMessages] = useState([]);
+	const [lastOnline, setLastOnline] = useState("");
+	const [username, setUsername] = useState(null);
+	const [stomp, setStomp] = useState(null);
 	const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
+	const queryClient = useQueryClient();
+	let currentUserVar = "";
 	
 	const getMessages = (username) => {
+		currentUserVar = username;
 		setCurrentUser(username);
 		if (isMobile) {
 			document.getElementById("contacts").style.display = "none";
 			document.getElementById("chat-main").style.display = "flex";
 		}
 		axios.get("/api/chat/message/" + username + "/-1").then(res => {
-			flushSync(() => setMessages(res.data["result"]));
+			console.log(res.data["result"]);
+			setLastOnline(res.data["result"]["onlineStatus"]);
+			flushSync(() => setMessages(res.data["result"]["message"]));
 			document.getElementById("message-card").lastElementChild.scrollIntoView({behavior: "instant"});
 		});
 	}
@@ -154,6 +213,7 @@ export default function Chat() {
 				setLogged(false);
 				return;
 			}
+			setLogged(true);
 			document.getElementById("page-container").style.height = "0";
 			document.getElementById("page-main").style.height = "0";
 			if (isMobile) {
@@ -162,10 +222,32 @@ export default function Chat() {
 			}
 			setPublicChannel(data["result"]["public"]);
 			setUsers(data["result"]["users"]);
+			
+			const stomp = Stomp.over(() => new SockJS(window.location.origin + "/api/websocket"));
+			const username = Cookies.get("username");
+			setUsername(username);
+			setStomp(stomp);
 		}
 	}, [data, error, isLoading, isMobile]);
 	
-	return logged ? (
+	if (stomp != null && username != null) {
+		stomp.connect({}, () => {
+			stomp.subscribe("/topic/chat/online", (message) => {
+				queryClient.invalidateQueries({queryKey: ["contacts"]});
+				console.log(message);
+				if (message.body === currentUserVar)
+					setLastOnline("对方在线");
+			});
+			stomp.subscribe("/topic/chat/offline", (message) => {
+				queryClient.invalidateQueries({queryKey: ["contacts"]});
+				console.log(message);
+				if (message.body === currentUserVar)
+					setLastOnline("对方已离线");
+			});
+		});
+	}
+	
+	return logged !== false ? (
 		<Grid container sx={{flex: 1, height: 0}} gap={2}>
 			<Card id="contacts" sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
@@ -195,7 +277,7 @@ export default function Chat() {
 					</List>
 				</Box>
 			</Card>
-			<Grid container id="chat-main" direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex"}} gap={2}>
+			<Grid container id="chat-main" direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex"}} gap={1.5}>
 				<Card>
 					<Grid
 						container direction="row" justifyContent="space-between" alignItems="center"
@@ -204,10 +286,15 @@ export default function Chat() {
 						<IconButton onClick={() => {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
+							setCurrentUser("");
+							currentUserVar = "";
 						}} sx={{display: isMobile ? "flex" : "none"}}>
 							<ArrowBack/>
 						</IconButton>
-						<Typography variant="h6">{currentUser}</Typography>
+						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"}>
+							<Typography variant="h6">{currentUser}</Typography>
+							<Typography id="last-online">{lastOnline}</Typography>
+						</Grid>
 						<IconButton onClick={() => window.open("/user/" + currentUser)}>
 							<MoreHoriz/>
 						</IconButton>

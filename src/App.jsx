@@ -30,10 +30,10 @@ export default function App() {
 		<ThemeProvider theme={createTheme(getDefaultTheme(mode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
-			<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
-				<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
-				<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
-					<QueryClientProvider client={new QueryClient()}>
+			<QueryClientProvider client={new QueryClient()}>
+				<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
+					<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
+					<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
 						<BrowserRouter>
 							<Routes>
 								<Route path="/" element={<Start/>}/>
@@ -51,10 +51,10 @@ export default function App() {
 								<Route path="*" element={<Error/>}/>
 							</Routes>
 						</BrowserRouter>
-					</QueryClientProvider>
-				</Container>
-				<Footer/>
-			</Box>
+					</Container>
+					<Footer/>
+				</Box>
+			</QueryClientProvider>
 		</ThemeProvider>
 	);
 }

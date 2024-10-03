@@ -75,7 +75,7 @@ function initGPU() {
 		return new window.GPU.GPU();
 		// eslint-disable-next-line no-unused-vars
 	} catch (e) {
-		return new GPU.GPU();
+		return new GPU();
 	}
 }
 

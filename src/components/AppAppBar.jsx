@@ -14,10 +14,10 @@ import PropTypes from "prop-types";
 import Avatar from "@mui/material/Avatar";
 import axios from "axios";
 import Grid from "@mui/material/Grid2";
-import Cookies from "js-cookie";
 import getCustomTheme from "src/theme/getCustomTheme.jsx";
 import {List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
 import {Analytics, Article, Chat, Draw, Forum, Games, Home, Leaderboard} from "@mui/icons-material";
+import {useQuery} from "@tanstack/react-query";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -38,7 +38,7 @@ export function AppBarInit() {
 		localStorage.setItem('themeMode', 'light');
 	const [mode, setMode] = useState(localStorage.getItem('themeMode'));
 	
-	React.useEffect(() => {
+	useEffect(() => {
 		const savedMode = localStorage.getItem('themeMode');
 		if (savedMode) {
 			setMode(savedMode);
@@ -66,20 +66,10 @@ export function AppAppBar({mode, toggleColorMode}) {
 		setOpen(newOpen);
 	};
 	
-	const [username, setUsername] = useState(null);
-	
-	useEffect(() => {
-		axios.get("/api/account/check").then(res => {
-			const data = res.data;
-			if (data["status"] === 1)
-				setUsername(data["username"]);
-			else {
-				setUsername("");
-				Cookies.remove("username");
-				Cookies.remove("user_token");
-			}
-		});
-	}, []);
+	const {data, isLoading, error} = useQuery({
+		queryKey: ["accountCheck"],
+		queryFn: () => axios.get("/api/account/check").then(res => res.data),
+	});
 	
 	return (
 		<AppBar
@@ -132,7 +122,7 @@ export function AppAppBar({mode, toggleColorMode}) {
 							alignItems: 'center',
 						}}
 					>
-						{username === "" ? (
+						{!isLoading && !error && data["status"] === 0 ? (
 							<Box>
 								<Button color="primary" variant="text" size="small" href="/login">
 									登陆
@@ -141,12 +131,12 @@ export function AppAppBar({mode, toggleColorMode}) {
 									注册
 								</Button>
 							</Box>
-						) : (username != null ? (
+						) : (!isLoading && !error ? (
 							<Box>
 								<Avatar
-									src={"/usericon/" + username + ".png"}
+									src={"/usericon/" + data["username"] + ".png"}
 									sx={{width: 35, height: 35, cursor: "pointer"}}
-									onClick={() => window.location.href = "/user/" + username}
+									onClick={() => window.location.href = "/user/" + data["username"]}
 								/>
 							</Box>
 						) : (<Box/>))}
@@ -170,7 +160,7 @@ export function AppAppBar({mode, toggleColorMode}) {
 						<SwipeableDrawer anchor="left" open={open} onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
 							<Box sx={{backgroundColor: 'background.default', minHeight: "100%", width: 250}}>
 								<Box sx={{mt: 2.5, mb: 1.5}}>
-									{username === "" ? (
+									{!isLoading && !error && data["status"] === 0 ? (
 										<Box>
 											<MenuItem>
 												<Button color="primary" variant="contained" fullWidth href="/register">
@@ -183,13 +173,13 @@ export function AppAppBar({mode, toggleColorMode}) {
 												</Button>
 											</MenuItem>
 										</Box>
-									) : (username != null ? (
+									) : (!isLoading && !error ? (
 										<Box display="flex" justifyContent="center">
-											<Avatar src={"/usericon/" + username + ".png"} sx={{width: 50, height: 50, cursor: "pointer"}}
-											        onClick={() => window.location.href = "/user/" + username}
+											<Avatar src={"/usericon/" + data["username"] + ".png"} sx={{width: 50, height: 50, cursor: "pointer"}}
+											        onClick={() => window.location.href = "/user/" + data["username"]}
 											/>
 										</Box>
-									) : (<Box/>))}
+									) : <Box/>)}
 								</Box>
 								<List sx={{width: "100%"}}>
 									<ListItemButton href="/">

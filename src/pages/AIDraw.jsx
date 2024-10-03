@@ -4,6 +4,7 @@ import Grid from "@mui/material/Grid2";
 import Button from "@mui/material/Button";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
+import {Upload, Visibility} from "@mui/icons-material";
 
 const submit = (event) => {
 	event.preventDefault();
@@ -82,8 +83,11 @@ export default function AIDraw() {
 					placeholder="1~30 (default: 7)"
 				/>
 				<Grid container>
-					<Button variant="contained" type="submit" sx={{flexGrow: 1}}>提交</Button>
-					<Button variant="contained" type="button" onClick={() => window.open("/ai-draw/result")} sx={{flexGrow: 1}}>查看结果</Button>
+					<Button variant="contained" type="submit" sx={{flexGrow: 1}} startIcon={<Upload/>}>提交</Button>
+					<Button
+						variant="contained" type="button" sx={{flexGrow: 1}} startIcon={<Visibility/>}
+						onClick={() => window.open("/ai-draw/result")}
+					>查看结果</Button>
 				</Grid>
 			</Grid>
 		</Card>

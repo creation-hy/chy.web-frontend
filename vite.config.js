@@ -20,6 +20,12 @@ export default defineConfig({
 				secure: false,
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/usericon/, ""),
+			},
+			"/api/websocket": {
+				target: 'wss://localhost:8080/websocket',
+				secure: false,
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api\/websocket/, ""),
 			}
 		},
 	},
@@ -28,4 +34,15 @@ export default defineConfig({
 			'src': resolve(path.resolve(), 'src'),
 		},
 	},
-})
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (id.includes('node_modules')) {
+						return "vendor";
+					}
+				},
+			},
+		},
+	},
+});

@@ -13,7 +13,7 @@ import Cookies from "js-cookie";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
-import {Verified} from "@mui/icons-material";
+import {Edit, Logout, PersonAdd, PersonAddDisabled, Verified} from "@mui/icons-material";
 import Markdown from "react-markdown";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -100,13 +100,13 @@ InfoContainer.propTypes = {
 	username: PropTypes.string.isRequired,
 }
 
-const doFollow = (username) => {
+const doFollow = (username, setIsFollowing) => {
 	axios.get("/api/user/" + username + "/follow").then(res => {
 		enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 0 ? "error" : "success"});
 		if (res.data["status"] === 1)
-			document.getElementById("do-follow").innerHTML = "取关";
+			setIsFollowing(true);
 		else if (res.data["status"] === 2)
-			document.getElementById("do-follow").innerHTML = "关注";
+			setIsFollowing(false);
 	})
 };
 
@@ -137,6 +137,7 @@ export default function User() {
 	const [modifying, setModifying] = React.useState(false);
 	const [inited, setInited] = React.useState(false);
 	const [isMe, setIsMe] = React.useState(false);
+	const [isFollowing, setIsFollowing] = React.useState(null);
 	
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
@@ -154,7 +155,7 @@ export default function User() {
 			);
 		document.getElementById("tab-following").innerHTML += "(" + data["followingCount"] + ")";
 		document.getElementById("tab-follower").innerHTML += "(" + data["followerCount"] + ")";
-		document.getElementById("do-follow").innerHTML = data["alreadyFollowing"] ? "取关" : "关注";
+		setIsFollowing(data["alreadyFollowing"]);
 		setIsMe(username === Cookies.get("username"));
 		setInited(true);
 	}
@@ -171,17 +172,21 @@ export default function User() {
 							onClick={isMe ? () => document.getElementById("avatar-upload").click() : null}
 						/>
 						<Input type="file" id="avatar-upload" sx={{display: "none"}} onChange={uploadAvatar}/>
-						<Grid container spacing={1}>
-							<Typography gutterBottom variant="h5" display="flex" gap={0.5} alignItems="center">
+						<Grid container spacing={1} alignItems="center" sx={{pb: 1}}>
+							<Typography gutterBottom variant="h5" display="flex" gap={0.5} alignItems="center" margin={0}>
 								{username}{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
 							</Typography>
-							<Button variant="contained" sx={{display: isMe ? "none" : "flex", height: 30}} id="do-follow"
-							        onClick={() => doFollow(username)}/>
+							<Button variant="contained" sx={{display: isMe ? "none" : "flex"}}
+							        onClick={() => doFollow(username)}>
+								{isFollowing == null ? null : (isFollowing ? <PersonAddDisabled fontSize="small"/> : <PersonAdd fontSize="small"/>)}
+							</Button>
 							<Box id="my-container" display={isMe ? "flex" : "none"} gap={1}>
-								<Button variant="contained" id="logout" sx={{height: 30}} onClick={() => setModifying(true)}>
-									修改信息
+								<Button variant="contained" onClick={() => setModifying(true)}>
+									<Edit fontSize="small"/>
 								</Button>
-								<Button variant="contained" id="logout" sx={{height: 30}} onClick={logOut}>登出</Button>
+								<Button variant="contained" onClick={logOut}>
+									<Logout fontSize="small"/>
+								</Button>
 							</Box>
 						</Grid>
 						<Box sx={{color: 'text.secondary'}} id="intro">
@@ -223,7 +228,7 @@ export default function User() {
 				<DialogContent>
 					<Box>
 						<InputLabel id="select-sex-label">性别</InputLabel>
-						<Select labelId="select-sex-label" variant="outlined" value={!isLoading && data["sex"]} name="sex">
+						<Select labelId="select-sex-label" variant="outlined" defaultValue={!isLoading && data["sex"]} name="sex">
 							<MenuItem value="未知">未知</MenuItem>
 							<MenuItem value="男">男</MenuItem>
 							<MenuItem value="女">女</MenuItem>
@@ -242,11 +247,11 @@ export default function User() {
 					</Box><br/>
 					<Box>
 						<InputLabel id="intro-label">简介</InputLabel>
-						<TextField fullWidth multiline name="intro" value={!isLoading && data["intro"]}/>
+						<TextField fullWidth multiline name="intro" defaultValue={!isLoading && data["intro"]}/>
 					</Box>
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={() => setModifying(false)}>关闭</Button>
+					<Button type="button" onClick={() => setModifying(false)}>关闭</Button>
 					<Button type="submit">确认</Button>
 				</DialogActions>
 			</Dialog>

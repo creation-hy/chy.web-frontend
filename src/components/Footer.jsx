@@ -4,7 +4,7 @@ import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import {Facebook, GitHub, X} from "@mui/icons-material";
+import {Facebook, GitHub, Instagram, Pinterest, Twitter, YouTube} from "@mui/icons-material";
 
 function Copyright() {
 	return (
@@ -39,6 +39,7 @@ export default function Footer() {
 					width: '100%',
 					borderTop: '1px solid',
 					borderColor: 'divider',
+					gap: 1,
 				}}
 			>
 				<Copyright/>
@@ -60,20 +61,47 @@ export default function Footer() {
 					<IconButton
 						color="inherit"
 						size="small"
-						href="https://x.com/creation_hy64"
-						aria-label="X"
-						sx={{alignSelf: 'center'}}
-					>
-						<X/>
-					</IconButton>
-					<IconButton
-						color="inherit"
-						size="small"
 						href="https://www.facebook.com/profile.php?id=61566312665119"
 						aria-label="Facebook"
 						sx={{alignSelf: 'center'}}
 					>
 						<Facebook/>
+					</IconButton>
+					<IconButton
+						color="inherit"
+						size="small"
+						href="https://x.com/creation_hy64"
+						aria-label="Twitter"
+						sx={{alignSelf: 'center'}}
+					>
+						<Twitter/>
+					</IconButton>
+					<IconButton
+						color="inherit"
+						size="small"
+						href="https://www.youtube.com/@creation_hy"
+						aria-label="Youtube"
+						sx={{alignSelf: 'center'}}
+					>
+						<YouTube/>
+					</IconButton>
+					<IconButton
+						color="inherit"
+						size="small"
+						href="https://www.pinterest.com/creation_hy"
+						aria-label="Pinterest"
+						sx={{alignSelf: 'center'}}
+					>
+						<Pinterest/>
+					</IconButton>
+					<IconButton
+						color="inherit"
+						size="small"
+						href="https://www.instagram.com/creation_hy64"
+						aria-label="Instagram"
+						sx={{alignSelf: 'center'}}
+					>
+						<Instagram/>
 					</IconButton>
 				</Stack>
 			</Box>
