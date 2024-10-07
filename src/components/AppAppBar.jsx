@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {useEffect, useState} from 'react';
-import {alpha, createTheme, styled, ThemeProvider} from '@mui/material/styles';
+import {alpha, createTheme, styled, ThemeProvider, useTheme} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -15,7 +15,7 @@ import Avatar from "@mui/material/Avatar";
 import axios from "axios";
 import Grid from "@mui/material/Grid2";
 import getCustomTheme from "src/theme/getCustomTheme.jsx";
-import {List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
+import {List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer, useMediaQuery} from "@mui/material";
 import {Analytics, Article, Chat, Draw, Forum, Games, Home, Leaderboard} from "@mui/icons-material";
 import {useQuery} from "@tanstack/react-query";
 
@@ -71,10 +71,12 @@ export function AppAppBar({mode, toggleColorMode}) {
 		queryFn: () => axios.get("/api/account/check").then(res => res.data),
 	});
 	
+	const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
+	
 	return (
 		<AppBar
 			position="sticky"
-			sx={{boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', top: 0, padding: 3}}
+			sx={{boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', top: 0, py: isMobile ? 2 : 3}}
 		>
 			<Container maxWidth="lg">
 				<StyledToolbar variant="dense" disableGutters>
@@ -133,11 +135,9 @@ export function AppAppBar({mode, toggleColorMode}) {
 							</Box>
 						) : (!isLoading && !error ? (
 							<Box>
-								<Avatar
-									src={"/usericon/" + data["username"] + ".png"}
-									sx={{width: 35, height: 35, cursor: "pointer"}}
-									onClick={() => window.location.href = "/user/" + data["username"]}
-								/>
+								<IconButton sx={{width: 35, height: 35}} href={"/user/" + data.username}>
+									<Avatar sx={{width: 35, height: 35}} alt={data.username} src={"/usericon/" + data.username + ".png"}/>
+								</IconButton>
 							</Box>
 						) : (<Box/>))}
 						<ToggleColorMode
@@ -175,9 +175,9 @@ export function AppAppBar({mode, toggleColorMode}) {
 										</Box>
 									) : (!isLoading && !error ? (
 										<Box display="flex" justifyContent="center">
-											<Avatar src={"/usericon/" + data["username"] + ".png"} sx={{width: 50, height: 50, cursor: "pointer"}}
-											        onClick={() => window.location.href = "/user/" + data["username"]}
-											/>
+											<IconButton sx={{width: 50, height: 50}} href={"/user/" + data.username}>
+												<Avatar sx={{width: 50, height: 50}} alt={data.username} src={"/usericon/" + data.username + ".png"}/>
+											</IconButton>
 										</Box>
 									) : <Box/>)}
 								</Box>

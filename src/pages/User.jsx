@@ -53,8 +53,8 @@ function InfoContainer({value, username}) {
 		return (
 			<Grid container direction="column" spacing={3}>
 				{data["result"].map((item, index) => (
-					<Box key={index} sx={{width: "100%"}}>
-						<Grid container spacing={1.5}>
+					<Grid container direction="column" key={index} sx={{width: "100%"}} gap={1}>
+						<Grid container spacing={1.5} alignItems="center">
 							<Avatar src={"/usericon/" + item["username"] + ".png"} alt={item["username"]}/>
 							<Typography variant="h5" sx={{cursor: "pointer"}} onClick={() => {
 								window.location.href = item["username"];
@@ -63,7 +63,7 @@ function InfoContainer({value, username}) {
 									{item["username"]}{item["certification"] != null && (<Verified color="primary"/>)}
 								</Grid>
 							</Typography>
-							<Typography variant="h6">
+							<Typography>
 								{item["time"]}
 							</Typography>
 						</Grid>
@@ -72,7 +72,7 @@ function InfoContainer({value, username}) {
 								{item["html"]}
 							</Markdown>
 						</Box>
-					</Box>
+					</Grid>
 				))}
 			</Grid>
 		);
@@ -80,7 +80,7 @@ function InfoContainer({value, username}) {
 	return (
 		<Grid container direction="column" spacing={3}>
 			{data["result"].map((item, index) => (
-				<Grid container key={index} spacing={1.5}>
+				<Grid container key={index} alignItems="center" spacing={1.5}>
 					<Avatar src={"/usericon/" + item["username"] + ".png"} alt={item["username"]}/>
 					<Typography variant="h5" sx={{cursor: "pointer"}} onClick={() => {
 						window.location.href = item["username"];
@@ -232,17 +232,19 @@ export default function User() {
 							<MenuItem value="未知">未知</MenuItem>
 							<MenuItem value="男">男</MenuItem>
 							<MenuItem value="女">女</MenuItem>
-							<MenuItem value="伪娘">伪娘</MenuItem>
+							<MenuItem value="男の娘">男の娘</MenuItem>
 							<MenuItem value="假小子">假小子</MenuItem>
-							<MenuItem value="futa">futa</MenuItem>
-							<MenuItem value="mtf">mtf</MenuItem>
-							<MenuItem value="ftm">ftm</MenuItem>
-							<MenuItem value="mtx">mtx</MenuItem>
-							<MenuItem value="ftx">ftx</MenuItem>
+							<MenuItem value="Futanari">Futanari</MenuItem>
+							<MenuItem value="MTF">MTF</MenuItem>
+							<MenuItem value="MTX">MTX</MenuItem>
+							<MenuItem value="FTM">FTM</MenuItem>
+							<MenuItem value="FTX">FTX</MenuItem>
+							<MenuItem value="Intersex">Intersex</MenuItem>
+							<MenuItem value="无">无</MenuItem>
 							<MenuItem value="汉堡王">汉堡王</MenuItem>
 							<MenuItem value="西瓜霜">西瓜霜</MenuItem>
 							<MenuItem value="北洋军阀">北洋军阀</MenuItem>
-							<MenuItem value="亚马逊购物袋">亚马逊购物袋</MenuItem>
+							<MenuItem value="其它">其它</MenuItem>
 						</Select>
 					</Box><br/>
 					<Box>

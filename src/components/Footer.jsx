@@ -5,6 +5,8 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import {Facebook, GitHub, Instagram, Pinterest, Twitter, YouTube} from "@mui/icons-material";
+import {useMediaQuery} from "@mui/material";
+import {useTheme} from "@mui/material/styles";
 
 function Copyright() {
 	return (
@@ -18,6 +20,8 @@ function Copyright() {
 }
 
 export default function Footer() {
+	const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
+	
 	return (
 		<Container
 			id="footer"
@@ -25,8 +29,8 @@ export default function Footer() {
 				display: 'flex',
 				flexDirection: 'column',
 				alignItems: 'center',
-				gap: 4,
-				pb: 4,
+				gap: isMobile ? 2 : 4,
+				pb: isMobile ? 2 : 4,
 				pt: 3,
 				textAlign: {sm: 'center', md: 'left'},
 			}}
@@ -35,7 +39,7 @@ export default function Footer() {
 				sx={{
 					display: 'flex',
 					justifyContent: 'space-between',
-					pt: {xs: 4, sm: 4},
+					pt: isMobile ? 2 : 4,
 					width: '100%',
 					borderTop: '1px solid',
 					borderColor: 'divider',

@@ -43,7 +43,14 @@ function UserItem({username, info}) {
 				<Badge badgeContent={info["newMessageCount"]} overlap="circular" color="error">
 					<Badge
 						badgeContent={info["isOnline"] || username === "ChatRoomSystem" ? " " : 0} overlap="circular"
-						anchorOrigin={{vertical: "bottom", horizontal: "right"}} color="success"
+						anchorOrigin={{vertical: "bottom", horizontal: "right"}} color="success" variant="dot"
+						sx={{
+							"& .MuiBadge-badge": {
+								backgroundColor: '#44b700',
+								color: '#44b700',
+								boxShadow: `0 0 0 2px`,
+							}
+						}}
 					>
 						<Avatar src={"/usericon/" + username + ".png"} alt={username}/>
 					</Badge>
@@ -187,6 +194,7 @@ export default function Chat() {
 	const messageCard = useRef(null), messageInput = useRef(null);
 	const currentUserVar = useRef("");
 	const messagesVar = useRef([]);
+	const myname = Cookies.get("username");
 	
 	const refreshContacts = useCallback(() => {
 		queryClient.invalidateQueries({queryKey: ["contacts"]})
@@ -233,8 +241,29 @@ export default function Chat() {
 		}
 	}, [data, error, isLoading, isMobile]);
 	
+	const newMessage = useCallback((data) => {
+		Notification.requestPermission().then(() => {
+		});
+		
+		axios.get("/api/chat/update-viewed/" + currentUserVar.current).then(() => refreshContacts());
+		messagesVar.current = [...messagesVar.current, {
+			id: data.id,
+			isMe: data.sender === myname,
+			username: data.sender,
+			text: data.content,
+			time: data.time
+		}];
+		
+		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
+		flushSync(() => setMessages(messagesVar.current));
+		if (scrollTop + clientHeight + 50 >= scrollHeight)
+			messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
+	}, [myname, refreshContacts]);
+	
 	useEffect(() => {
-		const username = Cookies.get("username");
+		if (myname == null)
+			return;
+		
 		const stomp = Stomp.over(() => new SockJS(window.location.origin + "/api/websocket"));
 		setStomp(stomp);
 		
@@ -253,47 +282,24 @@ export default function Chat() {
 			});
 			
 			// TODO: 新消息浏览器提示
-			stomp.subscribe(`/user/${username}/queue/chat/message`, (message) => {
+			stomp.subscribe(`/user/${myname}/queue/chat/message`, (message) => {
 				const data = JSON.parse(message.body);
-				if (username === data.sender && currentUserVar.current === data.recipient || username === data.recipient && currentUserVar.current === data.sender) {
-					axios.get("/api/chat/update-viewed/" + currentUserVar.current)
-						.then(() => refreshContacts());
-					messagesVar.current = [...messagesVar.current, {
-						id: data.id,
-						isMe: data.sender === username,
-						username: data.sender,
-						text: data.content,
-						time: data.time
-					}];
-					const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
-					flushSync(() => setMessages(messagesVar.current));
-					if (scrollTop + clientHeight + 50 >= scrollHeight)
-						messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
-				} else
+				if (myname === data.sender && currentUserVar.current === data.recipient || myname === data.recipient && currentUserVar.current === data.sender)
+					newMessage(data);
+				else
 					refreshContacts();
 			});
 			
 			stomp.subscribe("/topic/chat/public-message", (message) => {
 				refreshContacts();
 				const data = JSON.parse(message.body);
-				if (currentUserVar.current === data.recipient) {
-					axios.get("/api/chat/update-viewed/" + currentUserVar.current)
-						.then(() => refreshContacts());
-					messagesVar.current = [...messagesVar.current, {
-						id: data.id,
-						isMe: data.sender === username,
-						username: data.sender,
-						text: data.content,
-						time: data.time
-					}];
-					const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
-					flushSync(() => setMessages(messagesVar.current));
-					if (scrollTop + clientHeight + 50 >= scrollHeight)
-						messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
-				}
+				if (currentUserVar.current === data.recipient)
+					newMessage(data);
+				else
+					refreshContacts();
 			});
 		});
-	}, [refreshContacts]);
+	}, [myname, newMessage, refreshContacts]);
 	
 	const sendMessage = () => {
 		const content = messageInput.current.value;

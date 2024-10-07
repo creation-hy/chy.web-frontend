@@ -12,9 +12,9 @@ export default function Start() {
 				原聊天室已搬到私聊-公共，AI回答功能请直接跟SystemAI对话，智能体功能请和neko对话。（这两个AI只有显示在线的时候会回复你的消息）<br/>
 				neko支持的重置命令：<br/>
 				/sudo reset [model] [neko] [memorytype]<br/>
-				{`[model]：选择模型，"llama3"或"qwen1.5"`}<br/>
+				{`[model]：选择模型，"llama3"或"qwen2.5"`}<br/>
 				{`[neko]：是否使用训练好的猫娘记忆文件，"-neko"或""`}<br/>
-				{`[memorytype]：记忆类型，"-Buffer"或"-BufferWindow"或"-KG"或"-SummaryBuffer"或"-Summary"或"-TokenBuffer"`}<br/>
+				{`[memorytype]：记忆类型，"-Buffer"或"-BufferWindow"或"-SummaryBuffer"或"-Summary"或"-TokenBuffer"`}<br/>
 				如果三项都不填则会重置为默认猫娘。<br/>
 				示例：/sudo reset llama3 -neko -Buffer
 			</Typography><br/>
@@ -27,9 +27,9 @@ export default function Start() {
 			</Typography><br/>
 			<Typography variant="h4">关于</Typography>
 			<Typography>
-				当前版本：V4.4.3 (Alpha)<br/>
+				当前版本：V4.4 (Beta)<br/>
 				前后端已分离！后端采用Spring Boot + Spring MVC + JPA，前端采用React.js + Material UI，生产环境为Nginx，开发环境为Node.js + Vite。<br/>
-			</Typography><br/>
+			</Typography>
 		</Box>
 	);
 }

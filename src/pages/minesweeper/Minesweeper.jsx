@@ -173,14 +173,14 @@ export default function Minesweeper() {
 										border: "1px solid black",
 										borderTopWidth: !rowIndex ? 1 : 0,
 										borderLeftWidth: !colIndex ? 1 : 0,
-										backgroundColor: "#dcdcdc",
+										backgroundColor: "#d3d3d3",
 									}}
 									onContextMenu={(event) => {
 										event.preventDefault();
 										if (event.currentTarget.style.backgroundColor === "white") return false;
-										if (event.currentTarget.innerHTML === "F") event.currentTarget.innerHTML = "?";
-										else if (event.currentTarget.innerHTML === "?") event.currentTarget.innerHTML = " ";
-										else event.currentTarget.innerHTML = "F";
+										if (event.currentTarget.innerHTML === "🚩") event.currentTarget.innerHTML = "❓";
+										else if (event.currentTarget.innerHTML === "❓") event.currentTarget.innerHTML = " ";
+										else event.currentTarget.innerHTML = "🚩";
 										return false;
 									}}
 									onClick={(event) => {
