@@ -30,7 +30,13 @@ export default function App() {
 		<ThemeProvider theme={createTheme(getDefaultTheme(mode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
-			<QueryClientProvider client={new QueryClient()}>
+			<QueryClientProvider client={new QueryClient({
+				defaultOptions: {
+					queries: {
+						staleTime: 60 * 1000,
+					}
+				}
+			})}>
 				<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
 					<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
 					<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>

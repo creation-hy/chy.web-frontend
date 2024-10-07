@@ -1,4 +1,4 @@
-import {Fragment, useEffect, useState} from "react";
+import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
 import {Alert, Badge, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, useMediaQuery} from "@mui/material";
@@ -124,7 +124,7 @@ const Message = ({isMe, username, content, timestamp}) => {
 					<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
 					<Markdown>{content.replace(/\n/g, "  \n")}</Markdown>
 				</Box>
-				<Typography variant="caption" display="block" textAlign="right" mt={1}>
+				<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
 					{new Date(timestamp).toLocaleString()}
 				</Typography>
 				<Menu
@@ -181,24 +181,32 @@ export default function Chat() {
 	const [currentUser, setCurrentUser] = useState("");
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
-	const [username, setUsername] = useState(null);
 	const [stomp, setStomp] = useState(null);
 	const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
 	const queryClient = useQueryClient();
-	let currentUserVar = "";
+	const messageCard = useRef(null), messageInput = useRef(null);
+	const currentUserVar = useRef("");
+	const messagesVar = useRef([]);
+	
+	const refreshContacts = useCallback(() => {
+		queryClient.invalidateQueries({queryKey: ["contacts"]})
+	}, [queryClient]);
 	
 	const getMessages = (username) => {
-		currentUserVar = username;
+		currentUserVar.current = username;
 		setCurrentUser(username);
 		if (isMobile) {
 			document.getElementById("contacts").style.display = "none";
 			document.getElementById("chat-main").style.display = "flex";
 		}
 		axios.get("/api/chat/message/" + username + "/-1").then(res => {
-			console.log(res.data["result"]);
-			setLastOnline(res.data["result"]["onlineStatus"]);
-			flushSync(() => setMessages(res.data["result"]["message"]));
-			document.getElementById("message-card").lastElementChild.scrollIntoView({behavior: "instant"});
+			refreshContacts();
+			messagesVar.current = res.data["result"]["message"];
+			flushSync(() => {
+				setLastOnline(res.data["result"]["onlineStatus"]);
+				setMessages(messagesVar.current);
+			});
+			messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
 		});
 	}
 	
@@ -209,7 +217,7 @@ export default function Chat() {
 	
 	useEffect(() => {
 		if (!isLoading && !error) {
-			if (data["status"] !== 1) {
+			if (data.status !== 1) {
 				setLogged(false);
 				return;
 			}
@@ -220,32 +228,85 @@ export default function Chat() {
 				document.getElementById("footer").style.display = "none";
 				document.getElementById("page-main").style.paddingBottom = "20px";
 			}
-			setPublicChannel(data["result"]["public"]);
-			setUsers(data["result"]["users"]);
-			
-			const stomp = Stomp.over(() => new SockJS(window.location.origin + "/api/websocket"));
-			const username = Cookies.get("username");
-			setUsername(username);
-			setStomp(stomp);
+			setPublicChannel(data.result["public"]);
+			setUsers(data.result["users"]);
 		}
 	}, [data, error, isLoading, isMobile]);
 	
-	if (stomp != null && username != null) {
+	useEffect(() => {
+		const username = Cookies.get("username");
+		const stomp = Stomp.over(() => new SockJS(window.location.origin + "/api/websocket"));
+		setStomp(stomp);
+		
 		stomp.connect({}, () => {
 			stomp.subscribe("/topic/chat/online", (message) => {
-				queryClient.invalidateQueries({queryKey: ["contacts"]});
-				console.log(message);
-				if (message.body === currentUserVar)
+				refreshContacts();
+				if (JSON.parse(message.body).username === currentUserVar.current)
 					setLastOnline("对方在线");
 			});
+			
 			stomp.subscribe("/topic/chat/offline", (message) => {
-				queryClient.invalidateQueries({queryKey: ["contacts"]});
-				console.log(message);
-				if (message.body === currentUserVar)
-					setLastOnline("对方已离线");
+				refreshContacts();
+				const data = JSON.parse(message.body);
+				if (data.username === currentUserVar.current)
+					setLastOnline(data.online);
+			});
+			
+			// TODO: 新消息浏览器提示
+			stomp.subscribe(`/user/${username}/queue/chat/message`, (message) => {
+				const data = JSON.parse(message.body);
+				if (username === data.sender && currentUserVar.current === data.recipient || username === data.recipient && currentUserVar.current === data.sender) {
+					axios.get("/api/chat/update-viewed/" + currentUserVar.current)
+						.then(() => refreshContacts());
+					messagesVar.current = [...messagesVar.current, {
+						id: data.id,
+						isMe: data.sender === username,
+						username: data.sender,
+						text: data.content,
+						time: data.time
+					}];
+					const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
+					flushSync(() => setMessages(messagesVar.current));
+					if (scrollTop + clientHeight + 50 >= scrollHeight)
+						messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
+				} else
+					refreshContacts();
+			});
+			
+			stomp.subscribe("/topic/chat/public-message", (message) => {
+				refreshContacts();
+				const data = JSON.parse(message.body);
+				if (currentUserVar.current === data.recipient) {
+					axios.get("/api/chat/update-viewed/" + currentUserVar.current)
+						.then(() => refreshContacts());
+					messagesVar.current = [...messagesVar.current, {
+						id: data.id,
+						isMe: data.sender === username,
+						username: data.sender,
+						text: data.content,
+						time: data.time
+					}];
+					const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
+					flushSync(() => setMessages(messagesVar.current));
+					if (scrollTop + clientHeight + 50 >= scrollHeight)
+						messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
+				}
 			});
 		});
+	}, [refreshContacts]);
+	
+	const sendMessage = () => {
+		const content = messageInput.current.value;
+		if (content === "")
+			return;
+		messageInput.current.value = "";
+		stomp.send("/app/chat/send-message", {}, JSON.stringify({
+			recipient: currentUser,
+			content: content,
+		}));
 	}
+	
+	// TODO: 联系人搜索，引用消息，删除消息，复制消息默认复制全文，消息右键框优化，上滑加载更多消息
 	
 	return logged !== false ? (
 		<Grid container sx={{flex: 1, height: 0}} gap={2}>
@@ -267,11 +328,11 @@ export default function Chat() {
 					<List>
 						{users.map((user) => (
 							<ListItemButton
-								key={user["displayName"]}
-								onClick={() => getMessages(user["displayName"])}
-								selected={currentUser === user["displayName"]}
+								key={user.displayName}
+								onClick={() => getMessages(user.displayName)}
+								selected={currentUser === user.displayName}
 							>
-								<UserItem username={user["displayName"]} info={user}/>
+								<UserItem username={user.displayName} info={user}/>
 							</ListItemButton>
 						))}
 					</List>
@@ -287,39 +348,48 @@ export default function Chat() {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
 							setCurrentUser("");
-							currentUserVar = "";
+							currentUserVar.current = "";
 						}} sx={{display: isMobile ? "flex" : "none"}}>
 							<ArrowBack/>
 						</IconButton>
 						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"}>
 							<Typography variant="h6">{currentUser}</Typography>
-							<Typography id="last-online">{lastOnline}</Typography>
+							<Typography>{lastOnline}</Typography>
 						</Grid>
 						<IconButton onClick={() => window.open("/user/" + currentUser)}>
 							<MoreHoriz/>
 						</IconButton>
 					</Grid>
 				</Card>
-				<Card id="message-card" sx={{flex: 1, overflowY: "auto", p: 1}}>
+				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", p: 1}}>
 					{messages.map((message) => (
-						<Box key={message["id"]}>
+						<Box key={message.id}>
 							<Message
-								isMe={message["isMe"]}
-								username={message["username"]}
-								content={message["text"]}
-								timestamp={message["time"]}
+								isMe={message.isMe}
+								username={message.username}
+								content={message.text}
+								timestamp={message.time}
 							/>
 						</Box>
 					))}
 				</Card>
-				<Card>
+				<Card sx={{display: currentUser === "" ? "none" : "block"}}>
 					<TextField
-						id="message-text"
+						inputRef={messageInput}
 						placeholder="Message"
 						multiline
 						fullWidth
-						maxRows={5}
+						maxRows={10}
 						sx={{flex: 1}}
+						onKeyDown={(event) => {
+							if (!isMobile && event.key === "Enter") {
+								event.preventDefault();
+								if (event.ctrlKey)
+									document.execCommand("insertLineBreak");
+								else
+									sendMessage();
+							}
+						}}
 					/>
 					<Grid container justifyContent="space-between">
 						<Box>
@@ -329,7 +399,14 @@ export default function Chat() {
 							<IconButton size="large"><AddReactionOutlined/></IconButton>
 							<IconButton size="large"><SettingsOutlined/></IconButton>
 						</Box>
-						<IconButton sx={{justifySelf: "flex-end"}} size="large" color="primary"><Send/></IconButton>
+						<IconButton
+							size="large"
+							color="primary"
+							sx={{justifySelf: "flex-end"}}
+							onClick={sendMessage}
+						>
+							<Send/>
+						</IconButton>
 					</Grid>
 				</Card>
 			</Grid>
