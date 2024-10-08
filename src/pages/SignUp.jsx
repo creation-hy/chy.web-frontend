@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -37,12 +37,12 @@ const Card = styled(MuiCard)(({theme}) => ({
 export default function SignUp() {
 	document.title = "注册 - chy.web";
 	
-	const [emailError, setEmailError] = React.useState(false);
-	const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-	const [passwordError, setPasswordError] = React.useState(false);
-	const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-	const [nameError, setNameError] = React.useState(false);
-	const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+	const [emailError, setEmailError] = useState(false);
+	const [emailErrorMessage, setEmailErrorMessage] = useState('');
+	const [passwordError, setPasswordError] = useState(false);
+	const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
+	const [nameError, setNameError] = useState(false);
+	const [nameErrorMessage, setNameErrorMessage] = useState('');
 	
 	const register = (event) => {
 		event.preventDefault();

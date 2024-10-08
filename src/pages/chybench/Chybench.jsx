@@ -33,7 +33,7 @@ LinearProgressWithLabel.propTypes = {
 };
 
 function MyProgressLabel({id, label}) {
-	const [checked, setChecked] = React.useState(localStorage.getItem("chybench-" + id) === "true");
+	const [checked, setChecked] = useState(localStorage.getItem("chybench-" + id) === "true");
 	
 	return (
 		<Grid container justifyContent="space-between">
@@ -180,10 +180,10 @@ export default function Chybench() {
 	
 	const [size, setSize] = useState(parseInt(localStorage.getItem("chybench-size") ?? "1"));
 	const [rounds, setRounds] = useState(parseInt(localStorage.getItem("chybench-rounds") ?? "10"));
-	const [cpuSingleProgress, setCPUSingleProgress] = React.useState(0);
-	const [cpuMultiProgress, setCPUMultiProgress] = React.useState(0);
-	const [gpuProgress, setGPUProgress] = React.useState(0);
-	const [memoryProgress, setMemoryProgress] = React.useState(0);
+	const [cpuSingleProgress, setCPUSingleProgress] = useState(0);
+	const [cpuMultiProgress, setCPUMultiProgress] = useState(0);
+	const [gpuProgress, setGPUProgress] = useState(0);
+	const [memoryProgress, setMemoryProgress] = useState(0);
 	
 	const benchmark = async (size, rounds) => {
 		let cpuSingleScore = 0, cpuMultiScore = 0, gpuScore = 0, memoryScore = 0;

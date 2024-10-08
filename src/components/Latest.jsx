@@ -1,4 +1,3 @@
-import * as React from 'react';
 import PropTypes from 'prop-types';
 import Avatar from '@mui/material/Avatar';
 import AvatarGroup from '@mui/material/AvatarGroup';
@@ -8,6 +7,7 @@ import Pagination from '@mui/material/Pagination';
 import Typography from '@mui/material/Typography';
 import {styled} from '@mui/material/styles';
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
+import {useState} from "react";
 
 const articleInfo = [
 	{
@@ -179,7 +179,7 @@ Author.propTypes = {
 };
 
 export default function Latest() {
-	const [focusedCardIndex, setFocusedCardIndex] = React.useState(null);
+	const [focusedCardIndex, setFocusedCardIndex] = useState(null);
 	
 	const handleFocus = (index) => {
 		setFocusedCardIndex(index);

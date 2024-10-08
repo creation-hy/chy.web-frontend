@@ -1,6 +1,5 @@
-import * as React from 'react';
 import {useEffect, useState} from 'react';
-import {alpha, createTheme, styled, ThemeProvider, useTheme} from '@mui/material/styles';
+import {alpha, createTheme, styled, ThemeProvider} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -15,9 +14,10 @@ import Avatar from "@mui/material/Avatar";
 import axios from "axios";
 import Grid from "@mui/material/Grid2";
 import getCustomTheme from "src/theme/getCustomTheme.jsx";
-import {List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer, useMediaQuery} from "@mui/material";
+import {List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
 import {Analytics, Article, Chat, Draw, Forum, Games, Home, Leaderboard} from "@mui/icons-material";
 import {useQuery} from "@tanstack/react-query";
+import {isMobile} from "react-device-detect";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -70,8 +70,6 @@ export function AppAppBar({mode, toggleColorMode}) {
 		queryKey: ["accountCheck"],
 		queryFn: () => axios.get("/api/account/check").then(res => res.data),
 	});
-	
-	const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
 	
 	return (
 		<AppBar

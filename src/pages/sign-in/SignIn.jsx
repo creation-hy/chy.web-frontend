@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -37,11 +37,11 @@ const Card = styled(MuiCard)(({theme}) => ({
 export default function SignIn() {
 	document.title = "登陆 - chy.web";
 	
-	const [usernameError, setUsernameError] = React.useState(false);
-	const [usernameErrorMessage, setUsernameErrorMessage] = React.useState('');
-	const [passwordError, setPasswordError] = React.useState(false);
-	const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-	const [open, setOpen] = React.useState(false);
+	const [usernameError, setUsernameError] = useState(false);
+	const [usernameErrorMessage, setUsernameErrorMessage] = useState('');
+	const [passwordError, setPasswordError] = useState(false);
+	const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
+	const [open, setOpen] = useState(false);
 	
 	const handleClickOpen = () => {
 		setOpen(true);

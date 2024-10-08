@@ -1,12 +1,10 @@
-import * as React from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import {Facebook, GitHub, Instagram, Pinterest, Twitter, YouTube} from "@mui/icons-material";
-import {useMediaQuery} from "@mui/material";
-import {useTheme} from "@mui/material/styles";
+import {isMobile} from "react-device-detect";
 
 function Copyright() {
 	return (
@@ -20,8 +18,6 @@ function Copyright() {
 }
 
 export default function Footer() {
-	const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
-	
 	return (
 		<Container
 			id="footer"

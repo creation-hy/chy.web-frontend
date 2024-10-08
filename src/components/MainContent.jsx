@@ -1,4 +1,4 @@
-import * as React from 'react';
+import {useState} from 'react';
 import PropTypes from 'prop-types';
 import Avatar from '@mui/material/Avatar';
 import AvatarGroup from '@mui/material/AvatarGroup';
@@ -175,7 +175,7 @@ export function Search() {
 }
 
 export default function MainContent() {
-	const [focusedCardIndex, setFocusedCardIndex] = React.useState(null);
+	const [focusedCardIndex, setFocusedCardIndex] = useState(null);
 	
 	const handleFocus = (index) => {
 		setFocusedCardIndex(index);
