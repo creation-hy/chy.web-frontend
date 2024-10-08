@@ -68,9 +68,7 @@ function InfoContainer({value, username}) {
 							</Typography>
 						</Grid>
 						<Box fontSize={16} sx={{wordWrap: "break-word"}}>
-							<Markdown>
-								{item["html"]}
-							</Markdown>
+							<Markdown>{item["content"].replace(/\n/g, "  \n")}</Markdown>
 						</Box>
 					</Grid>
 				))}
