@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
-import React from "react";
+import React, {useState} from "react";
 import {Alert, Input, InputLabel, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
@@ -133,11 +133,11 @@ export default function User() {
 	
 	document.title = username + "的主页 - chy.web";
 	
-	const [value, setValue] = React.useState(0);
-	const [modifying, setModifying] = React.useState(false);
-	const [inited, setInited] = React.useState(false);
-	const [isMe, setIsMe] = React.useState(false);
-	const [isFollowing, setIsFollowing] = React.useState(null);
+	const [value, setValue] = useState(0);
+	const [modifying, setModifying] = useState(false);
+	const [inited, setInited] = useState(false);
+	const [isMe, setIsMe] = useState(false);
+	const [isFollowing, setIsFollowing] = useState(null);
 	
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
@@ -235,10 +235,10 @@ export default function User() {
 							<MenuItem value="男の娘">男の娘</MenuItem>
 							<MenuItem value="假小子">假小子</MenuItem>
 							<MenuItem value="Futanari">Futanari</MenuItem>
-							<MenuItem value="MTF">MTF</MenuItem>
-							<MenuItem value="MTX">MTX</MenuItem>
-							<MenuItem value="FTM">FTM</MenuItem>
-							<MenuItem value="FTX">FTX</MenuItem>
+							<MenuItem value="MtF">MtF</MenuItem>
+							<MenuItem value="MtX">MtX</MenuItem>
+							<MenuItem value="FtM">FtM</MenuItem>
+							<MenuItem value="FtX">FtX</MenuItem>
 							<MenuItem value="Intersex">Intersex</MenuItem>
 							<MenuItem value="无">无</MenuItem>
 							<MenuItem value="汉堡王">汉堡王</MenuItem>
@@ -249,7 +249,7 @@ export default function User() {
 					</Box><br/>
 					<Box>
 						<InputLabel id="intro-label">简介</InputLabel>
-						<TextField fullWidth multiline name="intro" defaultValue={!isLoading && data["intro"]}/>
+						<TextField fullWidth multiline name="intro" defaultValue={!isLoading && data["intro"]} maxRows={10}/>
 					</Box>
 				</DialogContent>
 				<DialogActions>
