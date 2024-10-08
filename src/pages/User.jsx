@@ -67,7 +67,7 @@ function InfoContainer({value, username}) {
 								{item["time"]}
 							</Typography>
 						</Grid>
-						<Box fontSize={16} sx={{wordWrap: "break-word"}}>
+						<Box fontSize={16} sx={{wordBreak: 'break-word'}}>
 							<Markdown>{item["content"].replace(/\n/g, "  \n")}</Markdown>
 						</Box>
 					</Grid>
@@ -189,7 +189,9 @@ export default function User() {
 						</Grid>
 						<Box sx={{color: 'text.secondary'}} id="intro">
 							<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
-							<Markdown>{!isLoading ? data["intro"] : null}</Markdown>
+							<Markdown sx={{wordBreak: 'break-word'}}>
+								{!isLoading ? data["intro"] : null}
+							</Markdown>
 						</Box>
 					</Grid>
 				</CardContent>
