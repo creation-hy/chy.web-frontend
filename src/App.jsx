@@ -11,7 +11,6 @@ import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import Container from "@mui/material/Container";
 import {AppAppBar, AppBarInit} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
-import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
 import Footer from "src/components/Footer.jsx";
@@ -22,6 +21,7 @@ import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
 import Error from "src/pages/Error.jsx";
 import Minesweeper from "src/pages/minesweeper/Minesweeper.jsx";
 import Box from "@mui/material/Box";
+import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 
 export default function App() {
 	const [mode, toggleColorMode] = AppBarInit();
@@ -34,8 +34,8 @@ export default function App() {
 				defaultOptions: {
 					queries: {
 						staleTime: 60 * 1000,
-					}
-				}
+					},
+				},
 			})}>
 				<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
 					<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>

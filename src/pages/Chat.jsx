@@ -40,6 +40,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import {isMobile} from "react-device-detect";
 import {enqueueSnackbar} from "notistack";
+import Chip from "@mui/material/Chip";
 
 function UserItem({username, info}) {
 	return (
@@ -101,42 +102,54 @@ UserItem.propTypes = {
 	info: PropTypes.any,
 }
 
-const Message = ({messageId, isMe, username, content, timestamp, messagesRef}) => {
+const Message = ({messageId, isMe, username, content, quote, timestamp, messagesRef, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const [contentState, setContent] = useState(content);
 	const queryClient = useQueryClient();
 	
 	return (
-		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}}>
+		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
 			{!isMe && <IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/usericon/" + username + ".png"} alt={username}/></IconButton>}
-			<Paper
-				elevation={3}
-				sx={{
-					padding: '8px 16px',
-					borderRadius: '16px',
-					maxWidth: '60%',
-					backgroundColor: isMe ? '#1976d2' : 'normal',
-					color: isMe ? 'white' : 'normal',
-					wordBreak: 'break-word',
-					userSelect: isMobile ? "none" : "auto",
-				}}
-				onContextMenu={(event) => {
-					event.preventDefault();
-					setContextMenu(contextMenu ? null : {
-						mouseX: event.clientX + 2,
-						mouseY: event.clientY - 6,
-					});
-				}}
-			>
-				<Box>
-					<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
-					<Markdown>{contentState.replace(/\n/g, "  \n")}</Markdown>
-				</Box>
-				<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
-					{new Date(timestamp).toLocaleString()}
-				</Typography>
-			</Paper>
+			<Grid container direction="column" sx={{maxWidth: "60%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
+				<Paper
+					elevation={3}
+					sx={{
+						padding: '8px 16px',
+						borderRadius: '16px',
+						backgroundColor: isMe ? '#1976d2' : 'normal',
+						color: isMe ? 'white' : 'normal',
+						wordBreak: 'break-word',
+						userSelect: isMobile ? "none" : "auto",
+					}}
+					onContextMenu={(event) => {
+						event.preventDefault();
+						setContextMenu(contextMenu ? null : {
+							mouseX: event.clientX + 2,
+							mouseY: event.clientY - 6,
+						});
+					}}
+				>
+					<Box>
+						<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
+						<Markdown>{contentState.replace(/\n/g, "  \n")}</Markdown>
+					</Box>
+					<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
+						{new Date(timestamp).toLocaleString()}
+					</Typography>
+				</Paper>
+				{quote != null &&
+					<Chip
+						variant="outlined"
+						avatar={<Avatar alt={quote.username} src={"/usericon/" + quote.username + ".png"}/>}
+						label={quote.content}
+						onClick={() => {
+							if (document.getElementById("message-" + quote.id))
+								document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"});
+						}}
+					/>
+				}
+			</Grid>
 			{isMe && <IconButton sx={{ml: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/usericon/" + username + ".png"} alt={username}/></IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
 				<DialogContent>
@@ -162,7 +175,11 @@ const Message = ({messageId, isMe, username, content, timestamp, messagesRef}) =
 					</Typography>
 				</MenuItem>
 				<MenuItem onClick={() => {
-				
+					setQuote({
+						id: messageId,
+						username: username,
+						content: contentState,
+					});
 				}}>
 					<ListItemIcon>
 						<FormatQuoteOutlined/>
@@ -204,8 +221,10 @@ Message.propTypes = {
 	isMe: PropTypes.bool,
 	username: PropTypes.string,
 	content: PropTypes.string,
+	quote: PropTypes.object,
 	timestamp: PropTypes.string,
 	messagesRef: PropTypes.object,
+	setQuote: PropTypes.func,
 }
 
 export default function Chat() {
@@ -218,6 +237,7 @@ export default function Chat() {
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [stomp, setStomp] = useState(null);
+	const [quote, setQuote] = useState(null);
 	const queryClient = useQueryClient();
 	const messageCard = useRef(null), messageInput = useRef(null);
 	const currentUserRef = useRef("");
@@ -229,17 +249,20 @@ export default function Chat() {
 	}, [queryClient]);
 	
 	const getMessages = (username) => {
+		if (currentUserRef.current === username)
+			return;
 		currentUserRef.current = username;
 		setCurrentUser(username);
+		setQuote(null);
 		if (isMobile) {
 			document.getElementById("contacts").style.display = "none";
 			document.getElementById("chat-main").style.display = "flex";
 		}
 		axios.get("/api/chat/message/" + username + "/-1").then(res => {
 			refreshContacts();
-			messagesRef.current = res.data["result"]["message"];
+			messagesRef.current = res.data.result["message"];
 			flushSync(() => {
-				setLastOnline(res.data["result"]["onlineStatus"]);
+				setLastOnline(res.data.result["onlineStatus"]);
 				setMessages(messagesRef.current);
 			});
 			messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
@@ -280,10 +303,11 @@ export default function Chat() {
 		}).then(() => refreshContacts());
 		messagesRef.current = [...messagesRef.current, {
 			id: data.id,
-			isMe: data.sender === myname,
 			username: data.sender,
+			isMe: data.sender === myname,
 			text: data.content,
-			time: data.time
+			quote: data.quote,
+			time: data.time,
 		}];
 		
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
@@ -310,7 +334,7 @@ export default function Chat() {
 				refreshContacts();
 				const data = JSON.parse(message.body);
 				if (data.username === currentUserRef.current)
-					setLastOnline(data.online);
+					setLastOnline("对方上次上线：" + data["lastOnline"]);
 			});
 			
 			// TODO: 新消息浏览器提示
@@ -323,12 +347,21 @@ export default function Chat() {
 			});
 			
 			stomp.subscribe("/topic/chat/public-message", (message) => {
-				refreshContacts();
 				const data = JSON.parse(message.body);
 				if (currentUserRef.current === data.recipient)
 					newMessage(data);
 				else
 					refreshContacts();
+			});
+			
+			stomp.subscribe(`/user/${myname}/queue/chat/delete-message`, (message) => {
+				const item = messagesRef.current.find(item => item.id === Number(message.body));
+				if (item) {
+					item.text = "消息已撤回";
+					item.id = -item.id;
+					setMessages(messagesRef.current);
+					refreshContacts();
+				}
 			});
 		});
 	}, [myname, newMessage, refreshContacts]);
@@ -338,13 +371,15 @@ export default function Chat() {
 		if (content === "")
 			return;
 		messageInput.current.value = "";
+		setQuote(null);
 		stomp.send("/app/chat/send-message", {}, JSON.stringify({
 			recipient: currentUser,
 			content: content,
+			quoteId: quote == null ? null : quote.id,
 		}));
 	}
 	
-	// TODO: 联系人搜索，引用消息，删除消息，复制消息默认复制全文，消息右键框优化，上滑加载更多消息
+	// TODO: 联系人搜索，上滑加载更多消息
 	
 	return logged !== false ? (
 		<Grid container sx={{flex: 1, height: 0}} gap={2}>
@@ -377,19 +412,16 @@ export default function Chat() {
 				</Box>
 			</Card>
 			<Grid container id="chat-main" direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex"}} gap={1.5}>
-				<Card>
-					<Grid
-						container direction="row" justifyContent="space-between" alignItems="center"
-						sx={{display: currentUser === "" ? "none" : "flex"}} padding={isMobile ? 1 : 2}
-					>
-						<IconButton onClick={() => {
+				<Card sx={{display: currentUser === "" ? "none" : "block"}}>
+					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 2}>
+						{isMobile && <IconButton onClick={() => {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
 							setCurrentUser("");
 							currentUserRef.current = "";
-						}} sx={{display: isMobile ? "flex" : "none"}}>
+						}}>
 							<ArrowBack/>
-						</IconButton>
+						</IconButton>}
 						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"}>
 							<Typography variant="h6">{currentUser}</Typography>
 							<Typography>{lastOnline}</Typography>
@@ -407,12 +439,24 @@ export default function Chat() {
 							isMe={message.isMe}
 							username={message.username}
 							content={message.text}
+							quote={message.quote}
 							timestamp={message.time}
 							messagesRef={messagesRef}
+							setQuote={setQuote}
 						/>
 					))}
 				</Card>
-				<Card sx={{display: currentUser === "" ? "none" : "block"}}>
+				<Card sx={{display: currentUser === "" ? "none" : "block", maxWidth: "100%"}}>
+					{quote != null &&
+						<Chip
+							variant="outlined"
+							avatar={<Avatar alt={quote.username} src={"/usericon/" + quote.username + ".png"}/>}
+							label={quote.username + ": " + quote.content}
+							clickable
+							onClick={() => document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"})}
+							onDelete={() => setQuote(null)}
+						/>
+					}
 					<TextField
 						inputRef={messageInput}
 						placeholder="Message"

@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
-import React, {useState} from "react";
+import {useState} from "react";
 import {Alert, Input, InputLabel, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
@@ -45,30 +45,30 @@ function InfoContainer({value, username}) {
 			<Typography fontSize={16}>
 				用户编号：{data["userId"]}<br/>
 				性别：{data["sex"]}<br/>
-				注册时间：{data["regTime"]}
+				注册时间：{new Date(data["regTime"]).toLocaleString()}
 			</Typography>
 		);
 	
 	if (value === 1)
 		return (
 			<Grid container direction="column" spacing={3}>
-				{data["result"].map((item, index) => (
+				{data.result.map((item, index) => (
 					<Grid container direction="column" key={index} sx={{width: "100%"}} gap={1}>
 						<Grid container spacing={1.5} alignItems="center">
-							<Avatar src={"/usericon/" + item["username"] + ".png"} alt={item["username"]}/>
+							<Avatar src={"/usericon/" + item.username + ".png"} alt={item.username}/>
 							<Typography variant="h5" sx={{cursor: "pointer"}} onClick={() => {
-								window.location.href = item["username"];
+								window.location.href = item.username;
 							}}>
 								<Grid container gap={0.5} alignItems="center">
-									{item["username"]}{item["certification"] != null && (<Verified color="primary"/>)}
+									{item.username}{item["certification"] != null && (<Verified color="primary"/>)}
 								</Grid>
 							</Typography>
 							<Typography>
-								{item["time"]}
+								{new Date(item.time).toLocaleString()}
 							</Typography>
 						</Grid>
 						<Box fontSize={16} sx={{wordBreak: 'break-word'}}>
-							<Markdown>{item["content"].replace(/\n/g, "  \n")}</Markdown>
+							<Markdown>{item.content.replace(/\n/g, "  \n")}</Markdown>
 						</Box>
 					</Grid>
 				))}
@@ -77,14 +77,14 @@ function InfoContainer({value, username}) {
 	
 	return (
 		<Grid container direction="column" spacing={3}>
-			{data["result"].map((item, index) => (
+			{data.result.map((item, index) => (
 				<Grid container key={index} alignItems="center" spacing={1.5}>
-					<Avatar src={"/usericon/" + item["username"] + ".png"} alt={item["username"]}/>
+					<Avatar src={"/usericon/" + item.username + ".png"} alt={item.username}/>
 					<Typography variant="h5" sx={{cursor: "pointer"}} onClick={() => {
-						window.location.href = item["username"];
+						window.location.href = item.username;
 					}}>
 						<Grid container gap={0.5} alignItems="center">
-							{item["username"]}{item["certification"] != null && (<Verified color="primary"/>)}
+							{item.username}{item["certification"] != null && (<Verified color="primary"/>)}
 						</Grid>
 					</Typography>
 				</Grid>
@@ -100,10 +100,10 @@ InfoContainer.propTypes = {
 
 const doFollow = (username, setIsFollowing) => {
 	axios.post("/api/user/" + username + "/follow").then(res => {
-		enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 0 ? "error" : "success"});
-		if (res.data["status"] === 1)
+		enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
+		if (res.data.status === 1)
 			setIsFollowing(true);
-		else if (res.data["status"] === 2)
+		else if (res.data.status === 2)
 			setIsFollowing(false);
 	})
 };

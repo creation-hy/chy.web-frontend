@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {alpha, createTheme, styled, ThemeProvider} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
@@ -37,18 +37,6 @@ export function AppBarInit() {
 	if (localStorage.getItem('themeMode') == null)
 		localStorage.setItem('themeMode', 'light');
 	const [mode, setMode] = useState(localStorage.getItem('themeMode'));
-	
-	useEffect(() => {
-		const savedMode = localStorage.getItem('themeMode');
-		if (savedMode) {
-			setMode(savedMode);
-		} else {
-			const systemPrefersDark = window.matchMedia(
-				'(prefers-color-scheme: dark)',
-			).matches;
-			setMode(systemPrefersDark ? 'dark' : 'light');
-		}
-	}, []);
 	
 	const toggleColorMode = () => {
 		const newMode = mode === 'dark' ? 'light' : 'dark';
