@@ -1,7 +1,7 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
-import {Alert, Badge, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, useMediaQuery} from "@mui/material";
+import {Alert, Badge, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper} from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
@@ -13,20 +13,19 @@ import {
 	AddPhotoAlternateOutlined,
 	AddReactionOutlined,
 	ArrowBack,
-	ContentCopyOutlined,
 	DeleteOutline,
 	FormatQuoteOutlined,
 	MoreHoriz,
 	SearchOutlined,
 	Send,
 	SettingsOutlined,
-	TitleOutlined
+	TitleOutlined,
+	VisibilityOutlined
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Markdown from "react-markdown";
 import IconButton from "@mui/material/IconButton";
-import {useTheme} from "@mui/material/styles";
 import {flushSync} from "react-dom";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -35,6 +34,12 @@ import MenuItem from "@mui/material/MenuItem";
 import SockJS from "sockjs-client";
 import {Stomp} from "@stomp/stompjs";
 import Cookies from "js-cookie";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import {isMobile} from "react-device-detect";
+import {enqueueSnackbar} from "notistack";
 
 function UserItem({username, info}) {
 	return (
@@ -96,18 +101,15 @@ UserItem.propTypes = {
 	info: PropTypes.any,
 }
 
-const Message = ({isMe, username, content, timestamp}) => {
-	const [selectedText, setSelectedText] = useState("");
+const Message = ({messageId, isMe, username, content, timestamp, messagesRef}) => {
 	const [contextMenu, setContextMenu] = useState(null);
+	const [onDialog, setOnDialog] = useState(false);
+	const [contentState, setContent] = useState(content);
+	const queryClient = useQueryClient();
 	
 	return (
-		<Box
-			display="flex"
-			justifyContent={isMe ? 'flex-end' : 'flex-start'}
-			alignItems="flex-start"
-			mb={2}
-		>
-			{!isMe && <Avatar src={"/usericon/" + username + ".png"} alt={username} sx={{mr: 1.5}}/>}
+		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}}>
+			{!isMe && <IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/usericon/" + username + ".png"} alt={username}/></IconButton>}
 			<Paper
 				elevation={3}
 				sx={{
@@ -117,10 +119,10 @@ const Message = ({isMe, username, content, timestamp}) => {
 					backgroundColor: isMe ? '#1976d2' : 'normal',
 					color: isMe ? 'white' : 'normal',
 					wordBreak: 'break-word',
+					userSelect: isMobile ? "none" : "auto",
 				}}
 				onContextMenu={(event) => {
 					event.preventDefault();
-					setSelectedText(window.getSelection().toString());
 					setContextMenu(contextMenu ? null : {
 						mouseX: event.clientX + 2,
 						mouseY: event.clientY - 6,
@@ -129,54 +131,77 @@ const Message = ({isMe, username, content, timestamp}) => {
 			>
 				<Box>
 					<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
-					<Markdown>{content.replace(/\n/g, "  \n")}</Markdown>
+					<Markdown>{contentState.replace(/\n/g, "  \n")}</Markdown>
 				</Box>
 				<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
 					{new Date(timestamp).toLocaleString()}
 				</Typography>
-				<Menu
-					open={Boolean(contextMenu)}
-					onClose={() => setContextMenu(null)}
-					onClick={() => setContextMenu(null)}
-					anchorReference="anchorPosition"
-					anchorPosition={contextMenu ? {top: contextMenu.mouseY, left: contextMenu.mouseX} : undefined}
-				>
-					<MenuItem onClick={() => navigator.clipboard.writeText(selectedText)}>
-						<ListItemIcon>
-							<ContentCopyOutlined/>
-						</ListItemIcon>
-						<Typography>
-							复制
-						</Typography>
-					</MenuItem>
-					<MenuItem>
-						<ListItemIcon>
-							<FormatQuoteOutlined/>
-						</ListItemIcon>
-						<Typography>
-							引用
-						</Typography>
-					</MenuItem>
-					<MenuItem>
-						<ListItemIcon>
-							<DeleteOutline/>
-						</ListItemIcon>
-						<Typography>
-							删除
-						</Typography>
-					</MenuItem>
-				</Menu>
 			</Paper>
-			{isMe && <Avatar src={"/usericon/" + username + ".png"} alt={username} sx={{ml: 1.5}}/>}
-		</Box>
+			{isMe && <IconButton sx={{ml: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/usericon/" + username + ".png"} alt={username}/></IconButton>}
+			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
+				<DialogContent>
+					<Markdown>{contentState.replace(/\n/g, "  \n")}</Markdown>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>
+				</DialogActions>
+			</Dialog>
+			<Menu
+				open={Boolean(contextMenu)}
+				onClose={() => setContextMenu(null)}
+				onClick={() => setContextMenu(null)}
+				anchorReference="anchorPosition"
+				anchorPosition={contextMenu ? {top: contextMenu.mouseY, left: contextMenu.mouseX} : undefined}
+			>
+				<MenuItem onClick={() => setOnDialog(true)}>
+					<ListItemIcon>
+						<VisibilityOutlined/>
+					</ListItemIcon>
+					<Typography>
+						查看
+					</Typography>
+				</MenuItem>
+				<MenuItem onClick={() => {
+					
+				}}>
+					<ListItemIcon>
+						<FormatQuoteOutlined/>
+					</ListItemIcon>
+					<Typography>
+						引用
+					</Typography>
+				</MenuItem>
+				<MenuItem onClick={() => {
+					axios.get("/api/chat/delete-message/" + messageId).then(res => {
+						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+						if (res.data.status === 1) {
+							queryClient.invalidateQueries({queryKey: ["contacts"]})
+							setContent("消息已撤回");
+							const item = messagesRef.current.find(item => item.id === messageId);
+							if (item)
+								item.text = "消息已撤回";
+						}
+					});
+				}}>
+					<ListItemIcon>
+						<DeleteOutline/>
+					</ListItemIcon>
+					<Typography>
+						删除
+					</Typography>
+				</MenuItem>
+			</Menu>
+		</Grid>
 	);
 };
 
 Message.propTypes = {
+	messageId: PropTypes.number,
 	isMe: PropTypes.bool,
 	username: PropTypes.string,
 	content: PropTypes.string,
 	timestamp: PropTypes.string,
+	messagesRef: PropTypes.object,
 }
 
 export default function Chat() {
@@ -189,19 +214,18 @@ export default function Chat() {
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [stomp, setStomp] = useState(null);
-	const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
 	const queryClient = useQueryClient();
 	const messageCard = useRef(null), messageInput = useRef(null);
-	const currentUserVar = useRef("");
-	const messagesVar = useRef([]);
+	const currentUserRef = useRef("");
+	const messagesRef = useRef([]);
 	const myname = Cookies.get("username");
 	
 	const refreshContacts = useCallback(() => {
-		queryClient.invalidateQueries({queryKey: ["contacts"]})
+		queryClient.invalidateQueries({queryKey: ["contacts"]});
 	}, [queryClient]);
 	
 	const getMessages = (username) => {
-		currentUserVar.current = username;
+		currentUserRef.current = username;
 		setCurrentUser(username);
 		if (isMobile) {
 			document.getElementById("contacts").style.display = "none";
@@ -209,10 +233,10 @@ export default function Chat() {
 		}
 		axios.get("/api/chat/message/" + username + "/-1").then(res => {
 			refreshContacts();
-			messagesVar.current = res.data["result"]["message"];
+			messagesRef.current = res.data["result"]["message"];
 			flushSync(() => {
 				setLastOnline(res.data["result"]["onlineStatus"]);
-				setMessages(messagesVar.current);
+				setMessages(messagesRef.current);
 			});
 			messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
 		});
@@ -239,14 +263,14 @@ export default function Chat() {
 			setPublicChannel(data.result["public"]);
 			setUsers(data.result["users"]);
 		}
-	}, [data, error, isLoading, isMobile]);
+	}, [data, error, isLoading]);
 	
 	const newMessage = useCallback((data) => {
 		Notification.requestPermission().then(() => {
 		});
 		
-		axios.get("/api/chat/update-viewed/" + currentUserVar.current).then(() => refreshContacts());
-		messagesVar.current = [...messagesVar.current, {
+		axios.get("/api/chat/update-viewed/" + currentUserRef.current).then(() => refreshContacts());
+		messagesRef.current = [...messagesRef.current, {
 			id: data.id,
 			isMe: data.sender === myname,
 			username: data.sender,
@@ -255,7 +279,7 @@ export default function Chat() {
 		}];
 		
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
-		flushSync(() => setMessages(messagesVar.current));
+		flushSync(() => setMessages(messagesRef.current));
 		if (scrollTop + clientHeight + 50 >= scrollHeight)
 			messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
 	}, [myname, refreshContacts]);
@@ -270,21 +294,21 @@ export default function Chat() {
 		stomp.connect({}, () => {
 			stomp.subscribe("/topic/chat/online", (message) => {
 				refreshContacts();
-				if (JSON.parse(message.body).username === currentUserVar.current)
+				if (JSON.parse(message.body).username === currentUserRef.current)
 					setLastOnline("对方在线");
 			});
 			
 			stomp.subscribe("/topic/chat/offline", (message) => {
 				refreshContacts();
 				const data = JSON.parse(message.body);
-				if (data.username === currentUserVar.current)
+				if (data.username === currentUserRef.current)
 					setLastOnline(data.online);
 			});
 			
 			// TODO: 新消息浏览器提示
 			stomp.subscribe(`/user/${myname}/queue/chat/message`, (message) => {
 				const data = JSON.parse(message.body);
-				if (myname === data.sender && currentUserVar.current === data.recipient || myname === data.recipient && currentUserVar.current === data.sender)
+				if (myname === data.sender && currentUserRef.current === data.recipient || myname === data.recipient && currentUserRef.current === data.sender)
 					newMessage(data);
 				else
 					refreshContacts();
@@ -293,7 +317,7 @@ export default function Chat() {
 			stomp.subscribe("/topic/chat/public-message", (message) => {
 				refreshContacts();
 				const data = JSON.parse(message.body);
-				if (currentUserVar.current === data.recipient)
+				if (currentUserRef.current === data.recipient)
 					newMessage(data);
 				else
 					refreshContacts();
@@ -354,7 +378,7 @@ export default function Chat() {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
 							setCurrentUser("");
-							currentUserVar.current = "";
+							currentUserRef.current = "";
 						}} sx={{display: isMobile ? "flex" : "none"}}>
 							<ArrowBack/>
 						</IconButton>
@@ -367,16 +391,17 @@ export default function Chat() {
 						</IconButton>
 					</Grid>
 				</Card>
-				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", p: 1}}>
+				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1}}>
 					{messages.map((message) => (
-						<Box key={message.id}>
-							<Message
-								isMe={message.isMe}
-								username={message.username}
-								content={message.text}
-								timestamp={message.time}
-							/>
-						</Box>
+						<Message
+							key={message.id}
+							messageId={message.id}
+							isMe={message.isMe}
+							username={message.username}
+							content={message.text}
+							timestamp={message.time}
+							messagesRef={messagesRef}
+						/>
 					))}
 				</Card>
 				<Card sx={{display: currentUser === "" ? "none" : "block"}}>
