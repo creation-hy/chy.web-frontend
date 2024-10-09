@@ -162,7 +162,7 @@ const Message = ({messageId, isMe, username, content, timestamp, messagesRef}) =
 					</Typography>
 				</MenuItem>
 				<MenuItem onClick={() => {
-					
+				
 				}}>
 					<ListItemIcon>
 						<FormatQuoteOutlined/>
@@ -172,7 +172,11 @@ const Message = ({messageId, isMe, username, content, timestamp, messagesRef}) =
 					</Typography>
 				</MenuItem>
 				<MenuItem onClick={() => {
-					axios.get("/api/chat/delete-message/" + messageId).then(res => {
+					axios.post("/api/chat/delete-message", {id: messageId}, {
+						headers: {
+							"Content-Type": "application/json",
+						},
+					}).then(res => {
 						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 						if (res.data.status === 1) {
 							queryClient.invalidateQueries({queryKey: ["contacts"]})
@@ -269,7 +273,11 @@ export default function Chat() {
 		Notification.requestPermission().then(() => {
 		});
 		
-		axios.get("/api/chat/update-viewed/" + currentUserRef.current).then(() => refreshContacts());
+		axios.post("/api/chat/update-viewed", {target: currentUserRef.current}, {
+			headers: {
+				"Content-Type": "application/json",
+			},
+		}).then(() => refreshContacts());
 		messagesRef.current = [...messagesRef.current, {
 			id: data.id,
 			isMe: data.sender === myname,

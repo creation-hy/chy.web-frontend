@@ -99,7 +99,7 @@ InfoContainer.propTypes = {
 }
 
 const doFollow = (username, setIsFollowing) => {
-	axios.get("/api/user/" + username + "/follow").then(res => {
+	axios.post("/api/user/" + username + "/follow").then(res => {
 		enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 0 ? "error" : "success"});
 		if (res.data["status"] === 1)
 			setIsFollowing(true);
@@ -190,7 +190,7 @@ export default function User() {
 						<Box sx={{color: 'text.secondary'}} id="intro">
 							<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
 							<Markdown sx={{wordBreak: 'break-word'}}>
-								{!isLoading ? data["intro"] : null}
+								{!isLoading ? data["intro"].replace(/\n/g, "  \n") : null}
 							</Markdown>
 						</Box>
 					</Grid>
