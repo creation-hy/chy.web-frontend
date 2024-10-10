@@ -1,7 +1,7 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
-import {Alert, Badge, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper} from "@mui/material";
+import {Alert, Badge, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
@@ -41,6 +41,7 @@ import Button from "@mui/material/Button";
 import {isMobile} from "react-device-detect";
 import {enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
+import DialogTitle from "@mui/material/DialogTitle";
 
 function UserItem({username, info}) {
 	return (
@@ -130,8 +131,11 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, messages
 						});
 					}}
 				>
-					<Box>
-						<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
+					<Box sx={{
+						'& h1, h2, h3, p, ul, li': {
+							margin: 0,
+						}
+					}}>
 						<Markdown>{contentState.replace(/\n/g, "  \n")}</Markdown>
 					</Box>
 					<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
@@ -152,7 +156,14 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, messages
 			</Grid>
 			{isMe && <IconButton sx={{ml: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/usericon/" + username + ".png"} alt={username}/></IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
-				<DialogContent>
+				<DialogTitle>
+					来自{username}的消息
+				</DialogTitle>
+				<DialogContent sx={{
+					'& h1, h2, h3, p, ul, li': {
+						margin: 0,
+					}
+				}}>
 					<Markdown>{contentState.replace(/\n/g, "  \n")}</Markdown>
 				</DialogContent>
 				<DialogActions>
@@ -227,6 +238,25 @@ Message.propTypes = {
 	setQuote: PropTypes.func,
 }
 
+const notify = (title, body, iconId) => {
+	try {
+		Notification.requestPermission().then((result) => {
+			if (result !== "granted") {
+				console.log("呜呜呜把通知权限打开嘛QAQ");
+				return;
+			}
+			navigator.serviceWorker.register("/service-worker.js").then((registration) => {
+				registration.showNotification(title, {
+					body: body,
+					icon: "/usericon/" + iconId + ".png",
+				});
+			});
+		});
+	} catch (e) {
+		console.log("你的浏览器不支持通知，人家也没办法呀……", e);
+	}
+};
+
 export default function Chat() {
 	document.title = "Chat - chy.web";
 	
@@ -238,11 +268,17 @@ export default function Chat() {
 	const [lastOnline, setLastOnline] = useState("");
 	const [stomp, setStomp] = useState(null);
 	const [quote, setQuote] = useState(null);
+	const [onSettings, setOnSettings] = useState(false);
 	const queryClient = useQueryClient();
 	const messageCard = useRef(null), messageInput = useRef(null);
 	const currentUserRef = useRef("");
 	const messagesRef = useRef([]);
+	const settingsRef = useRef(JSON.parse(localStorage.getItem("chatSettings")) || {});
 	const myname = Cookies.get("username");
+	
+	const [settings, setSettings] = useState(JSON.parse(localStorage.getItem("chatSettings")) || {});
+	const settingItems = ["allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
+	const settingItemsDisplay = ["允许通知", "允许公共频道通知", "允许当前联系人通知", "显示消息内容"];
 	
 	const refreshContacts = useCallback(() => {
 		queryClient.invalidateQueries({queryKey: ["contacts"]});
@@ -293,9 +329,6 @@ export default function Chat() {
 	}, [data, error, isLoading]);
 	
 	const newMessage = useCallback((data) => {
-		Notification.requestPermission().then(() => {
-		});
-		
 		axios.post("/api/chat/update-viewed", {target: currentUserRef.current}, {
 			headers: {
 				"Content-Type": "application/json",
@@ -324,6 +357,9 @@ export default function Chat() {
 		setStomp(stomp);
 		
 		stomp.connect({}, () => {
+			stomp.heartbeat.incoming = 10000;
+			stomp.heartbeat.outgoing = 10000;
+			
 			stomp.subscribe("/topic/chat/online", (message) => {
 				refreshContacts();
 				if (JSON.parse(message.body).username === currentUserRef.current)
@@ -337,21 +373,36 @@ export default function Chat() {
 					setLastOnline("对方上次上线：" + data["lastOnline"]);
 			});
 			
-			// TODO: 新消息浏览器提示
 			stomp.subscribe(`/user/${myname}/queue/chat/message`, (message) => {
 				const data = JSON.parse(message.body);
-				if (myname === data.sender && currentUserRef.current === data.recipient || myname === data.recipient && currentUserRef.current === data.sender)
+				if (myname === data.sender && currentUserRef.current === data.recipient ||
+					myname === data.recipient && currentUserRef.current === data.sender) {
 					newMessage(data);
-				else
+					if (settingsRef.current["allowNotification"] !== false && settingsRef.current["allowCurrentNotification"] !== false && data.sender !== myname)
+						notify("[私聊] " + data.sender + "说：",
+							settingsRef.current["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+				} else {
 					refreshContacts();
+					if (settingsRef.current["allowNotification"] !== false && data.sender !== myname)
+						notify("[私聊] " + data.sender + "说：",
+							settingsRef.current["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+				}
 			});
 			
 			stomp.subscribe("/topic/chat/public-message", (message) => {
 				const data = JSON.parse(message.body);
-				if (currentUserRef.current === data.recipient)
+				if (currentUserRef.current === data.recipient) {
 					newMessage(data);
-				else
+					if (settingsRef.current["allowNotification"] !== false && settingsRef.current["allowPublicNotification"] !== false &&
+						settingsRef.current["allowCurrentNotification"] !== false && data.sender !== myname)
+						notify("[公共] " + data.sender + "说：",
+							settingsRef.current["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+				} else {
 					refreshContacts();
+					if (settingsRef.current["allowNotification"] !== false && settingsRef.current["allowPublicNotification"] !== false && data.sender !== myname)
+						notify("[公共] " + data.sender + "说：",
+							settingsRef.current["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+				}
 			});
 			
 			stomp.subscribe(`/user/${myname}/queue/chat/delete-message`, (message) => {
@@ -426,7 +477,7 @@ export default function Chat() {
 							<Typography variant="h6">{currentUser}</Typography>
 							<Typography>{lastOnline}</Typography>
 						</Grid>
-						<IconButton onClick={() => window.open("/user/" + currentUser)}>
+						<IconButton href={"/user/" + currentUser}>
 							<MoreHoriz/>
 						</IconButton>
 					</Grid>
@@ -480,7 +531,7 @@ export default function Chat() {
 							<IconButton size="large"><AddLinkOutlined/></IconButton>
 							<IconButton size="large"><AddPhotoAlternateOutlined/></IconButton>
 							<IconButton size="large"><AddReactionOutlined/></IconButton>
-							<IconButton size="large"><SettingsOutlined/></IconButton>
+							<IconButton size="large" onClick={() => setOnSettings(true)}><SettingsOutlined/></IconButton>
 						</Box>
 						<IconButton
 							size="large"
@@ -493,6 +544,37 @@ export default function Chat() {
 					</Grid>
 				</Card>
 			</Grid>
+			<Dialog open={onSettings} onClose={() => setOnSettings(false)}>
+				<DialogTitle>
+					设置
+				</DialogTitle>
+				<DialogContent>
+					<Grid container direction="column" spacing={1}>
+						{settingItems.map((item, index) => (
+							<Grid container key={item} alignItems="center">
+								<Switch
+									checked={settings[item] !== false}
+									onChange={(event) => {
+										const newSettings = {...settings, [item]: event.currentTarget.checked};
+										setSettings(newSettings);
+										settingsRef.current = newSettings;
+										localStorage.setItem("chatSettings", JSON.stringify(newSettings));
+									}}
+									sx={{
+										'& .MuiSwitch-thumb': {
+											boxShadow: 'none', // 关闭阴影
+										}
+									}}
+								/>
+								<Typography>{settingItemsDisplay[index]}</Typography>
+							</Grid>
+						))}
+					</Grid>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setOnSettings(false)}>关闭</Button>
+				</DialogActions>
+			</Dialog>
 		</Grid>
 	) : <Alert severity="error">请先登录！</Alert>;
 }

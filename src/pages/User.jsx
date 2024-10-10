@@ -187,8 +187,12 @@ export default function User() {
 								</Button>
 							</Box>
 						</Grid>
-						<Box sx={{color: 'text.secondary'}} id="intro">
-							<style>{"h1, h2, h3, p, ul, li { margin: 0 }"}</style>
+						<Box id="intro" sx={{
+							color: 'text.secondary',
+							'& h1, h2, h3, p, ul, li': {
+								margin: 0,
+							}
+						}}>
 							<Markdown sx={{wordBreak: 'break-word'}}>
 								{!isLoading ? data["intro"].replace(/\n/g, "  \n") : null}
 							</Markdown>

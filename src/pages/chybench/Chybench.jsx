@@ -316,7 +316,7 @@ export default function Chybench() {
 					<LinearProgressWithLabel value={memoryProgress}/>
 				</Box>
 			</Grid>
-			<Button variant="contained" startIcon={<Leaderboard/>} onClick={() => window.open(window.location.href + "/ranking")}>排行榜</Button>
+			<Button variant="contained" startIcon={<Leaderboard/>} href={window.location.href + "/ranking"}>排行榜</Button>
 		</Grid>
 	)
 }

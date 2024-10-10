@@ -86,7 +86,7 @@ export default function AIDraw() {
 					<Button variant="contained" type="submit" sx={{flexGrow: 1}} startIcon={<Upload/>}>提交</Button>
 					<Button
 						variant="contained" type="button" sx={{flexGrow: 1}} startIcon={<Visibility/>}
-						onClick={() => window.open("/ai-draw/result")}
+						href={window.location.href + "/result"}
 					>查看结果</Button>
 				</Grid>
 			</Grid>
