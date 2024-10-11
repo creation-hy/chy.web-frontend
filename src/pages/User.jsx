@@ -67,8 +67,14 @@ function InfoContainer({value, username}) {
 								{new Date(item.time).toLocaleString()}
 							</Typography>
 						</Grid>
-						<Box fontSize={16} sx={{wordBreak: 'break-word'}}>
-							<Markdown>{item.content.replace(/\n/g, "  \n")}</Markdown>
+						<Box fontSize={16} sx={{
+							wordBreak: "break-word",
+							whiteSpace: "pre-wrap",
+							'& h1, h2, h3, p, ul, li': {
+								margin: 0,
+							}
+						}}>
+							<Markdown>{item.content}</Markdown>
 						</Box>
 					</Grid>
 				))}
@@ -188,13 +194,15 @@ export default function User() {
 							</Box>
 						</Grid>
 						<Box id="intro" sx={{
+							wordBreak: 'break-word',
+							whiteSpace: 'pre-wrap',
 							color: 'text.secondary',
 							'& h1, h2, h3, p, ul, li': {
 								margin: 0,
 							}
 						}}>
-							<Markdown sx={{wordBreak: 'break-word'}}>
-								{!isLoading ? data["intro"].replace(/\n/g, "  \n") : null}
+							<Markdown>
+								{!isLoading ? data["intro"] : null}
 							</Markdown>
 						</Box>
 					</Grid>

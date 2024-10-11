@@ -39,9 +39,14 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import {isMobile} from "react-device-detect";
-import {enqueueSnackbar} from "notistack";
+import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
+
+const myname = Cookies.get("username");
+
+let currentUserVar = "", messagesVar = [], settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {};
+let socket, stomp;
 
 function UserItem({username, info}) {
 	return (
@@ -103,7 +108,7 @@ UserItem.propTypes = {
 	info: PropTypes.any,
 }
 
-const Message = ({messageId, isMe, username, content, quote, timestamp, messagesRef, setQuote}) => {
+const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const [contentState, setContent] = useState(content);
@@ -132,11 +137,12 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, messages
 					}}
 				>
 					<Box sx={{
+						whiteSpace: "pre-wrap",
 						'& h1, h2, h3, p, ul, li': {
 							margin: 0,
 						}
 					}}>
-						<Markdown>{contentState.replace(/\n/g, "  \n")}</Markdown>
+						<Markdown>{contentState.toString()}</Markdown>
 					</Box>
 					<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
 						{new Date(timestamp).toLocaleString()}
@@ -146,7 +152,7 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, messages
 					<Chip
 						variant="outlined"
 						avatar={<Avatar alt={quote.username} src={"/usericon/" + quote.username + ".png"}/>}
-						label={quote.content}
+						label={quote.username + ": " + quote.content}
 						onClick={() => {
 							if (document.getElementById("message-" + quote.id))
 								document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"});
@@ -160,11 +166,12 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, messages
 					来自{username}的消息
 				</DialogTitle>
 				<DialogContent sx={{
+					whiteSpace: "pre-wrap",
 					'& h1, h2, h3, p, ul, li': {
 						margin: 0,
 					}
 				}}>
-					<Markdown>{contentState.replace(/\n/g, "  \n")}</Markdown>
+					<Markdown>{contentState.toString()}</Markdown>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>
@@ -209,7 +216,7 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, messages
 						if (res.data.status === 1) {
 							queryClient.invalidateQueries({queryKey: ["contacts"]})
 							setContent("消息已撤回");
-							const item = messagesRef.current.find(item => item.id === messageId);
+							const item = messagesVar.find(item => item.id === messageId);
 							if (item)
 								item.text = "消息已撤回";
 						}
@@ -234,7 +241,6 @@ Message.propTypes = {
 	content: PropTypes.string,
 	quote: PropTypes.object,
 	timestamp: PropTypes.string,
-	messagesRef: PropTypes.object,
 	setQuote: PropTypes.func,
 }
 
@@ -266,28 +272,24 @@ export default function Chat() {
 	const [currentUser, setCurrentUser] = useState("");
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
-	const [stomp, setStomp] = useState(null);
 	const [quote, setQuote] = useState(null);
 	const [onSettings, setOnSettings] = useState(false);
-	const queryClient = useQueryClient();
+	const queryClient = useRef(useQueryClient());
 	const messageCard = useRef(null), messageInput = useRef(null);
-	const currentUserRef = useRef("");
-	const messagesRef = useRef([]);
-	const settingsRef = useRef(JSON.parse(localStorage.getItem("chatSettings")) || {});
-	const myname = Cookies.get("username");
+	const disconnectErrorBarKey = useRef(null);
 	
-	const [settings, setSettings] = useState(JSON.parse(localStorage.getItem("chatSettings")) || {});
+	const [settings, setSettings] = useState(settingsVar);
 	const settingItems = ["allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
 	const settingItemsDisplay = ["允许通知", "允许公共频道通知", "允许当前联系人通知", "显示消息内容"];
 	
-	const refreshContacts = useCallback(() => {
-		queryClient.invalidateQueries({queryKey: ["contacts"]});
-	}, [queryClient]);
+	const refreshContacts = () => {
+		queryClient.current.invalidateQueries({queryKey: ["contacts"]});
+	}
 	
-	const getMessages = (username) => {
-		if (currentUserRef.current === username)
+	const getMessages = useCallback((username) => {
+		if (currentUserVar === username)
 			return;
-		currentUserRef.current = username;
+		currentUserVar = username;
 		setCurrentUser(username);
 		setQuote(null);
 		if (isMobile) {
@@ -296,14 +298,14 @@ export default function Chat() {
 		}
 		axios.get("/api/chat/message/" + username + "/-1").then(res => {
 			refreshContacts();
-			messagesRef.current = res.data.result["message"];
+			messagesVar = res.data.result["message"];
 			flushSync(() => {
 				setLastOnline(res.data.result["onlineStatus"]);
-				setMessages(messagesRef.current);
+				setMessages(messagesVar);
 			});
 			messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
 		});
-	}
+	}, []);
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["contacts"],
@@ -328,109 +330,135 @@ export default function Chat() {
 		}
 	}, [data, error, isLoading]);
 	
-	const newMessage = useCallback((data) => {
-		axios.post("/api/chat/update-viewed", {target: currentUserRef.current}, {
-			headers: {
-				"Content-Type": "application/json",
-			},
-		}).then(() => refreshContacts());
-		messagesRef.current = [...messagesRef.current, {
-			id: data.id,
-			username: data.sender,
-			isMe: data.sender === myname,
-			text: data.content,
-			quote: data.quote,
-			time: data.time,
-		}];
-		
-		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
-		flushSync(() => setMessages(messagesRef.current));
-		if (scrollTop + clientHeight + 50 >= scrollHeight)
-			messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
-	}, [myname, refreshContacts]);
-	
-	useEffect(() => {
-		if (myname == null)
-			return;
-		
-		const stomp = Stomp.over(() => new SockJS(window.location.origin + "/api/websocket"));
-		setStomp(stomp);
-		
-		stomp.connect({}, () => {
-			stomp.heartbeat.incoming = 10000;
-			stomp.heartbeat.outgoing = 10000;
-			
-			stomp.subscribe("/topic/chat/online", (message) => {
-				refreshContacts();
-				if (JSON.parse(message.body).username === currentUserRef.current)
-					setLastOnline("对方在线");
-			});
-			
-			stomp.subscribe("/topic/chat/offline", (message) => {
-				refreshContacts();
-				const data = JSON.parse(message.body);
-				if (data.username === currentUserRef.current)
-					setLastOnline("对方上次上线：" + data["lastOnline"]);
-			});
-			
-			stomp.subscribe(`/user/${myname}/queue/chat/message`, (message) => {
-				const data = JSON.parse(message.body);
-				if (myname === data.sender && currentUserRef.current === data.recipient ||
-					myname === data.recipient && currentUserRef.current === data.sender) {
-					newMessage(data);
-					if (settingsRef.current["allowNotification"] !== false && settingsRef.current["allowCurrentNotification"] !== false && data.sender !== myname)
-						notify("[私聊] " + data.sender + "说：",
-							settingsRef.current["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
-				} else {
-					refreshContacts();
-					if (settingsRef.current["allowNotification"] !== false && data.sender !== myname)
-						notify("[私聊] " + data.sender + "说：",
-							settingsRef.current["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
-				}
-			});
-			
-			stomp.subscribe("/topic/chat/public-message", (message) => {
-				const data = JSON.parse(message.body);
-				if (currentUserRef.current === data.recipient) {
-					newMessage(data);
-					if (settingsRef.current["allowNotification"] !== false && settingsRef.current["allowPublicNotification"] !== false &&
-						settingsRef.current["allowCurrentNotification"] !== false && data.sender !== myname)
-						notify("[公共] " + data.sender + "说：",
-							settingsRef.current["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
-				} else {
-					refreshContacts();
-					if (settingsRef.current["allowNotification"] !== false && settingsRef.current["allowPublicNotification"] !== false && data.sender !== myname)
-						notify("[公共] " + data.sender + "说：",
-							settingsRef.current["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
-				}
-			});
-			
-			stomp.subscribe(`/user/${myname}/queue/chat/delete-message`, (message) => {
-				const item = messagesRef.current.find(item => item.id === Number(message.body));
-				if (item) {
-					item.text = "消息已撤回";
-					item.id = -item.id;
-					setMessages(messagesRef.current);
-					refreshContacts();
-				}
-			});
-		});
-	}, [myname, newMessage, refreshContacts]);
-	
-	const sendMessage = () => {
+	const sendMessage = useCallback(() => {
 		const content = messageInput.current.value;
 		if (content === "")
 			return;
 		messageInput.current.value = "";
 		setQuote(null);
 		stomp.send("/app/chat/send-message", {}, JSON.stringify({
-			recipient: currentUser,
+			recipient: currentUserVar,
 			content: content,
 			quoteId: quote == null ? null : quote.id,
 		}));
-	}
+	}, [quote]);
 	
-	// TODO: 联系人搜索，上滑加载更多消息
+	useEffect(() => {
+		const newMessage = (data) => {
+			axios.post("/api/chat/update-viewed", {target: currentUserVar}, {
+				headers: {
+					"Content-Type": "application/json",
+				},
+			}).then(() => refreshContacts());
+			messagesVar = [...messagesVar, {
+				id: data.id,
+				username: data.sender,
+				isMe: data.sender === myname,
+				text: data.content,
+				quote: data.quote,
+				time: data.time,
+			}];
+			
+			const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
+			flushSync(() => setMessages(messagesVar));
+			if (scrollTop + clientHeight + 50 >= scrollHeight)
+				messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
+		};
+		
+		let firstRebirth = true;
+		
+		const stompOnConnect = () => {
+			stomp.heartbeat.incoming = 10000;
+			stomp.heartbeat.outgoing = 10000;
+			
+			firstRebirth = true;
+			
+			if (disconnectErrorBarKey.current) {
+				closeSnackbar(disconnectErrorBarKey.current);
+				getMessages(currentUserVar);
+				disconnectErrorBarKey.current = null;
+			}
+			
+			stomp.subscribe("/topic/chat/online", (message) => {
+				refreshContacts();
+				if (JSON.parse(message.body).username === currentUserVar)
+					setLastOnline("对方在线");
+			});
+			
+			stomp.subscribe("/topic/chat/offline", (message) => {
+				refreshContacts();
+				const data = JSON.parse(message.body);
+				if (data.username === currentUserVar)
+					setLastOnline("对方上次上线：" + data["lastOnline"]);
+			});
+			
+			stomp.subscribe(`/user/${myname}/queue/chat/message`, (message) => {
+				const data = JSON.parse(message.body);
+				if (myname === data.sender && currentUserVar === data.recipient ||
+					myname === data.recipient && currentUserVar === data.sender) {
+					newMessage(data);
+					if (settingsVar["allowNotification"] !== false && settingsVar["allowCurrentNotification"] !== false && data.sender !== myname)
+						notify("[私聊] " + data.sender + "说：",
+							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+				} else {
+					refreshContacts();
+					if (settingsVar["allowNotification"] !== false && data.sender !== myname)
+						notify("[私聊] " + data.sender + "说：",
+							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+				}
+			});
+			
+			stomp.subscribe("/topic/chat/public-message", (message) => {
+				const data = JSON.parse(message.body);
+				if (currentUserVar === data.recipient) {
+					newMessage(data);
+					if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false &&
+						settingsVar["allowCurrentNotification"] !== false && data.sender !== myname)
+						notify("[公共] " + data.sender + "说：",
+							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+				} else {
+					refreshContacts();
+					if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
+						notify("[公共] " + data.sender + "说：",
+							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+				}
+			});
+			
+			stomp.subscribe(`/user/${myname}/queue/chat/delete-message`, (message) => {
+				const item = messagesVar.find(item => item.id === Number(message.body));
+				if (item) {
+					item.text = "消息已撤回";
+					item.id = -item.id;
+					setMessages(messagesVar);
+					refreshContacts();
+				}
+			});
+		};
+		
+		const stompConnect = () => {
+			socket = new SockJS(window.location.origin + "/api/websocket");
+			stomp = Stomp.over(() => socket);
+			stomp.connect({}, stompOnConnect, null, stompReconnect);
+			socket.onclose = stompReconnect;
+		};
+		
+		const stompReconnect = async () => {
+			console.log("正在尝试重连...");
+			if (firstRebirth) {
+				firstRebirth = false;
+				disconnectErrorBarKey.current = enqueueSnackbar("服务器连接已断开，正在尝试重连...", {
+					variant: "error",
+					anchorOrigin: {vertical: "bottom", horizontal: "center"},
+					persist: true,
+				});
+				stompConnect();
+			} else
+				setTimeout(stompConnect, 5000);
+		};
+		stompConnect();
+	}, [getMessages]);
+	
+	// TODO: 联系人搜索，上滑加载更多消息，功能栏的小功能
 	
 	return logged !== false ? (
 		<Grid container sx={{flex: 1, height: 0}} gap={2}>
@@ -469,7 +497,7 @@ export default function Chat() {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
 							setCurrentUser("");
-							currentUserRef.current = "";
+							currentUserVar = "";
 						}}>
 							<ArrowBack/>
 						</IconButton>}
@@ -482,7 +510,7 @@ export default function Chat() {
 						</IconButton>
 					</Grid>
 				</Card>
-				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1}}>
+				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, maxWidth: "100%"}}>
 					{messages.map((message) => (
 						<Message
 							key={message.id}
@@ -492,7 +520,6 @@ export default function Chat() {
 							content={message.text}
 							quote={message.quote}
 							timestamp={message.time}
-							messagesRef={messagesRef}
 							setQuote={setQuote}
 						/>
 					))}
@@ -557,7 +584,7 @@ export default function Chat() {
 									onChange={(event) => {
 										const newSettings = {...settings, [item]: event.currentTarget.checked};
 										setSettings(newSettings);
-										settingsRef.current = newSettings;
+										settingsVar = newSettings;
 										localStorage.setItem("chatSettings", JSON.stringify(newSettings));
 									}}
 									sx={{

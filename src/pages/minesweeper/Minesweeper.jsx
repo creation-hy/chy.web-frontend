@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import DialogActions from "@mui/material/DialogActions";
 import Grid from "@mui/material/Grid2";
 import TextField from "@mui/material/TextField";
@@ -11,6 +11,7 @@ import {Alert} from "@mui/material";
 import {enqueueSnackbar} from "notistack";
 import Typography from "@mui/material/Typography";
 import axios from "axios";
+import PropTypes from "prop-types";
 
 let flippedCount = 0, passedTimeInterval;
 let startTime = 0, rows = 10, mines = 10;
@@ -65,15 +66,66 @@ const getPassedTime = () => {
 	return (hour < 10 ? "0" : "") + hour + ":" + (minute < 10 ? "0" : "") + minute + ":" + (second < 10 ? "0" : "") + second;
 }
 
-export default function Minesweeper() {
+const InitDialog = ({setGrid, setElapsedTime}) => {
 	const [open, setOpen] = useState(true);
+	const rowsRef = useRef(null);
+	const minesRef = useRef(null);
+	
+	return (
+		<Dialog open={open}>
+			<DialogTitle>设置参数</DialogTitle>
+			<DialogContent>
+				<TextField
+					autoFocus
+					margin="dense"
+					label="行数"
+					type="number"
+					fullWidth
+					variant="outlined"
+					inputRef={rowsRef}
+				/>
+				<TextField
+					label="雷数"
+					margin="dense"
+					type="number"
+					fullWidth
+					variant="outlined"
+					inputRef={minesRef}
+				/>
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={() => {
+					rows = Math.max(Number(rowsRef.current.value || 0), 10);
+					mines = Number(minesRef.current.value || 0);
+					mines = Math.max(mines, Math.floor(rows * rows * 0.2));
+					mines = Math.min(mines, Math.floor(rows * rows * 0.98));
+					setGrid(generateGrid(rows, mines));
+					startTime = new Date().getTime();
+					passedTimeInterval = setInterval(() => setElapsedTime(getPassedTime()), 1000);
+					setOpen(false);
+				}}>开始</Button>
+			</DialogActions>
+		</Dialog>
+	);
+};
+
+InitDialog.propTypes = {
+	setGrid: PropTypes.func,
+	setElapsedTime: PropTypes.func,
+}
+
+export default function Minesweeper() {
 	const [grid, setGrid] = useState([]);
+	const [elapsedTime, setElapsedTime] = useState("00:00:00");
+	const boxes = useRef([]);
 	
 	const purge = (x, y) => {
-		const current = document.getElementById("box" + x + "," + y);
-		if (current.style.backgroundColor === "white")
+		const current = boxes.current[x][y];
+		console.log(boxes.current, boxes.current[x], boxes.current[x][y]);
+		if (current.getAttribute("data-opened") === "true")
 			return;
-		current.style.backgroundColor = "white";
+		current.style.backgroundColor = "#dddddb";
+		current.setAttribute("data-opened", "true");
 		current.innerHTML = " ";
 		if (++flippedCount === rows * rows - mines) {
 			const score = getPassedTime();
@@ -116,42 +168,9 @@ export default function Minesweeper() {
 	
 	return (
 		<Box>
-			<Dialog open={open}>
-				<DialogTitle>设置参数</DialogTitle>
-				<DialogContent>
-					<TextField
-						autoFocus
-						margin="dense"
-						label="行数"
-						type="number"
-						fullWidth
-						variant="outlined"
-						id="rows"
-					/>
-					<TextField
-						label="雷数"
-						margin="dense"
-						type="number"
-						fullWidth
-						variant="outlined"
-						id="mines"
-					/>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => {
-						setOpen(false);
-						rows = Math.max(Number(document.getElementById("rows").value), 10);
-						mines = Number(document.getElementById("mines").value);
-						mines = Math.max(mines, Math.floor(rows * rows * 0.2));
-						mines = Math.min(mines, Math.floor(rows * rows * 0.98));
-						setGrid(generateGrid(rows, mines));
-						startTime = new Date().getTime();
-						passedTimeInterval = setInterval(() => document.getElementById("time-passed").innerHTML = getPassedTime(), 1000);
-					}}>开始</Button>
-				</DialogActions>
-			</Dialog>
+			<InitDialog setGrid={setGrid} setElapsedTime={setElapsedTime}/>
 			<Grid container justifyContent="center">
-				<Typography id="time-passed" variant="h3">00:00:00</Typography>
+				<Typography variant="h3">{elapsedTime}</Typography>
 			</Grid><br/>
 			<Grid container direction="column">
 				{grid == null ? <Alert severity="error">你被炸死了！</Alert> :
@@ -161,8 +180,14 @@ export default function Minesweeper() {
 								<Box
 									key={colIndex}
 									id={"box" + rowIndex + "," + colIndex}
+									ref={(el) => {
+										if (!boxes.current[rowIndex])
+											boxes.current[rowIndex] = [];
+										boxes.current[rowIndex][colIndex] = el;
+									}}
 									data-row={rowIndex}
 									data-col={colIndex}
+									data-opened="false"
 									sx={{
 										width: 35,
 										height: 35,
@@ -170,18 +195,17 @@ export default function Minesweeper() {
 										alignItems: "center",
 										justifyContent: "center",
 										cursor: "pointer",
-										border: "1px solid black",
-										borderTopWidth: !rowIndex ? 1 : 0,
-										borderLeftWidth: !colIndex ? 1 : 0,
-										backgroundColor: "#d3d3d3",
+										mt: rowIndex ? "1px" : 0,
+										ml: colIndex ? "1px" : 0,
+										backgroundColor: "#c3c3c3",
+										borderRadius: "7%",
 									}}
 									onContextMenu={(event) => {
 										event.preventDefault();
-										if (event.currentTarget.style.backgroundColor === "white") return false;
+										if (event.currentTarget.getAttribute("data-opened") === "true") return;
 										if (event.currentTarget.innerHTML === "🚩") event.currentTarget.innerHTML = "❓";
 										else if (event.currentTarget.innerHTML === "❓") event.currentTarget.innerHTML = " ";
 										else event.currentTarget.innerHTML = "🚩";
-										return false;
 									}}
 									onClick={(event) => {
 										const x = Number(event.currentTarget.getAttribute("data-row"));
@@ -192,9 +216,7 @@ export default function Minesweeper() {
 										} else
 											purge(x, y);
 									}}
-								>
-									{/* 可以在这里显示数字或状态 */}
-								</Box>
+								/>
 							))}
 						</Grid>
 					))}
