@@ -9,7 +9,7 @@ import User from "src/pages/User.jsx";
 import AIDraw from "src/pages/AIDraw.jsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import Container from "@mui/material/Container";
-import {AppAppBar, AppBarInit} from "src/components/AppAppBar.jsx";
+import {AppAppBar} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -22,12 +22,13 @@ import Error from "src/pages/Error.jsx";
 import Minesweeper from "src/pages/minesweeper/Minesweeper.jsx";
 import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
+import {useColorMode} from "src/theme/ColorMode.jsx";
 
 export default function App() {
-	const [mode, toggleColorMode] = AppBarInit();
+	const [colorMode] = useColorMode();
 	
 	return (
-		<ThemeProvider theme={createTheme(getDefaultTheme(mode))}>
+		<ThemeProvider theme={createTheme(getDefaultTheme(colorMode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
 			<QueryClientProvider client={new QueryClient({
@@ -38,7 +39,7 @@ export default function App() {
 				},
 			})}>
 				<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
-					<AppAppBar mode={mode} toggleColorMode={toggleColorMode}/>
+					<AppAppBar/>
 					<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
 						<BrowserRouter>
 							<Routes>

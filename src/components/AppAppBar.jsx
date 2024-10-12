@@ -9,7 +9,6 @@ import Container from '@mui/material/Container';
 import MenuItem from '@mui/material/MenuItem';
 import MenuIcon from '@mui/icons-material/Menu';
 import ToggleColorMode from "./ToggleColorMode.jsx";
-import PropTypes from "prop-types";
 import Avatar from "@mui/material/Avatar";
 import axios from "axios";
 import Grid from "@mui/material/Grid2";
@@ -18,6 +17,7 @@ import {List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from 
 import {Analytics, Article, Chat, Draw, Forum, Games, Home, Leaderboard} from "@mui/icons-material";
 import {useQuery} from "@tanstack/react-query";
 import {isMobile} from "react-device-detect";
+import {useColorMode} from "src/theme/ColorMode.jsx";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -33,22 +33,9 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	padding: '8px 12px',
 }));
 
-export function AppBarInit() {
-	if (localStorage.getItem('themeMode') == null)
-		localStorage.setItem('themeMode', 'light');
-	const [mode, setMode] = useState(localStorage.getItem('themeMode'));
-	
-	const toggleColorMode = () => {
-		const newMode = mode === 'dark' ? 'light' : 'dark';
-		setMode(newMode);
-		localStorage.setItem('themeMode', newMode);
-	};
-	
-	return [mode, toggleColorMode];
-}
-
-export function AppAppBar({mode, toggleColorMode}) {
+export const AppAppBar = () => {
 	const [open, setOpen] = useState(false);
+	const [colorMode, toggleColorMode] = useColorMode();
 	
 	const toggleDrawer = (newOpen) => () => {
 		setOpen(newOpen);
@@ -67,7 +54,7 @@ export function AppAppBar({mode, toggleColorMode}) {
 			<Container maxWidth="lg">
 				<StyledToolbar variant="dense" disableGutters>
 					<Box sx={{flexGrow: 1, display: 'flex', alignItems: 'center', px: 0}}>
-						<ThemeProvider theme={createTheme(getCustomTheme(mode))}>
+						<ThemeProvider theme={createTheme(getCustomTheme(colorMode))}>
 							<Box sx={{display: {xs: 'none', md: 'flex'}}}>
 								<Avatar src="/favicon.ico" sx={{width: 35, height: 35, mr: 1}}/>
 								<Button variant="text" size="small" href="/">
@@ -128,7 +115,7 @@ export function AppAppBar({mode, toggleColorMode}) {
 						) : (<Box/>))}
 						<ToggleColorMode
 							data-screenshot="toggle-mode"
-							mode={mode}
+							mode={colorMode}
 							toggleColorMode={toggleColorMode}
 						/>
 					</Box>
@@ -136,7 +123,7 @@ export function AppAppBar({mode, toggleColorMode}) {
 						<Grid container spacing={1} justify="center" alignItems="center">
 							<ToggleColorMode
 								data-screenshot="toggle-mode"
-								mode={mode}
+								mode={colorMode}
 								toggleColorMode={toggleColorMode}
 							/>
 							<IconButton aria-label="Menu button" onClick={toggleDrawer(true)} sx={{width: 36, height: 36}}>
@@ -237,8 +224,3 @@ export function AppAppBar({mode, toggleColorMode}) {
 		</AppBar>
 	);
 }
-
-AppAppBar.propTypes = {
-	mode: PropTypes.oneOf(['dark', 'light']).isRequired,
-	toggleColorMode: PropTypes.func.isRequired
-};
