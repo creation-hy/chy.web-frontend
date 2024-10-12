@@ -42,7 +42,7 @@ import {isMobile} from "react-device-detect";
 import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
-import EmojiPicker from "emoji-picker-react";
+import Picker from "@emoji-mart/react";
 import {useColorMode} from "src/theme/ColorMode.jsx";
 import Select from "@mui/material/Select";
 import gfm from "remark-gfm";
@@ -323,7 +323,9 @@ const ChatToolBar = (inputField) => {
 					<Button onClick={() => handleSpecialFont(false)}>关闭</Button>
 					<Button onClick={() => {
 						flushSync(() => handleSpecialFont(false));
-						if (fontStyle.charAt(0) === '#') {
+						if (fontStyle === '' && fontTextRef.current.value === '')
+							inputField.inputField.current.value += ' ';
+						else if (fontStyle.charAt(0) === '#') {
 							const lines = inputField.inputField.current.value.split('\n');
 							inputField.inputField.current.focus();
 							if (lines[lines.length - 1].trim() !== '')
@@ -347,8 +349,8 @@ const ChatToolBar = (inputField) => {
 				<DialogActions>
 					<Button onClick={() => handleAddLink(false)}>关闭</Button>
 					<Button onClick={() => {
-						inputField.inputField.current.value += "[" + linkTextRef.current.value + "](" + linkHrefRef.current.value + ")";
 						flushSync(() => handleAddLink(false));
+						inputField.inputField.current.value += "[" + linkTextRef.current.value + "](" + linkHrefRef.current.value + ")";
 						inputField.inputField.current.focus();
 					}}>确认</Button>
 				</DialogActions>
@@ -370,14 +372,12 @@ const ChatToolBar = (inputField) => {
 					}}>确认</Button>
 				</DialogActions>
 			</Dialog>
-			<Dialog open={onEmojiPicker} onClose={() => handleEmojiPicker(false)}>
-				<EmojiPicker
-					emojiStyle="native"
+			<Dialog open={onEmojiPicker} onClose={() => handleEmojiPicker(false)} PaperProps={{sx: {borderRadius: "10px", margin: 0}}}>
+				<Picker
 					theme={colorMode}
-					style={{maxWidth: "100%"}}
-					autoFocusSearch={false}
-					onEmojiClick={(emoji) => {
-						inputField.inputField.current.value += emoji.emoji;
+					locale="zh"
+					onEmojiSelect={(emoji) => {
+						inputField.inputField.current.value += emoji.native;
 						flushSync(() => handleEmojiPicker(false));
 						inputField.inputField.current.focus();
 					}}
@@ -457,7 +457,7 @@ export default function Chat() {
 				setLastOnline(res.data.result["onlineStatus"]);
 				setMessages(messagesVar);
 			});
-			messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
+			setTimeout(() => messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"}), 0);
 		});
 	}, []);
 	
@@ -516,7 +516,7 @@ export default function Chat() {
 			const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
 			flushSync(() => setMessages(messagesVar));
 			if (scrollTop + clientHeight + 50 >= scrollHeight)
-				messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"});
+				setTimeout(() => messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"}), 0);
 		};
 		
 		let firstRebirth = true;
@@ -607,7 +607,7 @@ export default function Chat() {
 				});
 				stompConnect();
 			} else
-				setTimeout(stompConnect, 5000);
+				setTimeout(stompConnect, 1000);
 		};
 		stompConnect();
 	}, [getMessages]);
