@@ -1,3 +1,19 @@
 html, body, #root {
 	height: 100%;
 }
+
+.my-markdown {
+	white-space: pre-wrap;
+	word-break: break-word;
+
+	& * {
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+
+	& blockquote {
+		border-left: 0.5em solid lightgrey;
+		margin: 0;
+		padding: 0 1em;
+	}
+}

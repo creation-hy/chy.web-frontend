@@ -67,13 +67,7 @@ function InfoContainer({value, username}) {
 								{new Date(item.time).toLocaleString()}
 							</Typography>
 						</Grid>
-						<Box fontSize={16} sx={{
-							wordBreak: "break-word",
-							whiteSpace: "pre-wrap",
-							'& h1, h2, h3, p, ul, li': {
-								margin: 0,
-							}
-						}}>
+						<Box fontSize={16} className="my-markdown">
 							<Markdown>{item.content}</Markdown>
 						</Box>
 					</Grid>
@@ -193,14 +187,7 @@ export default function User() {
 								</Button>
 							</Box>
 						</Grid>
-						<Box id="intro" sx={{
-							wordBreak: 'break-word',
-							whiteSpace: 'pre-wrap',
-							color: 'text.secondary',
-							'& h1, h2, h3, p, ul, li': {
-								margin: 0,
-							}
-						}}>
+						<Box id="intro" sx={{color: 'text.secondary'}} className="my-markdown">
 							<Markdown>
 								{!isLoading ? data["intro"] : null}
 							</Markdown>

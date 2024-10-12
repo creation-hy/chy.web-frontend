@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import {useState} from "react";
 import axios from "axios";
 import {useQuery} from "@tanstack/react-query";
+import FormControl from "@mui/material/FormControl";
 
 export default function ChybenchRanking() {
 	document.title = "排行榜 - Chybench - chy.web";
@@ -50,14 +51,15 @@ export default function ChybenchRanking() {
 	
 	return (
 		<Box>
-			<Grid container justifyContent="center" spacing={3.5}>
-				<Box>
-					<InputLabel htmlFor="select-size">
-						测试项目
+			<Grid container justifyContent="center" spacing={2}>
+				<FormControl>
+					<InputLabel id="select-item">
+						项目
 					</InputLabel>
 					<Select
-						id="select-item"
+						labelId="select-item"
 						variant="outlined"
+						label="项目"
 						value={rankingItem}
 						onChange={(event) => setItem(event.target.value)}
 					>
@@ -66,14 +68,15 @@ export default function ChybenchRanking() {
 						<MenuItem value="multi_sc">CPU多核</MenuItem>
 						<MenuItem value="memsc">Memory</MenuItem>
 					</Select>
-				</Box>
-				<Box>
-					<InputLabel htmlFor="select-size">
-						负载大小
+				</FormControl>
+				<FormControl>
+					<InputLabel id="select-size">
+						负载
 					</InputLabel>
 					<Select
-						id="select-size"
+						labelId="select-size"
 						variant="outlined"
+						label="负载"
 						value={rankingSize}
 						onChange={(event) => setSize(event.target.value)}
 					>
@@ -81,7 +84,7 @@ export default function ChybenchRanking() {
 						<MenuItem value={1}>中</MenuItem>
 						<MenuItem value={2}>低</MenuItem>
 					</Select>
-				</Box>
+				</FormControl>
 			</Grid><br/>
 			<RankingTable/>
 		</Box>

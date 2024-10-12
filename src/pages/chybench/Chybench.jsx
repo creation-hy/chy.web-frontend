@@ -6,12 +6,13 @@ import Grid from "@mui/material/Grid2";
 import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import {LinearProgress, Switch} from "@mui/material";
+import {InputLabel, LinearProgress, Switch} from "@mui/material";
 import PropTypes from "prop-types";
 import React, {useState} from "react";
 import {Leaderboard, PlayArrow} from "@mui/icons-material";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
+import FormControl from "@mui/material/FormControl";
 
 function LinearProgressWithLabel(props) {
 	return (
@@ -278,22 +279,40 @@ export default function Chybench() {
 				</Typography>
 			</Card>
 			<Grid container spacing={2}>
-				<Select variant="outlined" value={size} onChange={(event) => {
-					setSize(Number(event.target.value));
-					localStorage.setItem("chybench-size", event.target.value.toString());
-				}}>
-					<MenuItem value={0}>高负载</MenuItem>
-					<MenuItem value={1}>中负载</MenuItem>
-					<MenuItem value={2}>低负载</MenuItem>
-				</Select>
-				<Select variant="outlined" value={rounds} onChange={(event) => {
-					setRounds(Number(event.target.value));
-					localStorage.setItem("chybench-rounds", event.target.value.toString());
-				}}>
-					<MenuItem value={3}>快速测试</MenuItem>
-					<MenuItem value={10}>常规测试</MenuItem>
-					<MenuItem value={30}>深度测试</MenuItem>
-				</Select>
+				<FormControl>
+					<InputLabel id="size-label">负载</InputLabel>
+					<Select
+						labelId="size-label"
+						label="负载"
+						variant="outlined"
+						value={size}
+						onChange={(event) => {
+							setSize(Number(event.target.value));
+							localStorage.setItem("chybench-size", event.target.value.toString());
+						}}
+					>
+						<MenuItem value={0}>高</MenuItem>
+						<MenuItem value={1}>中</MenuItem>
+						<MenuItem value={2}>低</MenuItem>
+					</Select>
+				</FormControl>
+				<FormControl>
+					<InputLabel id="rounds-label">测试时间</InputLabel>
+					<Select
+						labelId="rounds-label"
+						label="测试时间"
+						variant="outlined"
+						value={rounds}
+						onChange={(event) => {
+							setRounds(Number(event.target.value));
+							localStorage.setItem("chybench-rounds", event.target.value.toString());
+						}}
+					>
+						<MenuItem value={3}>快速</MenuItem>
+						<MenuItem value={10}>常规</MenuItem>
+						<MenuItem value={30}>深度</MenuItem>
+					</Select>
+				</FormControl>
 				<Button variant="contained" onClick={() => benchmark(size, rounds)}>
 					<PlayArrow/>
 				</Button>

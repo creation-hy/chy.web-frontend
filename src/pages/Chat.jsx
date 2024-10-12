@@ -1,7 +1,7 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
-import {Alert, Badge, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
+import {Alert, Badge, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
@@ -14,12 +14,12 @@ import {
 	AddReactionOutlined,
 	ArrowBack,
 	DeleteOutline,
+	FontDownloadOutlined,
 	FormatQuoteOutlined,
 	MoreHoriz,
 	SearchOutlined,
 	Send,
 	SettingsOutlined,
-	TitleOutlined,
 	VisibilityOutlined
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
@@ -42,6 +42,11 @@ import {isMobile} from "react-device-detect";
 import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
+import EmojiPicker from "emoji-picker-react";
+import {useColorMode} from "src/theme/ColorMode.jsx";
+import Select from "@mui/material/Select";
+import gfm from "remark-gfm";
+import FormControl from "@mui/material/FormControl";
 
 const myname = Cookies.get("username");
 
@@ -136,13 +141,8 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 						});
 					}}
 				>
-					<Box sx={{
-						whiteSpace: "pre-wrap",
-						'& h1, h2, h3, p, ul, li': {
-							margin: 0,
-						}
-					}}>
-						<Markdown>{contentState.toString()}</Markdown>
+					<Box className="my-markdown">
+						<Markdown remarkPlugins={[gfm]}>{contentState.toString()}</Markdown>
 					</Box>
 					<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
 						{new Date(timestamp).toLocaleString()}
@@ -165,13 +165,8 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 				<DialogTitle>
 					来自{username}的消息
 				</DialogTitle>
-				<DialogContent sx={{
-					whiteSpace: "pre-wrap",
-					'& h1, h2, h3, p, ul, li': {
-						margin: 0,
-					}
-				}}>
-					<Markdown>{contentState.toString()}</Markdown>
+				<DialogContent className="my-markdown">
+					<Markdown remarkPlugins={[gfm]}>{contentState.toString()}</Markdown>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>
@@ -263,6 +258,170 @@ const notify = (title, body, iconId) => {
 	}
 };
 
+const ChatToolBar = (inputField) => {
+	const [colorMode] = useColorMode();
+	
+	const [onSpecialFont, handleSpecialFont] = useState(false);
+	const [fontStyle, setFontStyle] = useState("");
+	const fontTextRef = useRef(null);
+	
+	const [onAddLink, handleAddLink] = useState(false);
+	const linkHrefRef = useRef(null);
+	const linkTextRef = useRef(null);
+	
+	const [onAddImage, handleAddImage] = useState(false);
+	const imageHrefRef = useRef(null);
+	const imageAltRef = useRef(null);
+	
+	const [onEmojiPicker, handleEmojiPicker] = useState(false);
+	
+	const [onSettings, handleSettings] = useState(false);
+	const [settings, setSettings] = useState(settingsVar);
+	const settingItems = ["allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
+	const settingItemsDisplay = ["允许通知", "允许公共频道通知", "允许当前联系人通知", "显示消息内容"];
+	
+	return (
+		<>
+			<Box>
+				<IconButton size="large" onClick={() => handleSpecialFont(true)}><FontDownloadOutlined/></IconButton>
+				<IconButton size="large" onClick={() => handleAddLink(true)}><AddLinkOutlined/></IconButton>
+				<IconButton size="large" onClick={() => handleAddImage(true)}><AddPhotoAlternateOutlined/></IconButton>
+				<IconButton size="large" onClick={() => handleEmojiPicker(true)}><AddReactionOutlined/></IconButton>
+				<IconButton size="large" onClick={() => handleSettings(true)}><SettingsOutlined/></IconButton>
+			</Box>
+			<Dialog open={onSpecialFont} onClose={() => handleSpecialFont(false)} fullWidth>
+				<DialogTitle>
+					添加特殊字体
+				</DialogTitle>
+				<DialogContent>
+					<Grid container gap={1}>
+						<FormControl margin="dense" sx={{minWidth: 80}}>
+							<InputLabel id="font-style-label">样式</InputLabel>
+							<Select
+								labelId="font-style-label"
+								variant="outlined"
+								label="样式"
+								value={fontStyle}
+								onChange={(event) => setFontStyle(event.target.value)}
+							>
+								<MenuItem value="#">H1</MenuItem>
+								<MenuItem value="##">H2</MenuItem>
+								<MenuItem value="###">H3</MenuItem>
+								<MenuItem value="####">H4</MenuItem>
+								<MenuItem value="#####">H5</MenuItem>
+								<MenuItem value="######">H6</MenuItem>
+								<MenuItem value="*">斜体</MenuItem>
+								<MenuItem value="**">粗体</MenuItem>
+								<MenuItem value="***">斜体+粗体</MenuItem>
+								<MenuItem value="~~">删除线</MenuItem>
+							</Select>
+						</FormControl>
+						<TextField label="文本" margin="dense" inputRef={fontTextRef} sx={{flex: 1, minWidth: "min(100%, 300px)"}}/>
+					</Grid>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => handleSpecialFont(false)}>关闭</Button>
+					<Button onClick={() => {
+						flushSync(() => handleSpecialFont(false));
+						if (fontStyle.charAt(0) === '#') {
+							const lines = inputField.inputField.current.value.split('\n');
+							inputField.inputField.current.focus();
+							if (lines[lines.length - 1].trim() !== '')
+								document.execCommand("insertLineBreak");
+							inputField.inputField.current.value += fontStyle + ' ' + fontTextRef.current.value;
+							document.execCommand("insertLineBreak");
+						} else
+							inputField.inputField.current.value += fontStyle + fontTextRef.current.value + fontStyle;
+						inputField.inputField.current.focus();
+					}}>确认</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog open={onAddLink} onClose={() => handleAddLink(false)} fullWidth>
+				<DialogTitle>
+					添加链接
+				</DialogTitle>
+				<DialogContent>
+					<TextField label="链接地址" margin="dense" fullWidth inputRef={linkHrefRef}/>
+					<TextField label="显示文本" margin="dense" fullWidth inputRef={linkTextRef}/>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => handleAddLink(false)}>关闭</Button>
+					<Button onClick={() => {
+						inputField.inputField.current.value += "[" + linkTextRef.current.value + "](" + linkHrefRef.current.value + ")";
+						flushSync(() => handleAddLink(false));
+						inputField.inputField.current.focus();
+					}}>确认</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog open={onAddImage} onClose={() => handleAddImage(false)} fullWidth>
+				<DialogTitle>
+					添加图片
+				</DialogTitle>
+				<DialogContent>
+					<TextField label="图片地址" margin="dense" fullWidth inputRef={imageHrefRef}/>
+					<TextField label="替代文字" margin="dense" fullWidth inputRef={imageAltRef}/>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => handleAddImage(false)}>关闭</Button>
+					<Button onClick={() => {
+						inputField.inputField.current.value += "![" + imageAltRef.current.value + "](" + imageHrefRef.current.value + ")";
+						flushSync(() => handleAddImage(false));
+						inputField.inputField.current.focus();
+					}}>确认</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog open={onEmojiPicker} onClose={() => handleEmojiPicker(false)}>
+				<EmojiPicker
+					emojiStyle="native"
+					theme={colorMode}
+					style={{maxWidth: "100%"}}
+					autoFocusSearch={false}
+					onEmojiClick={(emoji) => {
+						inputField.inputField.current.value += emoji.emoji;
+						flushSync(() => handleEmojiPicker(false));
+						inputField.inputField.current.focus();
+					}}
+				/>
+			</Dialog>
+			<Dialog open={onSettings} onClose={() => handleSettings(false)}>
+				<DialogTitle>
+					设置
+				</DialogTitle>
+				<DialogContent>
+					<Grid container direction="column" spacing={1}>
+						{settingItems.map((item, index) => (
+							<Grid container key={item} alignItems="center">
+								<Switch
+									checked={settings[item] !== false}
+									onChange={(event) => {
+										const newSettings = {...settings, [item]: event.currentTarget.checked};
+										setSettings(newSettings);
+										settingsVar = newSettings;
+										localStorage.setItem("chatSettings", JSON.stringify(newSettings));
+									}}
+									sx={{
+										'& .MuiSwitch-thumb': {
+											boxShadow: 'none', // 关闭阴影
+										},
+									}}
+								/>
+								<Typography>{settingItemsDisplay[index]}</Typography>
+							</Grid>
+						))}
+					</Grid>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => handleSettings(false)}>关闭</Button>
+				</DialogActions>
+			</Dialog>
+		</>
+	);
+}
+
+ChatToolBar.propTypes = {
+	inputField: PropTypes.object.isRequired,
+}
+
 export default function Chat() {
 	document.title = "Chat - chy.web";
 	
@@ -273,14 +432,9 @@ export default function Chat() {
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
-	const [onSettings, setOnSettings] = useState(false);
 	const queryClient = useRef(useQueryClient());
 	const messageCard = useRef(null), messageInput = useRef(null);
 	const disconnectErrorBarKey = useRef(null);
-	
-	const [settings, setSettings] = useState(settingsVar);
-	const settingItems = ["allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
-	const settingItemsDisplay = ["允许通知", "允许公共频道通知", "允许当前联系人通知", "显示消息内容"];
 	
 	const refreshContacts = () => {
 		queryClient.current.invalidateQueries({queryKey: ["contacts"]});
@@ -458,7 +612,7 @@ export default function Chat() {
 		stompConnect();
 	}, [getMessages]);
 	
-	// TODO: 联系人搜索，上滑加载更多消息，功能栏的小功能
+	// TODO: 联系人搜索，上滑加载更多消息
 	
 	return logged !== false ? (
 		<Grid container sx={{flex: 1, height: 0}} gap={2}>
@@ -491,8 +645,8 @@ export default function Chat() {
 				</Box>
 			</Card>
 			<Grid container id="chat-main" direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex"}} gap={1.5}>
-				<Card sx={{display: currentUser === "" ? "none" : "block"}}>
-					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 2}>
+				<Card sx={{display: currentUser === "" ? "none" : "block", width: "100%"}}>
+					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 2} gap={1.5}>
 						{isMobile && <IconButton onClick={() => {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
@@ -501,9 +655,13 @@ export default function Chat() {
 						}}>
 							<ArrowBack/>
 						</IconButton>}
-						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"}>
-							<Typography variant="h6">{currentUser}</Typography>
-							<Typography>{lastOnline}</Typography>
+						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"} sx={{flex: 1}}>
+							<Typography variant="h6" sx={{maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis"}}>
+								{currentUser}
+							</Typography>
+							<Typography sx={{maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>
+								{lastOnline}
+							</Typography>
 						</Grid>
 						<IconButton href={"/user/" + currentUser}>
 							<MoreHoriz/>
@@ -553,13 +711,7 @@ export default function Chat() {
 						}}
 					/>
 					<Grid container justifyContent="space-between">
-						<Box>
-							<IconButton size="large"><TitleOutlined/></IconButton>
-							<IconButton size="large"><AddLinkOutlined/></IconButton>
-							<IconButton size="large"><AddPhotoAlternateOutlined/></IconButton>
-							<IconButton size="large"><AddReactionOutlined/></IconButton>
-							<IconButton size="large" onClick={() => setOnSettings(true)}><SettingsOutlined/></IconButton>
-						</Box>
+						<ChatToolBar inputField={messageInput}/>
 						<IconButton
 							size="large"
 							color="primary"
@@ -571,37 +723,6 @@ export default function Chat() {
 					</Grid>
 				</Card>
 			</Grid>
-			<Dialog open={onSettings} onClose={() => setOnSettings(false)}>
-				<DialogTitle>
-					设置
-				</DialogTitle>
-				<DialogContent>
-					<Grid container direction="column" spacing={1}>
-						{settingItems.map((item, index) => (
-							<Grid container key={item} alignItems="center">
-								<Switch
-									checked={settings[item] !== false}
-									onChange={(event) => {
-										const newSettings = {...settings, [item]: event.currentTarget.checked};
-										setSettings(newSettings);
-										settingsVar = newSettings;
-										localStorage.setItem("chatSettings", JSON.stringify(newSettings));
-									}}
-									sx={{
-										'& .MuiSwitch-thumb': {
-											boxShadow: 'none', // 关闭阴影
-										}
-									}}
-								/>
-								<Typography>{settingItemsDisplay[index]}</Typography>
-							</Grid>
-						))}
-					</Grid>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => setOnSettings(false)}>关闭</Button>
-				</DialogActions>
-			</Dialog>
 		</Grid>
 	) : <Alert severity="error">请先登录！</Alert>;
 }
