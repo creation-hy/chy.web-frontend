@@ -14,7 +14,6 @@ import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
 import {Edit, Logout, PersonAdd, PersonAddDisabled, Verified} from "@mui/icons-material";
-import Markdown from "react-markdown";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -22,6 +21,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
+import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 
 function a11yProps(index) {
 	return {
@@ -67,8 +67,8 @@ function InfoContainer({value, username}) {
 								{new Date(item.time).toLocaleString()}
 							</Typography>
 						</Grid>
-						<Box fontSize={16} className="my-markdown">
-							<Markdown>{item.content}</Markdown>
+						<Box fontSize={16}>
+							<ChatMarkdown>{item.content}</ChatMarkdown>
 						</Box>
 					</Grid>
 				))}
@@ -187,10 +187,8 @@ export default function User() {
 								</Button>
 							</Box>
 						</Grid>
-						<Box id="intro" sx={{color: 'text.secondary'}} className="my-markdown">
-							<Markdown>
-								{!isLoading ? data["intro"] : null}
-							</Markdown>
+						<Box id="intro" sx={{color: 'text.secondary'}}>
+							<ChatMarkdown>{!isLoading ? data["intro"] : ""}</ChatMarkdown>
 						</Box>
 					</Grid>
 				</CardContent>
@@ -218,6 +216,8 @@ export default function User() {
 							},
 						}).then(res => {
 							enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 1 ? "success" : "error"});
+							if (res.data["status"] === 1)
+								setTimeout(() => window.location.reload(), 500);
 						});
 						setModifying(false);
 					}

@@ -3,17 +3,27 @@ html, body, #root {
 }
 
 .my-markdown {
-	white-space: pre-wrap;
-	word-break: break-word;
-
 	& * {
-		margin-top: 0;
-		margin-bottom: 0;
+		margin: 0;
+		white-space: normal;
+		word-break: break-word;
 	}
 
 	& blockquote {
 		border-left: 0.5em solid lightgrey;
-		margin: 0;
+		margin: auto 0;
 		padding: 0 1em;
+	}
+
+	& ul {
+		padding-left: 1em;
+	}
+
+	& a:link {
+		color: #ffb000;
+	}
+
+	& a:visited {
+		color: #ffa000;
 	}
 }

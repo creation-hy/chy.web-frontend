@@ -24,7 +24,6 @@ import {
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
-import Markdown from "react-markdown";
 import IconButton from "@mui/material/IconButton";
 import {flushSync} from "react-dom";
 import OutlinedInput from "@mui/material/OutlinedInput";
@@ -45,8 +44,8 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Picker from "@emoji-mart/react";
 import {useColorMode} from "src/theme/ColorMode.jsx";
 import Select from "@mui/material/Select";
-import gfm from "remark-gfm";
 import FormControl from "@mui/material/FormControl";
+import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 
 const myname = Cookies.get("username");
 
@@ -116,7 +115,7 @@ UserItem.propTypes = {
 const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
-	const [contentState, setContent] = useState(content);
+	const [contentState, setContent] = useState(content.toString());
 	const queryClient = useQueryClient();
 	
 	return (
@@ -141,9 +140,7 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 						});
 					}}
 				>
-					<Box className="my-markdown">
-						<Markdown remarkPlugins={[gfm]}>{contentState.toString()}</Markdown>
-					</Box>
+					<ChatMarkdown>{contentState}</ChatMarkdown>
 					<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
 						{new Date(timestamp).toLocaleString()}
 					</Typography>
@@ -165,8 +162,8 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 				<DialogTitle>
 					来自{username}的消息
 				</DialogTitle>
-				<DialogContent className="my-markdown">
-					<Markdown remarkPlugins={[gfm]}>{contentState.toString()}</Markdown>
+				<DialogContent>
+					<ChatMarkdown>{contentState}</ChatMarkdown>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>
@@ -488,7 +485,9 @@ export default function Chat() {
 		const content = messageInput.current.value;
 		if (content === "")
 			return;
-		messageInput.current.value = "";
+		messageInput.current.focus();
+		document.execCommand("selectAll");
+		document.execCommand("delete");
 		setQuote(null);
 		stomp.send("/app/chat/send-message", {}, JSON.stringify({
 			recipient: currentUserVar,
@@ -609,6 +608,7 @@ export default function Chat() {
 			} else
 				setTimeout(stompConnect, 1000);
 		};
+		
 		stompConnect();
 	}, [getMessages]);
 	
