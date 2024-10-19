@@ -46,6 +46,7 @@ export const AppAppBar = () => {
 	return (
 		<AppBar
 			position="sticky"
+			id="app-bar"
 			sx={{boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', top: 0, py: isMobile ? 2 : 3}}
 		>
 			<Container maxWidth="lg">

@@ -140,7 +140,9 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 						});
 					}}
 				>
-					<ChatMarkdown>{contentState}</ChatMarkdown>
+					<Box sx={{fontSize: 15}}>
+						<ChatMarkdown>{contentState}</ChatMarkdown>
+					</Box>
 					<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
 						{new Date(timestamp).toLocaleString()}
 					</Typography>
@@ -446,6 +448,7 @@ export default function Chat() {
 		if (isMobile) {
 			document.getElementById("contacts").style.display = "none";
 			document.getElementById("chat-main").style.display = "flex";
+			document.getElementById("app-bar").style.display = "none";
 		}
 		axios.get("/api/chat/message/" + username + "/-1").then(res => {
 			refreshContacts();
@@ -474,7 +477,8 @@ export default function Chat() {
 			document.getElementById("page-main").style.height = "0";
 			if (isMobile) {
 				document.getElementById("footer").style.display = "none";
-				document.getElementById("page-main").style.paddingBottom = "20px";
+				document.getElementById("page-main").style.paddingBottom = "12px";
+				document.getElementById("chat-main").style.paddingTop = "16px";
 			}
 			setPublicChannel(data.result["public"]);
 			setUsers(data.result["users"]);
@@ -647,10 +651,11 @@ export default function Chat() {
 			</Card>
 			<Grid container id="chat-main" direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex"}} gap={1.5}>
 				<Card sx={{display: currentUser === "" ? "none" : "block", width: "100%"}}>
-					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1.5 : 2} gap={1.5}>
+					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 1.5} gap={1.5}>
 						{isMobile && <IconButton onClick={() => {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
+							document.getElementById("app-bar").style.display = "flex";
 							setCurrentUser("");
 							currentUserVar = "";
 						}}>
@@ -701,6 +706,7 @@ export default function Chat() {
 						multiline
 						fullWidth
 						maxRows={10}
+						slotProps={{input: {style: {fontSize: 15, padding: 12}}}}
 						onKeyDown={(event) => {
 							if (!isMobile && event.key === "Enter") {
 								event.preventDefault();
