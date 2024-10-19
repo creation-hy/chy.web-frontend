@@ -459,6 +459,11 @@ export default function Chat() {
 			});
 			setTimeout(() => messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"}), 0);
 		});
+		try {
+			Notification.requestPermission();
+		} catch (e) {
+			console.log("你的浏览器不支持通知，人家也没办法呀……", e);
+		}
 	}, []);
 	
 	const {data, isLoading, error} = useQuery({

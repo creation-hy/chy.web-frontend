@@ -54,34 +54,34 @@ export const AppAppBar = () => {
 					<Box sx={{flexGrow: 1, display: 'flex', alignItems: 'center', px: 0}}>
 						<Box sx={{display: {xs: 'none', md: 'flex'}}}>
 							<Avatar src="/favicon.ico" sx={{width: 35, height: 35, mr: 1}}/>
-							<Button variant="text" size="small" href="/">
+							<Button variant="text" href="/">
 								首页
 							</Button>
-							<Button variant="text" size="small" href="/chat">
+							<Button variant="text" href="/chat">
 								聊天
 							</Button>
-							<Button variant="text" size="small" href="/ai-draw">
+							<Button variant="text" href="/ai-draw">
 								AI绘图
 							</Button>
-							<Button variant="text" size="small" href="/greedysnake">
+							<Button variant="text" href="/greedysnake">
 								贪吃蛇
 							</Button>
-							<Button variant="text" size="small" href="/sgs">
+							<Button variant="text" href="/sgs">
 								三国杀
 							</Button>
-							<Button variant="text" size="small" href="/minesweeper">
+							<Button variant="text" href="/minesweeper">
 								扫雷
 							</Button>
-							<Button variant="text" size="small" href="/chybench" sx={{textTransform: "none", px: 1}}>
+							<Button variant="text" href="/chybench" sx={{textTransform: "none", px: 1}}>
 								Chybench
 							</Button>
-							<Button variant="text" size="small" href="/bbs">
+							<Button variant="text" href="/bbs">
 								BBS
 							</Button>
-							<Button variant="text" size="small" href="/blog" sx={{textTransform: "none"}}>
+							<Button variant="text" href="/blog" sx={{textTransform: "none"}}>
 								Blog
 							</Button>
-							<Button variant="text" size="small" href="/ranking">
+							<Button variant="text" href="/ranking">
 								排行榜
 							</Button>
 						</Box>
@@ -95,10 +95,10 @@ export const AppAppBar = () => {
 					>
 						{!isLoading && !error && data["status"] === 0 ? (
 							<Box>
-								<Button variant="text" size="small" href="/login">
+								<Button variant="text" href="/login">
 									登陆
 								</Button>
-								<Button variant="contained" size="small" href="/register">
+								<Button variant="contained" href="/register">
 									注册
 								</Button>
 							</Box>

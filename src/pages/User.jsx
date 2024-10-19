@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
 import {useState} from "react";
-import {Alert, Input, InputLabel, Tab, Tabs} from "@mui/material";
+import {Alert, Input, InputLabel, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -23,6 +23,7 @@ import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import FormControl from "@mui/material/FormControl";
+import IconButton from "@mui/material/IconButton";
 
 function a11yProps(index) {
 	return {
@@ -32,10 +33,11 @@ function a11yProps(index) {
 
 function InfoContainer({value, username}) {
 	const opt = value === 0 ? "info" : (value === 1 ? "chat" : (value === 2 ? "following" : "follower"));
+	const url = opt === "chat" ? "/chat/-1" : "/" + opt;
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: [opt],
-		queryFn: () => axios.get("/api/user/" + username + "/" + opt).then(res => res.data),
+		queryFn: () => axios.get("/api/user/" + username + url).then(res => res.data),
 	});
 	
 	if (error || isLoading)
@@ -52,28 +54,32 @@ function InfoContainer({value, username}) {
 	
 	if (value === 1)
 		return (
-			<Grid container direction="column" spacing={2.5}>
+			<Box>
 				{data.result.map((item, index) => (
-					<Grid container direction="column" key={index} sx={{width: "100%", borderBottom: "1px solid lightgray", pb: 2}} gap={1}>
-						<Grid container spacing={1.5} alignItems="center">
-							<Avatar src={"/usericon/" + item.username + ".png"} alt={item.username}/>
-							<Typography variant="h6" sx={{cursor: "pointer"}} onClick={() => {
-								window.location.href = item.username;
-							}}>
-								<Grid container gap={0.5} alignItems="center">
-									{item.username}{item["certification"] != null && (<Verified color="primary"/>)}
-								</Grid>
-							</Typography>
-							<Typography variant="body2" color="textSecondary">
-								{new Date(item.time).toLocaleString()}
-							</Typography>
+					<Grid container key={index} justifyContent='flex-start' alignItems="flex-start" sx={{my: 2.5}}>
+						<IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}>
+							<Avatar src={"/usericon/" + username + ".png"} alt={username}/>
+						</IconButton>
+						<Grid container direction="column" sx={{maxWidth: "60%"}} alignItems='flex-end' spacing={0.7}>
+							<Paper
+								elevation={3}
+								sx={{
+									padding: '8px 16px',
+									borderRadius: '16px',
+									wordBreak: 'break-word',
+								}}
+							>
+								<Box sx={{fontSize: 15}}>
+									<ChatMarkdown>{item.content}</ChatMarkdown>
+								</Box>
+								<Typography variant="caption" display="block" textAlign="right" mt={1}>
+									{new Date(item.time).toLocaleString()}
+								</Typography>
+							</Paper>
 						</Grid>
-						<Box>
-							<ChatMarkdown>{item.content}</ChatMarkdown>
-						</Box>
 					</Grid>
 				))}
-			</Grid>
+			</Box>
 		);
 	
 	return (
@@ -206,22 +212,20 @@ export default function User() {
 			<Dialog
 				open={modifying}
 				onClose={() => setModifying(false)}
-				PaperProps={{
-					component: "form",
-					onSubmit: (event) => {
-						event.preventDefault();
-						const formData = new FormData(event.currentTarget);
-						axios.post("/api/account/modify", formData, {
-							headers: {
-								"Content-Type": "application/json",
-							},
-						}).then(res => {
-							enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 1 ? "success" : "error"});
-							if (res.data["status"] === 1)
-								setTimeout(() => window.location.reload(), 500);
-						});
-						setModifying(false);
-					}
+				component="form"
+				onSubmit={(event) => {
+					event.preventDefault();
+					const formData = new FormData(event.currentTarget);
+					axios.post("/api/account/modify", formData, {
+						headers: {
+							"Content-Type": "application/json",
+						},
+					}).then(res => {
+						enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 1 ? "success" : "error"});
+						if (res.data["status"] === 1)
+							setTimeout(() => window.location.reload(), 500);
+					});
+					setModifying(false);
 				}}
 			>
 				<DialogTitle>修改信息</DialogTitle>
