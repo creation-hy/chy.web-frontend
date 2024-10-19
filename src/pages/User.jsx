@@ -111,7 +111,7 @@ const doFollow = (username, setIsFollowing) => {
 
 const logOut = () => {
 	Cookies.remove("username");
-	Cookies.remove("userToken");
+	Cookies.remove("user_token");
 	window.location.href = "/";
 }
 

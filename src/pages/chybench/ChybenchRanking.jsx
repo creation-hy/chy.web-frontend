@@ -16,7 +16,7 @@ export default function ChybenchRanking() {
 	
 	const RankingTable = () => {
 		const {data, isLoading, error} = useQuery({
-			queryKey: ["ChybenchRanking"],
+			queryKey: [rankingItem + rankingSize],
 			queryFn: () => axios.get("/api/chybench/ranking/" + rankingItem + "/" + rankingSize).then(res => res.data),
 		});
 		
