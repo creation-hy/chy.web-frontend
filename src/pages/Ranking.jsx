@@ -20,7 +20,7 @@ export default function Ranking() {
 		<Grid container direction="column" spacing={2}>
 			{data["result"].map((item, index) => (
 				<Box key={index}>
-					<Typography variant="h3">{item["item"]}</Typography>
+					<Typography variant="h4">{item["item"]}</Typography>
 					<TableContainer component={Paper}>
 						<Table>
 							<TableHead>

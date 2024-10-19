@@ -22,6 +22,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
+import FormControl from "@mui/material/FormControl";
 
 function a11yProps(index) {
 	return {
@@ -42,7 +43,7 @@ function InfoContainer({value, username}) {
 	
 	if (value === 0)
 		return (
-			<Typography fontSize={16}>
+			<Typography>
 				用户编号：{data["userId"]}<br/>
 				性别：{data["sex"]}<br/>
 				注册时间：{new Date(data["regTime"]).toLocaleString()}
@@ -51,23 +52,23 @@ function InfoContainer({value, username}) {
 	
 	if (value === 1)
 		return (
-			<Grid container direction="column" spacing={3}>
+			<Grid container direction="column" spacing={2.5}>
 				{data.result.map((item, index) => (
-					<Grid container direction="column" key={index} sx={{width: "100%"}} gap={1}>
+					<Grid container direction="column" key={index} sx={{width: "100%", borderBottom: "1px solid lightgray", pb: 2}} gap={1}>
 						<Grid container spacing={1.5} alignItems="center">
 							<Avatar src={"/usericon/" + item.username + ".png"} alt={item.username}/>
-							<Typography variant="h5" sx={{cursor: "pointer"}} onClick={() => {
+							<Typography variant="h6" sx={{cursor: "pointer"}} onClick={() => {
 								window.location.href = item.username;
 							}}>
 								<Grid container gap={0.5} alignItems="center">
 									{item.username}{item["certification"] != null && (<Verified color="primary"/>)}
 								</Grid>
 							</Typography>
-							<Typography>
+							<Typography variant="body2" color="textSecondary">
 								{new Date(item.time).toLocaleString()}
 							</Typography>
 						</Grid>
-						<Box fontSize={16}>
+						<Box>
 							<ChatMarkdown>{item.content}</ChatMarkdown>
 						</Box>
 					</Grid>
@@ -80,7 +81,7 @@ function InfoContainer({value, username}) {
 			{data.result.map((item, index) => (
 				<Grid container key={index} alignItems="center" spacing={1.5}>
 					<Avatar src={"/usericon/" + item.username + ".png"} alt={item.username}/>
-					<Typography variant="h5" sx={{cursor: "pointer"}} onClick={() => {
+					<Typography variant="h6" sx={{cursor: "pointer"}} onClick={() => {
 						window.location.href = item.username;
 					}}>
 						<Grid container gap={0.5} alignItems="center">
@@ -171,7 +172,7 @@ export default function User() {
 						/>
 						<Input type="file" id="avatar-upload" sx={{display: "none"}} onChange={uploadAvatar}/>
 						<Grid container spacing={1} alignItems="center" sx={{pb: 1}}>
-							<Typography gutterBottom variant="h5" display="flex" gap={0.5} alignItems="center" margin={0}>
+							<Typography gutterBottom variant="h6" display="flex" gap={0.5} alignItems="center" margin={0}>
 								{username}{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
 							</Typography>
 							<Button variant="contained" sx={{display: isMe ? "none" : "flex"}}
@@ -187,7 +188,7 @@ export default function User() {
 								</Button>
 							</Box>
 						</Grid>
-						<Box id="intro" sx={{color: 'text.secondary'}}>
+						<Box id="intro" sx={{color: "text.secondary", fontSize: 14}}>
 							<ChatMarkdown>{!isLoading ? data["intro"] : ""}</ChatMarkdown>
 						</Box>
 					</Grid>
@@ -225,9 +226,15 @@ export default function User() {
 			>
 				<DialogTitle>修改信息</DialogTitle>
 				<DialogContent>
-					<Box>
+					<FormControl margin="dense">
 						<InputLabel id="select-sex-label">性别</InputLabel>
-						<Select labelId="select-sex-label" variant="outlined" defaultValue={!isLoading && data["sex"]} name="sex">
+						<Select
+							labelId="select-sex-label"
+							label="性别"
+							variant="outlined"
+							defaultValue={!isLoading && data["sex"]}
+							name="sex"
+						>
 							<MenuItem value="未知">未知</MenuItem>
 							<MenuItem value="男">男</MenuItem>
 							<MenuItem value="女">女</MenuItem>
@@ -245,11 +252,17 @@ export default function User() {
 							<MenuItem value="北洋军阀">北洋军阀</MenuItem>
 							<MenuItem value="其它">其它</MenuItem>
 						</Select>
-					</Box><br/>
-					<Box>
-						<InputLabel id="intro-label">简介</InputLabel>
-						<TextField fullWidth multiline name="intro" defaultValue={!isLoading && data["intro"]} maxRows={10}/>
-					</Box>
+					</FormControl><br/>
+					<FormControl margin="dense" sx={{pt: 1}}>
+						<TextField
+							label="简介"
+							fullWidth
+							multiline
+							maxRows={10}
+							defaultValue={!isLoading && data["intro"]}
+							name="intro"
+						/>
+					</FormControl>
 				</DialogContent>
 				<DialogActions>
 					<Button type="button" onClick={() => setModifying(false)}>关闭</Button>

@@ -121,7 +121,6 @@ export default function Minesweeper() {
 	
 	const purge = (x, y) => {
 		const current = boxes.current[x][y];
-		console.log(boxes.current, boxes.current[x], boxes.current[x][y]);
 		if (current.getAttribute("data-opened") === "true")
 			return;
 		current.style.backgroundColor = "#dddddb";
@@ -170,7 +169,7 @@ export default function Minesweeper() {
 		<Box>
 			<InitDialog setGrid={setGrid} setElapsedTime={setElapsedTime}/>
 			<Grid container justifyContent="center">
-				<Typography variant="h3">{elapsedTime}</Typography>
+				<Typography variant="h4">{elapsedTime}</Typography>
 			</Grid><br/>
 			<Grid container direction="column">
 				{grid == null ? <Alert severity="error">你被炸死了！</Alert> :

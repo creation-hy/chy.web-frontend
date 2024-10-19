@@ -4,6 +4,9 @@ import remarkBreaks from "remark-breaks";
 import PropTypes from "prop-types";
 
 export const ChatMarkdown = ({children, ...props}) => {
+	if (!children)
+		children = "";
+	
 	return (
 		<Markdown className="my-markdown" remarkPlugins={[remarkGfm, remarkBreaks]} {...props}>
 			{children.toString().replace(/ {2}/g, " &nbsp;")

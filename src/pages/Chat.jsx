@@ -1,4 +1,4 @@
-import {Fragment, useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
 import {Alert, Badge, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
@@ -42,7 +42,7 @@ import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
 import Picker from "@emoji-mart/react";
-import {useColorMode} from "src/theme/ColorMode.jsx";
+import {useColorMode} from "src/components/ColorMode.jsx";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
@@ -54,7 +54,7 @@ let socket, stomp;
 
 function UserItem({username, info}) {
 	return (
-		<Fragment>
+		<>
 			<ListItemAvatar>
 				<Badge badgeContent={info["newMessageCount"]} overlap="circular" color="error">
 					<Badge
@@ -88,7 +88,7 @@ function UserItem({username, info}) {
 						}}>
 							{info["displayName"]}
 						</Typography>
-						<Typography>
+						<Typography variant="body2" color="textSecondary">
 							{info["lastMessageTime"]}
 						</Typography>
 					</Grid>
@@ -103,7 +103,7 @@ function UserItem({username, info}) {
 					</Typography>
 				}
 			/>
-		</Fragment>
+		</>
 	);
 }
 
@@ -542,7 +542,7 @@ export default function Chat() {
 				refreshContacts();
 				const data = JSON.parse(message.body);
 				if (data.username === currentUserVar)
-					setLastOnline("对方上次上线：" + data["lastOnline"]);
+					setLastOnline("上次上线：" + data["lastOnline"]);
 			});
 			
 			stomp.subscribe(`/user/${myname}/queue/chat/message`, (message) => {
@@ -620,6 +620,7 @@ export default function Chat() {
 				<OutlinedInput
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
 					placeholder="搜索联系人"
+					sx={{fontSize: 14}}
 				/>
 				<Box sx={{overflowY: "auto"}}>
 					<List>
@@ -646,7 +647,7 @@ export default function Chat() {
 			</Card>
 			<Grid container id="chat-main" direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex"}} gap={1.5}>
 				<Card sx={{display: currentUser === "" ? "none" : "block", width: "100%"}}>
-					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 2} gap={1.5}>
+					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1.5 : 2} gap={1.5}>
 						{isMobile && <IconButton onClick={() => {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
@@ -656,10 +657,11 @@ export default function Chat() {
 							<ArrowBack/>
 						</IconButton>}
 						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"} sx={{flex: 1}}>
-							<Typography variant="h6" sx={{maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis"}}>
+							<Typography sx={{maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis"}}>
 								{currentUser}
 							</Typography>
-							<Typography sx={{maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>
+							<Typography variant="body2" color="textSecondary"
+							            sx={{maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>
 								{lastOnline}
 							</Typography>
 						</Grid>
@@ -699,7 +701,6 @@ export default function Chat() {
 						multiline
 						fullWidth
 						maxRows={10}
-						sx={{flex: 1}}
 						onKeyDown={(event) => {
 							if (!isMobile && event.key === "Enter") {
 								event.preventDefault();

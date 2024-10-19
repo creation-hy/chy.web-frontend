@@ -8,7 +8,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import {InputLabel, LinearProgress, Switch} from "@mui/material";
 import PropTypes from "prop-types";
-import React, {useState} from "react";
+import {useState} from "react";
 import {Leaderboard, PlayArrow} from "@mui/icons-material";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
@@ -21,7 +21,7 @@ function LinearProgressWithLabel(props) {
 				<LinearProgress variant="determinate" {...props} />
 			</Box>
 			<Box sx={{minWidth: 35}}>
-				<Typography variant="body2" sx={{color: 'text.secondary'}}>
+				<Typography variant="body2" color="textSecondary">
 					{`${Math.round(props.value)}%`}
 				</Typography>
 			</Box>
@@ -271,7 +271,7 @@ export default function Chybench() {
 	return (
 		<Grid container direction="column" sx={{alignItems: "center", width: "100%"}} spacing={3}>
 			<Card variant="outlined" sx={{padding: 3, width: "100%", maxWidth: 800}}>
-				<Typography fontSize={16}>
+				<Typography>
 					CPU线程数：{cores}<br/>
 					GPU：{gpu_name}<br/>
 					系统：{os}<br/>

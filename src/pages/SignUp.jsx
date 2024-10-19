@@ -229,7 +229,7 @@ export default function SignUp() {
 				</Typography>
 			</Box>
 			<Divider>
-				<Typography sx={{color: 'text.secondary'}}>或者</Typography>
+				<Typography color="textSecondary">或者</Typography>
 			</Divider>
 			<Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
 				<Button

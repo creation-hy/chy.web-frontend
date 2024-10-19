@@ -98,9 +98,8 @@ export default function SignIn() {
 	return (
 		<Card variant="outlined">
 			<Typography
-				component="h1"
 				variant="h4"
-				sx={{width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)'}}
+				sx={{width: '100%'}}
 			>
 				登陆
 			</Typography>
@@ -181,7 +180,9 @@ export default function SignIn() {
 					</span>
 				</Typography>
 			</Box>
-			<Divider>或者</Divider>
+			<Divider>
+				<Typography color="textSecondary">或者</Typography>
+			</Divider>
 			<Box sx={{display: 'flex', flexDirection: 'column', gap: 2}}>
 				<Button
 					type="submit"

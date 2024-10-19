@@ -22,7 +22,7 @@ import Error from "src/pages/Error.jsx";
 import Minesweeper from "src/pages/minesweeper/Minesweeper.jsx";
 import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
-import {useColorMode} from "src/theme/ColorMode.jsx";
+import {useColorMode} from "src/components/ColorMode.jsx";
 
 export default function App() {
 	const [colorMode] = useColorMode();
