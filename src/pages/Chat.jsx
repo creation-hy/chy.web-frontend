@@ -49,10 +49,14 @@ import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 
 const myname = Cookies.get("username");
 
-let currentUserVar = "", messagesVar = [], settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {};
+let currentUserVar = "", settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {};
+let usersVar = [], messagesVar = [];
 let socket, stomp;
 
 function UserItem({username, info}) {
+	if (!info)
+		return null;
+	
 	return (
 		<>
 			<ListItemAvatar>
@@ -112,11 +116,10 @@ UserItem.propTypes = {
 	info: PropTypes.any,
 }
 
-const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote}) => {
+const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote, messageCard, setUsers}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const [contentState, setContent] = useState(content.toString());
-	const queryClient = useQueryClient();
 	
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
@@ -208,11 +211,19 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 					}).then(res => {
 						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 						if (res.data.status === 1) {
-							queryClient.invalidateQueries({queryKey: ["contacts"]})
 							setContent("消息已撤回");
 							const item = messagesVar.find(item => item.id === messageId);
-							if (item)
+							if (item) {
 								item.text = "消息已撤回";
+								if (item.id.toString() === messageCard.current.lastElementChild.id.substring(8)) {
+									const userItem = usersVar.find(item => item.displayName === (currentUserVar === "ChatRoomSystem" ? "公共" : currentUserVar));
+									if (userItem) {
+										userItem["lastMessageText"] = currentUserVar === "ChatRoomSystem" ? myname + ": 消息已撤回" : "消息已撤回";
+										userItem.updateTime = new Date();
+										setUsers([...usersVar]);
+									}
+								}
+							}
 						}
 					});
 				}}>
@@ -236,6 +247,8 @@ Message.propTypes = {
 	quote: PropTypes.object,
 	timestamp: PropTypes.string,
 	setQuote: PropTypes.func,
+	messageCard: PropTypes.object,
+	setUsers: PropTypes.func,
 }
 
 const notify = (title, body, iconId) => {
@@ -425,19 +438,14 @@ export default function Chat() {
 	document.title = "Chat - chy.web";
 	
 	const [users, setUsers] = useState([]);
-	const [publicChannel, setPublicChannel] = useState([]);
 	const [logged, setLogged] = useState(null);
 	const [currentUser, setCurrentUser] = useState("");
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
-	const queryClient = useRef(useQueryClient());
 	const messageCard = useRef(null), messageInput = useRef(null);
 	const disconnectErrorBarKey = useRef(null);
-	
-	const refreshContacts = () => {
-		queryClient.current.invalidateQueries({queryKey: ["contacts"]});
-	}
+	const queryClient = useRef(useQueryClient());
 	
 	const getMessages = useCallback((username) => {
 		if (currentUserVar === username)
@@ -451,11 +459,13 @@ export default function Chat() {
 			document.getElementById("app-bar").style.display = "none";
 		}
 		axios.get("/api/chat/message/" + username + "/-1").then(res => {
-			refreshContacts();
+			const userItem = usersVar.find(item => item.displayName === (username === "ChatRoomSystem" ? "公共" : username));
+			userItem["newMessageCount"] = 0;
+			setUsers([...usersVar]);
 			messagesVar = res.data.result["message"];
 			flushSync(() => {
 				setLastOnline(res.data.result["onlineStatus"]);
-				setMessages(messagesVar);
+				setMessages([...messagesVar]);
 			});
 			setTimeout(() => messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"}), 0);
 		});
@@ -469,6 +479,7 @@ export default function Chat() {
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["contacts"],
 		queryFn: () => axios.get("/api/chat/contacts").then(res => res.data),
+		staleTime: Infinity,
 	});
 	
 	useEffect(() => {
@@ -485,8 +496,8 @@ export default function Chat() {
 				document.getElementById("page-main").style.paddingBottom = "12px";
 				document.getElementById("chat-main").style.paddingTop = "16px";
 			}
-			setPublicChannel(data.result["public"]);
-			setUsers(data.result["users"]);
+			usersVar = data.result.map((item) => ({...item, updateTime: new Date()}));
+			setUsers(usersVar);
 		}
 	}, [data, error, isLoading]);
 	
@@ -506,12 +517,41 @@ export default function Chat() {
 	}, [quote]);
 	
 	useEffect(() => {
+		const updateUserItem = (username, content, time, isCurrent) => {
+			const date = new Date(time), now = new Date();
+			const timeString = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate() ?
+				date.toLocaleTimeString().substring(0, 5) : date.toLocaleDateString().replace(/\//g, '-').substring(2);
+			
+			const userItem = usersVar.find(item => item.displayName === (username === "ChatRoomSystem" ? "公共" : username));
+			if (userItem) {
+				userItem["lastMessageText"] = content;
+				userItem["lastMessageTime"] = timeString;
+				if (!isCurrent)
+					userItem["newMessageCount"]++;
+				usersVar = [userItem, ...usersVar.filter(item => item.displayName !== username)];
+			} else {
+				usersVar = [{
+					displayName: username,
+					isOnline: true,
+					lastMessageTime: timeString,
+					lastMessageText: content,
+					newMessageCount: isCurrent ? 0 : 1,
+				}, ...usersVar];
+			}
+			setUsers([...usersVar]);
+		}
+		
 		const newMessage = (data) => {
 			axios.post("/api/chat/update-viewed", {target: currentUserVar}, {
 				headers: {
 					"Content-Type": "application/json",
 				},
-			}).then(() => refreshContacts());
+			});
+			
+			const content = data.recipient === "ChatRoomSystem" ? data.sender + ": " + data.content : data.content;
+			updateUserItem(data.recipient === "ChatRoomSystem" ? data.recipient : (data.sender === myname ? data.recipient : data.sender),
+				content, data.time, true);
+			
 			messagesVar = [...messagesVar, {
 				id: data.id,
 				username: data.sender,
@@ -522,7 +562,7 @@ export default function Chat() {
 			}];
 			
 			const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
-			flushSync(() => setMessages(messagesVar));
+			flushSync(() => setMessages([...messagesVar]));
 			if (scrollTop + clientHeight + 50 >= scrollHeight)
 				setTimeout(() => messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"}), 0);
 		};
@@ -538,18 +578,29 @@ export default function Chat() {
 			if (disconnectErrorBarKey.current) {
 				closeSnackbar(disconnectErrorBarKey.current);
 				getMessages(currentUserVar);
+				queryClient.current.invalidateQueries({queryKey: ["contacts"]});
 				disconnectErrorBarKey.current = null;
 			}
 			
 			stomp.subscribe("/topic/chat/online", (message) => {
-				refreshContacts();
-				if (JSON.parse(message.body).username === currentUserVar)
+				const username = JSON.parse(message.body).username;
+				const userItem = usersVar.find(item => item.displayName === username);
+				if (userItem) {
+					userItem["isOnline"] = true;
+					setUsers([...usersVar]);
+				}
+				if (username === currentUserVar)
 					setLastOnline("对方在线");
 			});
 			
 			stomp.subscribe("/topic/chat/offline", (message) => {
-				refreshContacts();
 				const data = JSON.parse(message.body);
+				const userItem = usersVar.find(item => item.displayName === data.username);
+				if (userItem) {
+					userItem["isOnline"] = false;
+					userItem["lastOnline"] = data["lastOnline"];
+					setUsers([...usersVar]);
+				}
 				if (data.username === currentUserVar)
 					setLastOnline("上次上线：" + data["lastOnline"]);
 			});
@@ -563,7 +614,7 @@ export default function Chat() {
 						notify("[私聊] " + data.sender + "说：",
 							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
 				} else {
-					refreshContacts();
+					updateUserItem(data.sender === myname ? data.recipient : data.sender, data.content, data.time, false);
 					if (settingsVar["allowNotification"] !== false && data.sender !== myname)
 						notify("[私聊] " + data.sender + "说：",
 							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
@@ -579,7 +630,7 @@ export default function Chat() {
 						notify("[公共] " + data.sender + "说：",
 							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
 				} else {
-					refreshContacts();
+					updateUserItem(data.recipient, data.sender + ": " + data.content, data.time, false);
 					if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
 						notify("[公共] " + data.sender + "说：",
 							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
@@ -587,12 +638,43 @@ export default function Chat() {
 			});
 			
 			stomp.subscribe(`/user/${myname}/queue/chat/delete-message`, (message) => {
-				const item = messagesVar.find(item => item.id === Number(message.body));
+				const data = JSON.parse(message.body);
+				const item = messagesVar.find(item => item.id === data.id);
 				if (item) {
 					item.text = "消息已撤回";
 					item.id = -item.id;
-					setMessages(messagesVar);
-					refreshContacts();
+					setMessages([...messagesVar]);
+				}
+				
+				if (data["isLatest"]) {
+					const userItem = usersVar.find(item => item.displayName === data.username);
+					if (userItem) {
+						userItem["lastMessageText"] = "消息已撤回";
+						userItem.updateTime = new Date();
+						setUsers([...usersVar]);
+					}
+				}
+			});
+			
+			stomp.subscribe(`/user/ChatRoomSystem/queue/chat/delete-message`, (message) => {
+				const data = JSON.parse(message.body);
+				if (data.username === myname)
+					return;
+				
+				const item = messagesVar.find(item => item.id === data.id);
+				if (item) {
+					item.text = "消息已撤回";
+					item.id = -item.id;
+					setMessages([...messagesVar]);
+				}
+				
+				if (data["isLatest"]) {
+					const userItem = usersVar.find(item => item.displayName === "公共");
+					if (userItem) {
+						userItem["lastMessageText"] = data.username + ": 消息已撤回";
+						userItem.updateTime = new Date();
+						setUsers([...usersVar]);
+					}
 				}
 			});
 		};
@@ -621,8 +703,6 @@ export default function Chat() {
 		stompConnect();
 	}, [getMessages]);
 	
-	// TODO: 联系人搜索，上滑加载更多消息
-	
 	return logged !== false ? (
 		<Grid container sx={{flex: 1, height: 0}} gap={2}>
 			<Card id="contacts" sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
@@ -637,19 +717,19 @@ export default function Chat() {
 							onClick={() => getMessages("ChatRoomSystem")}
 							selected={currentUser === "ChatRoomSystem"}
 						>
-							<UserItem username="ChatRoomSystem" info={publicChannel}/>
+							<UserItem username="ChatRoomSystem" info={users.find(item => item.displayName === "公共")}/>
 						</ListItemButton>
 					</List>
 					<Divider/>
 					<List>
-						{users.map((user) => (
-							<ListItemButton
-								key={user.displayName}
-								onClick={() => getMessages(user.displayName)}
-								selected={currentUser === user.displayName}
-							>
-								<UserItem username={user.displayName} info={user}/>
-							</ListItemButton>
+						{users.map((user) => (user.displayName === "公共" ? null :
+								<ListItemButton
+									key={user.displayName + '-' + user.updateTime}
+									onClick={() => getMessages(user.displayName)}
+									selected={currentUser === user.displayName}
+								>
+									<UserItem username={user.displayName} info={user}/>
+								</ListItemButton>
 						))}
 					</List>
 				</Box>
@@ -691,6 +771,8 @@ export default function Chat() {
 							quote={message.quote}
 							timestamp={message.time}
 							setQuote={setQuote}
+							messageCard={messageCard}
+							setUsers={setUsers}
 						/>
 					))}
 				</Card>
