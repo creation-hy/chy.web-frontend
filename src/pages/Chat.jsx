@@ -91,7 +91,7 @@ function UserItem({username, info}) {
 							textOverflow: "ellipsis",
 							flexShrink: 1,
 						}}>
-							{info["displayName"]}
+							{info.username}
 						</Typography>
 						<Typography variant="body2" color="textSecondary">
 							{info["lastMessageTime"]}
@@ -217,10 +217,9 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 							if (item) {
 								item.text = "消息已撤回";
 								if (item.id.toString() === messageCard.current.lastElementChild.id.substring(8)) {
-									const userItem = usersVar.find(item => item.displayName === (currentUserVar === "ChatRoomSystem" ? "公共" : currentUserVar));
+									const userItem = usersVar.find(item => item.username === (currentUserVar === "ChatRoomSystem" ? "公共" : currentUserVar));
 									if (userItem) {
 										userItem["lastMessageText"] = currentUserVar === "ChatRoomSystem" ? myname + ": 消息已撤回" : "消息已撤回";
-										userItem.updateTime = new Date();
 										setUsers([...usersVar]);
 									}
 								}
@@ -444,6 +443,8 @@ export default function Chat() {
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
+	const [matchList, setMatchList] = useState(null);
+	const [abortController, setAbortController] = useState(null);
 	const messageCard = useRef(null), messageInput = useRef(null);
 	const disconnectErrorBarKey = useRef(null);
 	const queryClient = useRef(useQueryClient());
@@ -460,9 +461,11 @@ export default function Chat() {
 			document.getElementById("app-bar").style.display = "none";
 		}
 		axios.get("/api/chat/message/" + username + "/-1").then(res => {
-			const userItem = usersVar.find(item => item.displayName === (username === "ChatRoomSystem" ? "公共" : username));
-			userItem["newMessageCount"] = 0;
-			setUsers([...usersVar]);
+			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
+			if (userItem) {
+				userItem["newMessageCount"] = 0;
+				setUsers([...usersVar]);
+			}
 			messagesVar = res.data.result["message"];
 			flushSync(() => {
 				setLastOnline(res.data.result["onlineStatus"]);
@@ -497,7 +500,7 @@ export default function Chat() {
 				document.getElementById("page-main").style.paddingBottom = "12px";
 				document.getElementById("chat-main").style.paddingTop = "16px";
 			}
-			usersVar = data.result.map((item) => ({...item, updateTime: new Date()}));
+			usersVar = data.result;
 			setUsers(usersVar);
 		}
 	}, [data, error, isLoading]);
@@ -523,23 +526,26 @@ export default function Chat() {
 			const timeString = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate() ?
 				date.toLocaleTimeString().substring(0, 5) : date.toLocaleDateString().replace(/\//g, '-').substring(2);
 			
-			const userItem = usersVar.find(item => item.displayName === (username === "ChatRoomSystem" ? "公共" : username));
+			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
 			if (userItem) {
 				userItem["lastMessageText"] = content;
 				userItem["lastMessageTime"] = timeString;
 				if (!isCurrent)
 					userItem["newMessageCount"]++;
-				usersVar = [userItem, ...usersVar.filter(item => item.displayName !== username)];
+				usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
+				setUsers([...usersVar]);
 			} else {
-				usersVar = [{
-					displayName: username,
-					isOnline: true,
-					lastMessageTime: timeString,
-					lastMessageText: content,
-					newMessageCount: isCurrent ? 0 : 1,
-				}, ...usersVar];
+				axios.get("/api/user/find/" + username).then(res => {
+					usersVar = [{
+						username: username,
+						isOnline: res.data.result[0].isOnline,
+						lastMessageTime: timeString,
+						lastMessageText: content,
+						newMessageCount: isCurrent ? 0 : 1,
+					}, ...usersVar];
+					setUsers([...usersVar]);
+				});
 			}
-			setUsers([...usersVar]);
 		}
 		
 		const newMessage = (data) => {
@@ -585,7 +591,7 @@ export default function Chat() {
 			
 			stomp.subscribe("/topic/chat/online", (message) => {
 				const username = JSON.parse(message.body).username;
-				const userItem = usersVar.find(item => item.displayName === username);
+				const userItem = usersVar.find(item => item.username === username);
 				if (userItem) {
 					userItem["isOnline"] = true;
 					setUsers([...usersVar]);
@@ -596,7 +602,7 @@ export default function Chat() {
 			
 			stomp.subscribe("/topic/chat/offline", (message) => {
 				const data = JSON.parse(message.body);
-				const userItem = usersVar.find(item => item.displayName === data.username);
+				const userItem = usersVar.find(item => item.username === data.username);
 				if (userItem) {
 					userItem["isOnline"] = false;
 					userItem["lastOnline"] = data["lastOnline"];
@@ -648,10 +654,9 @@ export default function Chat() {
 				}
 				
 				if (data["isLatest"]) {
-					const userItem = usersVar.find(item => item.displayName === data.username);
+					const userItem = usersVar.find(item => item.username === data.username);
 					if (userItem) {
 						userItem["lastMessageText"] = "消息已撤回";
-						userItem.updateTime = new Date();
 						setUsers([...usersVar]);
 					}
 				}
@@ -670,10 +675,9 @@ export default function Chat() {
 				}
 				
 				if (data["isLatest"]) {
-					const userItem = usersVar.find(item => item.displayName === "公共");
+					const userItem = usersVar.find(item => item.username === "公共");
 					if (userItem) {
 						userItem["lastMessageText"] = data.username + ": 消息已撤回";
-						userItem.updateTime = new Date();
 						setUsers([...usersVar]);
 					}
 				}
@@ -711,6 +715,18 @@ export default function Chat() {
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
 					placeholder="搜索联系人"
 					sx={{fontSize: 14}}
+					onChange={(event) => {
+						if (abortController)
+							abortController.abort();
+						if (event.target.value === "")
+							setMatchList(null);
+						else {
+							const controller = new AbortController();
+							setAbortController(controller);
+							axios.get("/api/user/find/" + encodeURIComponent(event.target.value), {signal: controller.signal})
+								.then(res => setMatchList(res.data.result)).catch(() => null);
+						}
+					}}
 				/>
 				<Box sx={{overflowY: "auto"}}>
 					<List>
@@ -718,19 +734,36 @@ export default function Chat() {
 							onClick={() => getMessages("ChatRoomSystem")}
 							selected={currentUser === "ChatRoomSystem"}
 						>
-							<UserItem username="ChatRoomSystem" info={users.find(item => item.displayName === "公共")}/>
+							<UserItem username="ChatRoomSystem" info={users.find(item => item.username === "公共")}/>
 						</ListItemButton>
 					</List>
 					<Divider/>
-					<List>
-						{users.map((user) => (user.displayName === "公共" ? null :
-								<ListItemButton
-									key={user.displayName + '-' + user.updateTime}
-									onClick={() => getMessages(user.displayName)}
-									selected={currentUser === user.displayName}
-								>
-									<UserItem username={user.displayName} info={user}/>
-								</ListItemButton>
+					<List sx={{display: !matchList ? "block" : "none"}}>
+						{users.map((user) => (user.username !== "公共" &&
+							<ListItemButton
+								key={user.username}
+								onClick={() => getMessages(user.username)}
+								selected={currentUser === user.username}
+							>
+								<UserItem username={user.username} info={user}/>
+							</ListItemButton>
+						))}
+					</List>
+					<List sx={{display: !matchList ? "none" : "block"}}>
+						{matchList && matchList.map((user) => (
+							<ListItemButton
+								key={user.username + '-' + user.isOnline}
+								onClick={() => getMessages(user.username)}
+								selected={currentUser === user.username}
+							>
+								<UserItem username={user.username} info={{
+									username: user.username,
+									isOnline: user.isOnline,
+									lastMessageText: "",
+									lastMessageTime: "",
+									newMessageCount: 0,
+								}}/>
+							</ListItemButton>
 						))}
 					</List>
 				</Box>
