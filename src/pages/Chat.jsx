@@ -13,6 +13,7 @@ import {
 	AddPhotoAlternateOutlined,
 	AddReactionOutlined,
 	ArrowBack,
+	CloudDownload,
 	DeleteOutline,
 	FontDownloadOutlined,
 	FormatQuoteOutlined,
@@ -113,7 +114,7 @@ function UserItem({username, info}) {
 
 UserItem.propTypes = {
 	username: PropTypes.string,
-	info: PropTypes.any,
+	info: PropTypes.object,
 }
 
 const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote, messageCard, setUsers}) => {
@@ -467,7 +468,7 @@ export default function Chat() {
 				setLastOnline(res.data.result["onlineStatus"]);
 				setMessages([...messagesVar]);
 			});
-			setTimeout(() => messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"}), 0);
+			messageCard.current.scrollTop = messageCard.current.scrollHeight;
 		});
 		try {
 			Notification.requestPermission();
@@ -564,7 +565,7 @@ export default function Chat() {
 			const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
 			flushSync(() => setMessages([...messagesVar]));
 			if (scrollTop + clientHeight + 50 >= scrollHeight)
-				setTimeout(() => messageCard.current.lastElementChild.scrollIntoView({behavior: "instant"}), 0);
+				messageCard.current.scrollTop = scrollHeight;
 		};
 		
 		let firstRebirth = true;
@@ -755,9 +756,32 @@ export default function Chat() {
 								{lastOnline}
 							</Typography>
 						</Grid>
-						<IconButton href={"/user/" + currentUser}>
-							<MoreHoriz/>
-						</IconButton>
+						<Box>
+							<IconButton onClick={async () => {
+								let text = "", startId = -1;
+								while (true) {
+									const res = await axios.get("/api/chat/message/" + currentUserVar + "/" + startId);
+									const message = res.data.result.message;
+									if (!message.length)
+										break;
+									text = message.map((item) => ("**" + item.username + " " + new Date(item.time) + "**\n\n" + item.text)).join("\n\n")
+										+ "\n\n" + text;
+									startId = message[0].id;
+								}
+								const link = document.createElement("a");
+								link.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
+								link.style.display = "none";
+								link.download = "ChyChat-" + currentUserVar + ".md";
+								document.body.appendChild(link);
+								link.click();
+								document.body.removeChild(link);
+							}}>
+								<CloudDownload/>
+							</IconButton>
+							<IconButton href={"/user/" + currentUser}>
+								<MoreHoriz/>
+							</IconButton>
+						</Box>
 					</Grid>
 				</Card>
 				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, maxWidth: "100%"}}>
