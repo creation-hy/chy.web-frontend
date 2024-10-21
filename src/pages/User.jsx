@@ -170,12 +170,16 @@ export default function User() {
 			<Card>
 				<CardContent>
 					<Grid container direction="column">
-						<Avatar
-							alt={username}
-							src={"/usericon/" + username + ".png"}
-							sx={{mb: 0.5, cursor: isMe ? "pointer" : "normal", width: 75, height: 75}}
+						<IconButton
 							onClick={isMe ? () => document.getElementById("avatar-upload").click() : null}
-						/>
+							sx={{width: 75, height: 75, mb: 0.5}}
+						>
+							<Avatar
+								alt={username}
+								src={"/usericon/" + username + ".png"}
+								sx={{width: 75, height: 75}}
+							/>
+						</IconButton>
 						<Input type="file" id="avatar-upload" sx={{display: "none"}} onChange={uploadAvatar}/>
 						<Grid container spacing={1} alignItems="center" sx={{pb: 1}}>
 							<Typography gutterBottom variant="h6" display="flex" gap={0.5} alignItems="center" margin={0}>

@@ -63,10 +63,10 @@ export const AppAppBar = () => {
 							<Button variant="text" href="/ai-draw">
 								AI绘图
 							</Button>
-							<Button variant="text" href="/greedysnake">
+							<Button variant="text" href="https://creation-hy.top:8080/greedy-snake">
 								贪吃蛇
 							</Button>
-							<Button variant="text" href="/sgs">
+							<Button variant="text" href="https://creation-hy.top:8080/sgs">
 								三国杀
 							</Button>
 							<Button variant="text" href="/minesweeper">
@@ -75,7 +75,7 @@ export const AppAppBar = () => {
 							<Button variant="text" href="/chybench" sx={{textTransform: "none", px: 1}}>
 								Chybench
 							</Button>
-							<Button variant="text" href="/bbs">
+							<Button variant="text" href="https://creation-hy.top:8080/bbs">
 								BBS
 							</Button>
 							<Button variant="text" href="/blog" sx={{textTransform: "none"}}>
@@ -161,13 +161,13 @@ export const AppAppBar = () => {
 										</ListItemIcon>
 										<ListItemText primary="AI绘图"/>
 									</ListItemButton>
-									<ListItemButton href="/greedysnake">
+									<ListItemButton href="https://creation-hy.top:8080/greedy-snake">
 										<ListItemIcon>
 											<Games/>
 										</ListItemIcon>
 										<ListItemText primary="贪吃蛇"/>
 									</ListItemButton>
-									<ListItemButton href="/sgs">
+									<ListItemButton href="https://creation-hy.top:8080/sgs">
 										<ListItemIcon>
 											<Games/>
 										</ListItemIcon>
@@ -185,7 +185,7 @@ export const AppAppBar = () => {
 										</ListItemIcon>
 										<ListItemText primary="Chybench"/>
 									</ListItemButton>
-									<ListItemButton href="/bbs">
+									<ListItemButton href="https://creation-hy.top:8080/bbs">
 										<ListItemIcon>
 											<Forum/>
 										</ListItemIcon>
