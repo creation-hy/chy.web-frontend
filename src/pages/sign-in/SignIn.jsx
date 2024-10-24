@@ -8,12 +8,12 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import MuiCard from '@mui/material/Card';
 import {styled} from '@mui/material/styles';
-import ForgotPassword from './ForgotPassword';
 import {GoogleIcon} from './CustomIcons';
 import axios from "axios";
 import {enqueueSnackbar} from 'notistack';
 import {X} from "@mui/icons-material";
 import Cookies from "js-cookie";
+import ResetPassword from "src/components/ResetPassword.jsx";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -159,7 +159,7 @@ export default function SignIn() {
 						</Link>
 					</Box>
 				</FormControl>
-				<ForgotPassword open={open} handleClose={handleClose}/>
+				<ResetPassword open={open} handleClose={handleClose}/>
 				<Button
 					type="submit"
 					fullWidth

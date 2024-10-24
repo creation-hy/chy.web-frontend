@@ -13,7 +13,7 @@ import Cookies from "js-cookie";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
-import {Edit, Logout, PersonAdd, PersonAddDisabled, Verified} from "@mui/icons-material";
+import {Edit, LockReset, Logout, PersonAdd, PersonAddDisabled, Verified} from "@mui/icons-material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -24,6 +24,7 @@ import TextField from "@mui/material/TextField";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
+import ResetPassword from "src/components/ResetPassword.jsx";
 
 function a11yProps(index) {
 	return {
@@ -143,6 +144,7 @@ export default function User() {
 	const [inited, setInited] = useState(false);
 	const [isMe, setIsMe] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
+	const [resetPasswordOn, setResetPasswordOn] = useState(false);
 	
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
@@ -181,21 +183,25 @@ export default function User() {
 							/>
 						</IconButton>
 						<input type="file" id="avatar-upload" style={{display: "none"}} onChange={uploadAvatar} accept="image/*"/>
+						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container spacing={1} alignItems="center" sx={{pb: 1}}>
 							<Typography gutterBottom variant="h6" display="flex" gap={0.5} alignItems="center" margin={0}>
 								{username}{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
 							</Typography>
-							<Button variant="contained" sx={{display: isMe ? "none" : "flex"}}
-							        onClick={() => doFollow(username)}>
+							<IconButton sx={{display: isMe ? "none" : "flex"}}
+							            onClick={() => doFollow(username)}>
 								{isFollowing == null ? null : (isFollowing ? <PersonAddDisabled fontSize="small"/> : <PersonAdd fontSize="small"/>)}
-							</Button>
-							<Box id="my-container" display={isMe ? "flex" : "none"} gap={1}>
-								<Button variant="contained" onClick={() => setModifying(true)}>
+							</IconButton>
+							<Box id="my-container" display={isMe ? "flex" : "none"}>
+								<IconButton onClick={() => setModifying(true)}>
 									<Edit fontSize="small"/>
-								</Button>
-								<Button variant="contained" onClick={logOut}>
+								</IconButton>
+								<IconButton onClick={() => setResetPasswordOn(true)}>
+									<LockReset fontSize="small"/>
+								</IconButton>
+								<IconButton onClick={logOut}>
 									<Logout fontSize="small"/>
-								</Button>
+								</IconButton>
 							</Box>
 						</Grid>
 						<Box id="intro" sx={{color: "text.secondary", fontSize: 14}}>
