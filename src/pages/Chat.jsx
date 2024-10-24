@@ -48,7 +48,7 @@ import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 
-const myname = Cookies.get("username");
+const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
 let currentUserVar = "", settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {};
 let usersVar = [], messagesVar = [];
@@ -513,7 +513,7 @@ export default function Chat() {
 		document.execCommand("selectAll");
 		document.execCommand("delete");
 		setQuote(null);
-		stomp.send("/app/chat/send-message", {}, JSON.stringify({
+		stomp.send("/app/chat.message", {}, JSON.stringify({
 			recipient: currentUserVar,
 			content: content,
 			quoteId: quote == null ? null : quote.id,
@@ -589,7 +589,7 @@ export default function Chat() {
 				disconnectErrorBarKey.current = null;
 			}
 			
-			stomp.subscribe("/topic/chat/online", (message) => {
+			stomp.subscribe("/topic/chat.online", (message) => {
 				const username = JSON.parse(message.body).username;
 				const userItem = usersVar.find(item => item.username === username);
 				if (userItem) {
@@ -600,7 +600,7 @@ export default function Chat() {
 					setLastOnline("对方在线");
 			});
 			
-			stomp.subscribe("/topic/chat/offline", (message) => {
+			stomp.subscribe("/topic/chat.offline", (message) => {
 				const data = JSON.parse(message.body);
 				const userItem = usersVar.find(item => item.username === data.username);
 				if (userItem) {
@@ -612,7 +612,7 @@ export default function Chat() {
 					setLastOnline("上次上线：" + data["lastOnline"]);
 			});
 			
-			stomp.subscribe(`/user/${myname}/queue/chat/message`, (message) => {
+			stomp.subscribe(`/user/queue/chat.message`, (message) => {
 				const data = JSON.parse(message.body);
 				if (myname === data.sender && currentUserVar === data.recipient ||
 					myname === data.recipient && currentUserVar === data.sender) {
@@ -626,9 +626,9 @@ export default function Chat() {
 						notify("[私聊] " + data.sender + "说：",
 							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
 				}
-			});
+			}, {"auto-delete": true});
 			
-			stomp.subscribe("/topic/chat/public-message", (message) => {
+			stomp.subscribe("/topic/chat.group.public.message", (message) => {
 				const data = JSON.parse(message.body);
 				if (currentUserVar === data.recipient) {
 					newMessage(data);
@@ -644,7 +644,7 @@ export default function Chat() {
 				}
 			});
 			
-			stomp.subscribe(`/user/${myname}/queue/chat/delete-message`, (message) => {
+			stomp.subscribe(`/user/queue/chat.delete`, (message) => {
 				const data = JSON.parse(message.body);
 				const item = messagesVar.find(item => item.id === data.id);
 				if (item) {
@@ -660,9 +660,9 @@ export default function Chat() {
 						setUsers([...usersVar]);
 					}
 				}
-			});
+			}, {"auto-delete": true});
 			
-			stomp.subscribe(`/user/ChatRoomSystem/queue/chat/delete-message`, (message) => {
+			stomp.subscribe(`/topic/chat.group.public.delete`, (message) => {
 				const data = JSON.parse(message.body);
 				if (data.username === myname)
 					return;
@@ -687,7 +687,10 @@ export default function Chat() {
 		const stompConnect = () => {
 			socket = new SockJS(window.location.origin + "/api/websocket");
 			stomp = Stomp.over(() => socket);
-			stomp.connect({}, stompOnConnect, null, stompReconnect);
+			stomp.connect({
+				"username": myname,
+				"user-token": myToken,
+			}, stompOnConnect, null, stompReconnect);
 			socket.onclose = stompReconnect;
 		};
 		
