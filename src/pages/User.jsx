@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
 import {useState} from "react";
-import {Alert, Input, InputLabel, Paper, Tab, Tabs} from "@mui/material";
+import {Alert, InputLabel, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -180,7 +180,7 @@ export default function User() {
 								sx={{width: 75, height: 75}}
 							/>
 						</IconButton>
-						<Input type="file" id="avatar-upload" sx={{display: "none"}} onChange={uploadAvatar}/>
+						<input type="file" id="avatar-upload" style={{display: "none"}} onChange={uploadAvatar} accept="image/*"/>
 						<Grid container spacing={1} alignItems="center" sx={{pb: 1}}>
 							<Typography gutterBottom variant="h6" display="flex" gap={0.5} alignItems="center" margin={0}>
 								{username}{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
@@ -217,6 +217,7 @@ export default function User() {
 				open={modifying}
 				onClose={() => setModifying(false)}
 				component="form"
+				fullWidth
 				onSubmit={(event) => {
 					event.preventDefault();
 					const formData = new FormData(event.currentTarget);
@@ -260,17 +261,16 @@ export default function User() {
 							<MenuItem value="北洋军阀">北洋军阀</MenuItem>
 							<MenuItem value="其它">其它</MenuItem>
 						</Select>
-					</FormControl><br/>
-					<FormControl margin="dense" sx={{pt: 1}}>
-						<TextField
-							label="简介"
-							fullWidth
-							multiline
-							maxRows={10}
-							defaultValue={!isLoading && data["intro"]}
-							name="intro"
-						/>
 					</FormControl>
+					<TextField
+						label="简介"
+						fullWidth
+						multiline
+						maxRows={10}
+						defaultValue={!isLoading && data["intro"]}
+						name="intro"
+						margin="normal"
+					/>
 				</DialogContent>
 				<DialogActions>
 					<Button type="button" onClick={() => setModifying(false)}>关闭</Button>

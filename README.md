@@ -1,9 +1,3 @@
 # chy.web 前端仓库
 
-框架为Vite + React，还用了Material UI现成的一些组件。
-
-本项目部署在服务器的8090端口，未来正式上线后会改到443。
-
-项目里没什么敏感信息，所以就公开了（
-
-基本功能大致已做完，晋升为Beta版本！
+Vite + React + Material UI。

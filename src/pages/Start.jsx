@@ -16,7 +16,8 @@ export default function Start() {
 			<Typography variant="h6" align="center" mb={4}>前端重写，采用SpringBoot + React</Typography>
 			<Typography variant="h4">私聊</Typography>
 			<Typography>
-				AI回答功能请直接跟SystemAI对话，智能体功能请和neko对话。（这两个AI只有显示在线的时候会回复你的消息）<br/>
+				AI回答功能请直接跟用户名为【AI】的用户对话，智能体功能请和【neko】对话。前者不支持记忆，后者支持。<br/>
+				5.0.1版本以后，即使AI不在线，你的对话内容也会被回复。<br/>
 				neko支持的重置命令：<br/>
 				/sudo reset [model] [neko] [memoryType]<br/>
 				{`[model]：选择模型，"llama3"或"qwen2.5"`}<br/>
