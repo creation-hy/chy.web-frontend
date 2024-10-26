@@ -4,18 +4,24 @@ html, body, #root {
 
 .my-markdown {
 	& * {
-		margin: 0;
 		white-space: normal;
 		word-break: break-word;
 	}
 
 	& blockquote {
 		border-left: 0.5em solid lightgrey;
-		margin: auto 0;
-		padding: 0 1em;
+		padding: 0.5em 1em;
 	}
 
-	& ul {
+	& h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, li, ol, dl, dt, dd {
+		margin: 0;
+	}
+
+	& code, pre {
+		white-space: pre-wrap;
+	}
+
+	& ul, ol, dl {
 		padding-left: 1em;
 	}
 
