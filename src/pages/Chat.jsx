@@ -449,9 +449,10 @@ export default function Chat() {
 	const disconnectErrorBarKey = useRef(null);
 	const queryClient = useRef(useQueryClient());
 	
-	const getMessages = useCallback((username) => {
-		if (currentUserVar === username)
+	const getMessages = useCallback((username, startId = -1, doRefresh = false) => {
+		if (currentUserVar === username && startId === -1 && !doRefresh)
 			return;
+		const isCurrentUser = currentUserVar === username;
 		currentUserVar = username;
 		setCurrentUser(username);
 		setQuote(null);
@@ -460,24 +461,25 @@ export default function Chat() {
 			document.getElementById("chat-main").style.display = "flex";
 			document.getElementById("app-bar").style.display = "none";
 		}
-		axios.get("/api/chat/message/" + username + "/-1").then(res => {
-			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
-			if (userItem) {
-				userItem["newMessageCount"] = 0;
-				setUsers([...usersVar]);
-			}
-			messagesVar = res.data.result["message"];
-			flushSync(() => {
-				setLastOnline(res.data.result["onlineStatus"]);
-				setMessages([...messagesVar]);
-			});
-			messageCard.current.scrollTop = messageCard.current.scrollHeight;
-		});
 		try {
 			Notification.requestPermission();
 		} catch (e) {
 			console.log("你的浏览器不支持通知，人家也没办法呀……", e);
 		}
+		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
+			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
+			if (userItem) {
+				userItem["newMessageCount"] = 0;
+				setUsers([...usersVar]);
+			}
+			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
+			messagesVar = startId === -1 ? res.data.result["message"] : [...res.data.result["message"], ...messagesVar];
+			flushSync(() => {
+				setLastOnline(res.data.result["onlineStatus"]);
+				setMessages([...messagesVar]);
+			});
+			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
+		});
 	}, []);
 	
 	const {data, isLoading, error} = useQuery({
@@ -495,11 +497,12 @@ export default function Chat() {
 			setLogged(true);
 			document.getElementById("page-container").style.height = "0";
 			document.getElementById("page-main").style.height = "0";
+			document.getElementById("footer").style.display = "none";
 			if (isMobile) {
-				document.getElementById("footer").style.display = "none";
 				document.getElementById("page-main").style.paddingBottom = "12px";
 				document.getElementById("chat-main").style.paddingTop = "16px";
-			}
+			} else
+				document.getElementById("page-main").style.paddingBottom = "24px";
 			usersVar = data.result;
 			setUsers(usersVar);
 		}
@@ -584,7 +587,7 @@ export default function Chat() {
 			
 			if (disconnectErrorBarKey.current) {
 				closeSnackbar(disconnectErrorBarKey.current);
-				getMessages(currentUserVar);
+				getMessages(currentUserVar, -1, true);
 				queryClient.current.invalidateQueries({queryKey: ["contacts"]});
 				disconnectErrorBarKey.current = null;
 			}
@@ -695,7 +698,6 @@ export default function Chat() {
 		};
 		
 		const stompReconnect = async () => {
-			console.log("正在尝试重连...");
 			if (firstRebirth) {
 				firstRebirth = false;
 				disconnectErrorBarKey.current = enqueueSnackbar("服务器连接已断开，正在尝试重连...", {
@@ -709,6 +711,14 @@ export default function Chat() {
 		};
 		
 		stompConnect();
+		
+		let lastScrollStartId = -1;
+		messageCard.current.addEventListener("scroll", (event) => {
+			if (event.target.scrollTop <= 50 && lastScrollStartId !== messagesVar[0].id - 1 && messagesVar.length >= 30) {
+				lastScrollStartId = messagesVar[0].id - 1;
+				getMessages(currentUserVar, lastScrollStartId);
+			}
+		});
 	}, [getMessages]);
 	
 	return logged !== false ? (
@@ -857,7 +867,7 @@ export default function Chat() {
 						onKeyDown={(event) => {
 							if (!isMobile && event.key === "Enter") {
 								event.preventDefault();
-								if (event.ctrlKey)
+								if (event.metaKey)
 									document.execCommand("insertLineBreak");
 								else
 									sendMessage();
