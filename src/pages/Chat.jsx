@@ -258,7 +258,8 @@ const notify = (title, body, iconId) => {
 				console.log("呜呜呜把通知权限打开嘛QAQ");
 				return;
 			}
-			navigator.serviceWorker.register("/service-worker.js").then((registration) => {
+			navigator.serviceWorker.register("/service-worker.js");
+			navigator.serviceWorker.ready.then((registration) => {
 				registration.showNotification(title, {
 					body: body,
 					icon: "/avatars/" + iconId + ".png",
@@ -865,7 +866,7 @@ export default function Chat() {
 						maxRows={10}
 						slotProps={{input: {style: {fontSize: 15, padding: 12}}}}
 						onKeyDown={(event) => {
-							if (!isMobile && event.key === "Enter") {
+							if (!isMobile && event.keyCode === 13) {
 								event.preventDefault();
 								if (event.metaKey)
 									document.execCommand("insertLineBreak");
