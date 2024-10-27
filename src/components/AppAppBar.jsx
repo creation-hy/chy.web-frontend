@@ -47,7 +47,7 @@ export const AppAppBar = () => {
 		<AppBar
 			position="sticky"
 			id="app-bar"
-			sx={{boxShadow: 0, bgcolor: 'transparent', backgroundImage: 'none', top: 0, py: isMobile ? 2 : 3}}
+			sx={{boxShadow: 0, backgroundColor: 'transparent', backgroundImage: 'none', top: 0, py: isMobile ? 2 : 3}}
 		>
 			<Container maxWidth="lg">
 				<StyledToolbar variant="dense" disableGutters>
@@ -105,7 +105,7 @@ export const AppAppBar = () => {
 						) : (!isLoading && !error ? (
 							<Box>
 								<IconButton sx={{width: 35, height: 35}} href={"/user/" + data.username}>
-									<Avatar sx={{width: 35, height: 35}} alt={data.username} src={"/usericon/" + data.username + ".png"}/>
+									<Avatar sx={{width: 35, height: 35}} alt={data.username} src={"/avatars/" + data.username + ".png"}/>
 								</IconButton>
 							</Box>
 						) : (<Box/>))}
@@ -137,7 +137,7 @@ export const AppAppBar = () => {
 									) : (!isLoading && !error ? (
 										<Box display="flex" justifyContent="center">
 											<IconButton sx={{width: 50, height: 50}} href={"/user/" + data.username}>
-												<Avatar sx={{width: 50, height: 50}} alt={data.username} src={"/usericon/" + data.username + ".png"}/>
+												<Avatar sx={{width: 50, height: 50}} alt={data.username} src={"/avatars/" + data.username + ".png"}/>
 											</IconButton>
 										</Box>
 									) : <Box/>)}

@@ -87,9 +87,9 @@ export default function SignUp() {
 				}
 			}).then(res => {
 				const data = res.data;
-				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
-				if (data["status"] === 1) {
-					Cookies.set("username", data["username"], {expires: 30, path: "/"});
+				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
+				if (data.status === 1) {
+					Cookies.set("username", data.username, {expires: 30, path: "/"});
 					Cookies.set("user_token", data["userToken"], {expires: 30, path: "/"});
 					window.location.href = "/";
 				}
@@ -217,15 +217,13 @@ export default function SignUp() {
 				</Button>
 				<Typography sx={{textAlign: 'center'}}>
 					已经有账号了？{' '}
-					<span>
-	                    <Link
-		                    href="/login"
-		                    variant="body2"
-		                    sx={{alignSelf: 'center'}}
-	                    >
-	                        登陆
-	                    </Link>
-					</span>
+					<Link
+						href={"/login"}
+						variant="body2"
+						sx={{alignSelf: 'center'}}
+					>
+						登陆
+					</Link>
 				</Typography>
 			</Box>
 			<Divider>

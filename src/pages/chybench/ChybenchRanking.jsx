@@ -11,7 +11,7 @@ import FormControl from "@mui/material/FormControl";
 export default function ChybenchRanking() {
 	document.title = "排行榜 - Chybench - chy.web";
 	
-	const [rankingItem, setItem] = useState("gpusc");
+	const [rankingItem, setItem] = useState("gpuScore");
 	const [rankingSize, setSize] = useState(0);
 	
 	const RankingTable = () => {
@@ -63,10 +63,10 @@ export default function ChybenchRanking() {
 						value={rankingItem}
 						onChange={(event) => setItem(event.target.value)}
 					>
-						<MenuItem value="gpusc">GPU</MenuItem>
-						<MenuItem value="single_sc">CPU单核</MenuItem>
-						<MenuItem value="multi_sc">CPU多核</MenuItem>
-						<MenuItem value="memsc">Memory</MenuItem>
+						<MenuItem value="gpuScore">GPU</MenuItem>
+						<MenuItem value="cpuSingleScore">CPU单核</MenuItem>
+						<MenuItem value="cpuMultiScore">CPU多核</MenuItem>
+						<MenuItem value="memoryScore">Memory</MenuItem>
 					</Select>
 				</FormControl>
 				<FormControl>

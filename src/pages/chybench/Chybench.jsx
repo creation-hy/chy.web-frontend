@@ -136,7 +136,7 @@ const memoryTest = (size) => {
 
 const os = osName + " " + osVersion, browser = browserName + " " + fullBrowserVersion, cores = navigator.hardwareConcurrency;
 const webgl = document.createElement("canvas").getContext("experimental-webgl");
-const gpu_name = webgl.getParameter(webgl.getExtension("WEBGL_debug_renderer_info").UNMASKED_RENDERER_WEBGL)
+const gpuName = webgl.getParameter(webgl.getExtension("WEBGL_debug_renderer_info").UNMASKED_RENDERER_WEBGL)
 	.replace(/ANGLE [(].*, (.*) [(]0x.*, .*[)]/g, "$1").replace(/ANGLE [(].*, (.*), OpenGL.*[)]/g, "$1")
 	.replace(/ANGLE [(].*, (.*) (Direct).*[)], or similar/g, "$1").replace(/(.*), or similar/g, "$1").replace(/ANGLE [(]Apple, ANGLE Metal Renderer: (.*), (.*)[)]/g, "$1");
 
@@ -251,14 +251,14 @@ export default function Chybench() {
 		}
 		
 		axios.post("/api/chybench/submit", {
-			gpuname: gpu_name,
+			gpuName: gpuName,
 			os: os,
 			browser: browser,
 			size: size,
-			gpusc: gpuScore,
-			single_sc: cpuSingleScore,
-			multi_sc: cpuMultiScore,
-			memsc: memoryScore,
+			gpuScore: gpuScore,
+			cpuSingleScore: cpuSingleScore,
+			cpuMultiScore: cpuMultiScore,
+			memoryScore: memoryScore,
 		}, {
 			headers: {
 				"Content-Type": "application/json",
@@ -273,7 +273,7 @@ export default function Chybench() {
 			<Card variant="outlined" sx={{padding: 3, width: "100%", maxWidth: 800}}>
 				<Typography>
 					CPU线程数：{cores}<br/>
-					GPU：{gpu_name}<br/>
+					GPU：{gpuName}<br/>
 					系统：{os}<br/>
 					浏览器：{browser}
 				</Typography>

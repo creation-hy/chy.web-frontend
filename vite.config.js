@@ -15,11 +15,11 @@ export default defineConfig({
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, ""),
 			},
-			"/usericon": {
-				target: 'https://localhost:8080/usericon/',
+			"/avatars": {
+				target: 'https://localhost:8080/avatars/',
 				secure: false,
 				changeOrigin: true,
-				rewrite: (path) => path.replace(/^\/usericon/, ""),
+				rewrite: (path) => path.replace(/^\/avatars/, ""),
 			},
 			"/api/websocket": {
 				target: 'wss://localhost:8080/websocket',

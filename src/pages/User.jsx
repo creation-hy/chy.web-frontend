@@ -80,7 +80,7 @@ function InfoContainer({value, username}) {
 				{chatList.map((item) => (
 					<Grid container key={item.id} justifyContent='flex-start' alignItems="flex-start" sx={{my: 2.5}}>
 						<IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}>
-							<Avatar src={"/usericon/" + username + ".png"} alt={username}/>
+							<Avatar src={"/avatars/" + username + ".png"} alt={username}/>
 						</IconButton>
 						<Grid container direction="column" sx={{maxWidth: "60%"}} alignItems='flex-end' spacing={0.7}>
 							<Paper
@@ -109,7 +109,7 @@ function InfoContainer({value, username}) {
 		<Grid container direction="column" spacing={3}>
 			{data.result.map((item, index) => (
 				<Grid container key={index} alignItems="center" spacing={1.5}>
-					<Avatar src={"/usericon/" + item.username + ".png"} alt={item.username}/>
+					<Avatar src={"/avatars/" + item.username + ".png"} alt={item.username}/>
 					<Typography variant="h6" sx={{cursor: "pointer"}} onClick={() => {
 						window.location.href = item.username;
 					}}>
@@ -200,7 +200,7 @@ export default function User() {
 						>
 							<Avatar
 								alt={username}
-								src={"/usericon/" + username + ".png"}
+								src={"/avatars/" + username + ".png"}
 								sx={{width: 75, height: 75}}
 							/>
 						</IconButton>

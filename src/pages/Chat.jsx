@@ -73,7 +73,7 @@ function UserItem({username, info}) {
 							}
 						}}
 					>
-						<Avatar src={"/usericon/" + username + ".png"} alt={username}/>
+						<Avatar src={"/avatars/" + username + ".png"} alt={username}/>
 					</Badge>
 				</Badge>
 			</ListItemAvatar>
@@ -124,7 +124,7 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 	
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
-			{!isMe && <IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/usericon/" + username + ".png"} alt={username}/></IconButton>}
+			{!isMe && <IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/avatars/" + username + ".png"} alt={username}/></IconButton>}
 			<Grid container direction="column" sx={{maxWidth: "60%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
 				<Paper
 					elevation={3}
@@ -154,7 +154,7 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 				{quote != null &&
 					<Chip
 						variant="outlined"
-						avatar={<Avatar alt={quote.username} src={"/usericon/" + quote.username + ".png"}/>}
+						avatar={<Avatar alt={quote.username} src={"/avatars/" + quote.username + ".png"}/>}
 						label={quote.username + ": " + quote.content}
 						onClick={() => {
 							if (document.getElementById("message-" + quote.id))
@@ -163,7 +163,7 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 					/>
 				}
 			</Grid>
-			{isMe && <IconButton sx={{ml: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/usericon/" + username + ".png"} alt={username}/></IconButton>}
+			{isMe && <IconButton sx={{ml: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/avatars/" + username + ".png"} alt={username}/></IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
 				<DialogTitle>
 					来自{username}的消息
@@ -261,7 +261,7 @@ const notify = (title, body, iconId) => {
 			navigator.serviceWorker.register("/service-worker.js").then((registration) => {
 				registration.showNotification(title, {
 					body: body,
-					icon: "/usericon/" + iconId + ".png",
+					icon: "/avatars/" + iconId + ".png",
 				});
 			});
 		});
@@ -850,7 +850,7 @@ export default function Chat() {
 					{quote != null &&
 						<Chip
 							variant="outlined"
-							avatar={<Avatar alt={quote.username} src={"/usericon/" + quote.username + ".png"}/>}
+							avatar={<Avatar alt={quote.username} src={"/avatars/" + quote.username + ".png"}/>}
 							label={quote.username + ": " + quote.content}
 							clickable
 							onClick={() => document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"})}

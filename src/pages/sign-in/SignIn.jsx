@@ -84,10 +84,10 @@ export default function SignIn() {
 				}
 			}).then(res => {
 				const data = res.data;
-				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
-				if (data["status"] === 1) {
-					Cookies.set("username", data["username"], {expires: 30, path: "/"});
-					Cookies.set("user_token", data["userToken"], {expires: 30, path: "/"});
+				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
+				if (data.status === 1) {
+					Cookies.set("username", data.username, {path: "/", expires: 30});
+					Cookies.set("user_token", data["userToken"], {path: "/", expires: 30});
 					window.location.href = "/";
 				}
 			});
@@ -169,15 +169,13 @@ export default function SignIn() {
 				</Button>
 				<Typography sx={{textAlign: 'center'}}>
 					还没有账号？{' '}
-					<span>
-		                <Link
-			                href="/register"
-			                variant="body2"
-			                sx={{alignSelf: 'center'}}
-		                >
-		                  注册
-		                </Link>
-					</span>
+					<Link
+						href={"/register"}
+						variant="body2"
+						sx={{alignSelf: 'center'}}
+					>
+						注册
+					</Link>
 				</Typography>
 			</Box>
 			<Divider>
