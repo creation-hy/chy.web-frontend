@@ -8,7 +8,7 @@ export const ChatMarkdown = ({children, ...props}) => {
 		children = "";
 	
 	const md = children.replace(/ {2}/g, " \u00A0")
-		.replace(/(?<![*-])(?<![*-]\n)\n{2,}(?![*-])/g,
+		.replace(/(?<!((?<!\S)([*_-]{3,})(?!\S)))\n{2,}(?!((?<!\S)([*_-]{3,})(?!\S)))/g,
 			(match) => "\n\n" + "\u00A0  \n".repeat(match.length - 1));
 	
 	return (
