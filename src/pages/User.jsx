@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {Alert, InputLabel, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
@@ -41,6 +41,27 @@ function InfoContainer({value, username}) {
 		queryFn: () => axios.get("/api/user/" + username + url).then(res => res.data),
 	});
 	
+	const [chatList, setChatList] = useState([]);
+	const chatListRef = useRef(-1);
+	
+	useEffect(() => {
+		if (!error && !isLoading && value === 1) {
+			setChatList([...data.result]);
+			chatListRef.current = data.result;
+			let lastScrollStartId = -1;
+			window.addEventListener("scroll", () => {
+				if (document.documentElement.scrollHeight - window.scrollY - window.innerHeight <= 50 &&
+					lastScrollStartId !== chatListRef.current[chatListRef.current.length - 1].id - 1) {
+					lastScrollStartId = chatListRef.current[chatListRef.current.length - 1].id - 1;
+					axios.get("/api/user/" + username + "/chat/" + lastScrollStartId).then(res => {
+						chatListRef.current = [...chatListRef.current, ...res.data.result];
+						setChatList([...chatListRef.current]);
+					});
+				}
+			});
+		}
+	}, [data, error, isLoading, username, value]);
+	
 	if (error || isLoading)
 		return null;
 	
@@ -53,11 +74,11 @@ function InfoContainer({value, username}) {
 			</Typography>
 		);
 	
-	if (value === 1)
+	if (value === 1) {
 		return (
 			<Box>
-				{data.result.map((item, index) => (
-					<Grid container key={index} justifyContent='flex-start' alignItems="flex-start" sx={{my: 2.5}}>
+				{chatList.map((item) => (
+					<Grid container key={item.id} justifyContent='flex-start' alignItems="flex-start" sx={{my: 2.5}}>
 						<IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}>
 							<Avatar src={"/usericon/" + username + ".png"} alt={username}/>
 						</IconButton>
@@ -82,6 +103,7 @@ function InfoContainer({value, username}) {
 				))}
 			</Box>
 		);
+	}
 	
 	return (
 		<Grid container direction="column" spacing={3}>
