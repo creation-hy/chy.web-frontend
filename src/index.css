@@ -21,6 +21,12 @@ html, body, #root {
 		white-space: pre-wrap;
 	}
 
+	.syntax-highlighter {
+		border-radius: 5px;
+		margin-top: 4px;
+		margin-bottom: 4px;
+	}
+
 	& ul, ol, dl {
 		padding-left: 1em;
 	}
