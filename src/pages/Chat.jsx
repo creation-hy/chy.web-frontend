@@ -221,7 +221,7 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 							setContent("消息已撤回");
 							const item = messagesVar.find(item => item.id === messageId);
 							if (item) {
-								item.text = "消息已撤回";
+								item.content = "消息已撤回";
 								if (item.id.toString() === messageCard.current.lastElementChild.id.substring(8)) {
 									const userItem = usersVar.find(item => item.username === (currentUserVar === "ChatRoomSystem" ? "公共" : currentUserVar));
 									if (userItem) {
@@ -573,7 +573,7 @@ export default function Chat() {
 				id: data.id,
 				username: data.sender,
 				isMe: data.sender === myname,
-				text: data.content,
+				content: data.content,
 				quote: data.quote,
 				time: data.time,
 			}];
@@ -658,7 +658,7 @@ export default function Chat() {
 				const data = JSON.parse(message.body);
 				const item = messagesVar.find(item => item.id === data.id);
 				if (item) {
-					item.text = "消息已撤回";
+					item.content = "消息已撤回";
 					item.id = -item.id;
 					setMessages([...messagesVar]);
 				}
@@ -679,7 +679,7 @@ export default function Chat() {
 				
 				const item = messagesVar.find(item => item.id === data.id);
 				if (item) {
-					item.text = "消息已撤回";
+					item.content = "消息已撤回";
 					item.id = -item.id;
 					setMessages([...messagesVar]);
 				}
@@ -822,7 +822,7 @@ export default function Chat() {
 									startId = message[0].id;
 								}
 								const link = document.createElement("a");
-								link.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
+								link.href = URL.createObjectURL(new Blob([text], {type: "text/plain;charset=utf-8"}));
 								link.style.display = "none";
 								link.download = "ChyChat-" + currentUserVar + ".md";
 								document.body.appendChild(link);
@@ -850,7 +850,7 @@ export default function Chat() {
 									messageId={message.id}
 									isMe={message.isMe}
 									username={message.username}
-									content={message.text}
+									content={message.content}
 									quote={message.quote}
 									timestamp={message.time}
 									setQuote={setQuote}
