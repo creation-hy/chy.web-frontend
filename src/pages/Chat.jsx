@@ -125,13 +125,13 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 	
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
-			{!isMe && <IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/avatars/" + username + ".png"} alt={username}/></IconButton>}
-			<Grid container direction="column" sx={{maxWidth: "60%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
+			{!isMe && <IconButton sx={{mr: 1, p: 0}} href={"/user/" + username}><Avatar src={"/avatars/" + username + ".png"} alt={username}/></IconButton>}
+			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
 				<Paper
 					elevation={3}
 					sx={{
-						padding: '8px 16px',
-						borderRadius: '16px',
+						padding: '8px 11px',
+						borderRadius: '10px',
 						backgroundColor: isMe ? '#1976d2' : 'normal',
 						color: isMe ? 'white' : 'normal',
 						wordBreak: 'break-word',
@@ -145,12 +145,9 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 						});
 					}}
 				>
-					<Box sx={{fontSize: 15}}>
+					<Box>
 						<ChatMarkdown>{contentState}</ChatMarkdown>
 					</Box>
-					<Typography variant="caption" display="block" textAlign={isMe ? "right" : "left"} mt={1}>
-						{new Date(timestamp).toLocaleString()}
-					</Typography>
 				</Paper>
 				{quote != null &&
 					<Chip
@@ -164,7 +161,7 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 					/>
 				}
 			</Grid>
-			{isMe && <IconButton sx={{ml: 1.5, p: 0}} href={"/user/" + username}><Avatar src={"/avatars/" + username + ".png"} alt={username}/></IconButton>}
+			{isMe && <IconButton sx={{ml: 1, p: 0}} href={"/user/" + username}><Avatar src={"/avatars/" + username + ".png"} alt={username}/></IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
 				<DialogTitle>
 					来自{username}的消息
@@ -520,7 +517,7 @@ export default function Chat() {
 	
 	const sendMessage = useCallback(() => {
 		const content = messageInput.current.value;
-		if (content === "")
+		if (content.trim().length === 0)
 			return;
 		messageInput.current.focus();
 		document.execCommand("selectAll");
@@ -841,20 +838,28 @@ export default function Chat() {
 					</Grid>
 				</Card>
 				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, maxWidth: "100%"}}>
-					{messages.map((message) => (
-						<Message
-							key={message.id}
-							messageId={message.id}
-							isMe={message.isMe}
-							username={message.username}
-							content={message.text}
-							quote={message.quote}
-							timestamp={message.time}
-							setQuote={setQuote}
-							messageCard={messageCard}
-							setUsers={setUsers}
-						/>
-					))}
+					{messages.map((message, index) => {
+						const currentDate = new Date(message.time);
+						const previousDate = new Date(!index ? 0 : messages[index - 1].time);
+						return (
+							<>
+								{currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000 &&
+									<Grid container><Chip label={currentDate.toLocaleString()} sx={{mx: "auto"}}/></Grid>}
+								<Message
+									key={message.id}
+									messageId={message.id}
+									isMe={message.isMe}
+									username={message.username}
+									content={message.text}
+									quote={message.quote}
+									timestamp={message.time}
+									setQuote={setQuote}
+									messageCard={messageCard}
+									setUsers={setUsers}
+								/>
+							</>
+						);
+					})}
 				</Card>
 				<Card sx={{display: currentUser === "" ? "none" : "block", maxWidth: "100%"}}>
 					{quote != null &&
@@ -873,7 +878,7 @@ export default function Chat() {
 						multiline
 						fullWidth
 						maxRows={10}
-						slotProps={{input: {style: {fontSize: 15, padding: 12}}}}
+						slotProps={{input: {style: {fontSize: 15, padding: 10}}}}
 						onKeyDown={(event) => {
 							if (!isMobile && event.keyCode === 13) {
 								event.preventDefault();
