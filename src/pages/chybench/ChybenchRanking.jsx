@@ -23,8 +23,6 @@ export default function ChybenchRanking() {
 		if (isLoading || error)
 			return null;
 		
-		console.log(data);
-		
 		return (
 			<TableContainer component={Paper}>
 				<Table>

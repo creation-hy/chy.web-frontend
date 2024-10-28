@@ -14,6 +14,7 @@ import {
 	AddReactionOutlined,
 	ArrowBack,
 	CloudDownload,
+	ContentCopyOutlined,
 	DeleteOutline,
 	FontDownloadOutlined,
 	FormatQuoteOutlined,
@@ -182,6 +183,14 @@ const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote
 				anchorReference="anchorPosition"
 				anchorPosition={contextMenu ? {top: contextMenu.mouseY, left: contextMenu.mouseX} : undefined}
 			>
+				<MenuItem onClick={() => navigator.clipboard.writeText(contentState)}>
+					<ListItemIcon>
+						<ContentCopyOutlined/>
+					</ListItemIcon>
+					<Typography>
+						复制
+					</Typography>
+				</MenuItem>
 				<MenuItem onClick={() => setOnDialog(true)}>
 					<ListItemIcon>
 						<VisibilityOutlined/>
