@@ -51,7 +51,7 @@ import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
-let currentUserVar = "", settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {};
+let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {};
 let usersVar = [], messagesVar = [];
 let socket, stomp;
 
@@ -445,7 +445,7 @@ export default function Chat() {
 	
 	const [users, setUsers] = useState([]);
 	const [logged, setLogged] = useState(null);
-	const [currentUser, setCurrentUser] = useState("");
+	const [currentUser, setCurrentUser] = useState(null);
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
@@ -456,7 +456,7 @@ export default function Chat() {
 	const queryClient = useRef(useQueryClient());
 	
 	const getMessages = useCallback((username, startId = -1, doRefresh = false) => {
-		if (currentUserVar === username && startId === -1 && !doRefresh)
+		if (!username || currentUserVar === username && startId === -1 && !doRefresh)
 			return;
 		const isCurrentUser = currentUserVar === username;
 		currentUserVar = username;
@@ -782,14 +782,14 @@ export default function Chat() {
 				</Box>
 			</Card>
 			<Grid container id="chat-main" direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex"}} gap={1.5}>
-				<Card sx={{display: currentUser === "" ? "none" : "block", width: "100%"}}>
+				{currentUser != null && <Card sx={{width: "100%"}}>
 					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 1.5} gap={1.5}>
 						{isMobile && <IconButton onClick={() => {
 							document.getElementById("contacts").style.display = "flex";
 							document.getElementById("chat-main").style.display = "none";
 							document.getElementById("app-bar").style.display = "flex";
-							setCurrentUser("");
-							currentUserVar = "";
+							setCurrentUser(null);
+							currentUserVar = null;
 						}}>
 							<ArrowBack/>
 						</IconButton>}
@@ -829,7 +829,7 @@ export default function Chat() {
 							</IconButton>
 						</Box>
 					</Grid>
-				</Card>
+				</Card>}
 				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 1, maxWidth: "100%"}}>
 					{messages.map((message, index) => {
 						const currentDate = new Date(message.time);
@@ -853,7 +853,7 @@ export default function Chat() {
 						);
 					})}
 				</Card>
-				<Card sx={{display: currentUser === "" ? "none" : "block", maxWidth: "100%"}}>
+				{currentUser != null && <Card sx={{maxWidth: "100%"}}>
 					{quote != null &&
 						<Chip
 							variant="outlined"
@@ -892,7 +892,7 @@ export default function Chat() {
 							<Send/>
 						</IconButton>
 					</Grid>
-				</Card>
+				</Card>}
 			</Grid>
 		</Grid>
 	) : <Alert severity="error">请先登录！</Alert>;
