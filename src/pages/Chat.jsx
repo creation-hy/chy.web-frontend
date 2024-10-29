@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from "react";
+import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
 import {Alert, Badge, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
@@ -450,7 +450,7 @@ export default function Chat() {
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
-	const [matchList, setMatchList] = useState(null);
+	const [matchList, setMatchList] = useState([]);
 	const [abortController, setAbortController] = useState(null);
 	const messageCard = useRef(null), messageInput = useRef(null);
 	const disconnectErrorBarKey = useRef(null);
@@ -739,7 +739,7 @@ export default function Chat() {
 						if (abortController)
 							abortController.abort();
 						if (event.target.value === "")
-							setMatchList(null);
+							setMatchList([]);
 						else {
 							const controller = new AbortController();
 							setAbortController(controller);
@@ -758,7 +758,7 @@ export default function Chat() {
 						</ListItemButton>
 					</List>
 					<Divider/>
-					<List sx={{display: !matchList ? "block" : "none"}}>
+					<List sx={{display: matchList.length === 0 ? "block" : "none"}}>
 						{users.map((user) => (user.username !== "公共" &&
 							<ListItemButton
 								key={user.username}
@@ -769,20 +769,14 @@ export default function Chat() {
 							</ListItemButton>
 						))}
 					</List>
-					<List sx={{display: !matchList ? "none" : "block"}}>
-						{matchList && matchList.map((user) => (
+					<List sx={{display: matchList.length === 0 ? "none" : "block"}}>
+						{matchList.map((user) => (
 							<ListItemButton
-								key={user.username + '-' + user.isOnline}
+								key={user.username}
 								onClick={() => getMessages(user.username)}
 								selected={currentUser === user.username}
 							>
-								<UserItem username={user.username} info={{
-									username: user.username,
-									isOnline: user.isOnline,
-									lastMessageText: "",
-									lastMessageTime: "",
-									newMessageCount: 0,
-								}}/>
+								<Avatar src={"/avatars/" + user.username + ".png"} alt={user.username}/>
 							</ListItemButton>
 						))}
 					</List>
@@ -837,16 +831,15 @@ export default function Chat() {
 						</Box>
 					</Grid>
 				</Card>
-				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, maxWidth: "100%"}}>
+				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 1, maxWidth: "100%"}}>
 					{messages.map((message, index) => {
 						const currentDate = new Date(message.time);
 						const previousDate = new Date(!index ? 0 : messages[index - 1].time);
+						const showTime = currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000;
 						return (
-							<>
-								{currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000 &&
-									<Grid container><Chip label={currentDate.toLocaleString()} sx={{mx: "auto"}}/></Grid>}
+							<Fragment key={message.id}>
+								{showTime && <Grid container><Chip label={currentDate.toLocaleString()} sx={{mx: "auto"}}/></Grid>}
 								<Message
-									key={message.id}
 									messageId={message.id}
 									isMe={message.isMe}
 									username={message.username}
@@ -857,7 +850,7 @@ export default function Chat() {
 									messageCard={messageCard}
 									setUsers={setUsers}
 								/>
-							</>
+							</Fragment>
 						);
 					})}
 				</Card>
