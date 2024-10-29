@@ -4,7 +4,6 @@ import {useEffect, useRef, useState} from "react";
 import {Alert, InputLabel, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
@@ -82,12 +81,12 @@ function InfoContainer({value, username}) {
 						<IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}>
 							<Avatar src={"/avatars/" + username + ".png"} alt={username}/>
 						</IconButton>
-						<Grid container direction="column" sx={{maxWidth: "60%"}} alignItems='flex-end' spacing={0.7}>
+						<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-end' spacing={0.7}>
 							<Paper
 								elevation={3}
 								sx={{
-									padding: '8px 16px',
-									borderRadius: '16px',
+									padding: '8px 11px',
+									borderRadius: '10px',
 									wordBreak: 'break-word',
 								}}
 							>
@@ -191,46 +190,44 @@ export default function User() {
 	
 	return (
 		<Box>
-			<Card>
-				<CardContent>
-					<Grid container direction="column">
-						<IconButton
-							onClick={isMe ? () => document.getElementById("avatar-upload").click() : null}
-							sx={{width: 75, height: 75, mb: 0.5}}
-						>
-							<Avatar
-								alt={username}
-								src={"/avatars/" + username + ".png"}
-								sx={{width: 75, height: 75}}
-							/>
+			<Card sx={{p: 2}}>
+				<Grid container direction="column">
+					<IconButton
+						onClick={isMe ? () => document.getElementById("avatar-upload").click() : null}
+						sx={{width: 75, height: 75, mb: 0.5}}
+					>
+						<Avatar
+							alt={username}
+							src={"/avatars/" + username + ".png"}
+							sx={{width: 75, height: 75}}
+						/>
+					</IconButton>
+					<input type="file" id="avatar-upload" style={{display: "none"}} onChange={uploadAvatar} accept="image/*"/>
+					<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
+					<Grid container spacing={1} alignItems="center" sx={{pb: 1}}>
+						<Typography gutterBottom variant="h6" display="flex" gap={0.5} alignItems="center" margin={0}>
+							{username}{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
+						</Typography>
+						<IconButton sx={{display: isMe ? "none" : "flex"}}
+						            onClick={() => doFollow(username)}>
+							{isFollowing == null ? null : (isFollowing ? <PersonAddDisabled fontSize="small"/> : <PersonAdd fontSize="small"/>)}
 						</IconButton>
-						<input type="file" id="avatar-upload" style={{display: "none"}} onChange={uploadAvatar} accept="image/*"/>
-						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
-						<Grid container spacing={1} alignItems="center" sx={{pb: 1}}>
-							<Typography gutterBottom variant="h6" display="flex" gap={0.5} alignItems="center" margin={0}>
-								{username}{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
-							</Typography>
-							<IconButton sx={{display: isMe ? "none" : "flex"}}
-							            onClick={() => doFollow(username)}>
-								{isFollowing == null ? null : (isFollowing ? <PersonAddDisabled fontSize="small"/> : <PersonAdd fontSize="small"/>)}
+						<Box id="my-container" display={isMe ? "flex" : "none"}>
+							<IconButton onClick={() => setModifying(true)}>
+								<Edit fontSize="small"/>
 							</IconButton>
-							<Box id="my-container" display={isMe ? "flex" : "none"}>
-								<IconButton onClick={() => setModifying(true)}>
-									<Edit fontSize="small"/>
-								</IconButton>
-								<IconButton onClick={() => setResetPasswordOn(true)}>
-									<LockReset fontSize="small"/>
-								</IconButton>
-								<IconButton onClick={logOut}>
-									<Logout fontSize="small"/>
-								</IconButton>
-							</Box>
-						</Grid>
-						<Box id="intro" sx={{color: "text.secondary", fontSize: 14}}>
-							<ChatMarkdown>{!isLoading ? data["intro"] : ""}</ChatMarkdown>
+							<IconButton onClick={() => setResetPasswordOn(true)}>
+								<LockReset fontSize="small"/>
+							</IconButton>
+							<IconButton onClick={logOut}>
+								<Logout fontSize="small"/>
+							</IconButton>
 						</Box>
 					</Grid>
-				</CardContent>
+					<Box id="intro" sx={{color: "text.secondary", fontSize: 14}}>
+						<ChatMarkdown>{!isLoading ? data["intro"] : ""}</ChatMarkdown>
+					</Box>
+				</Grid>
 			</Card>
 			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2, mt: 1}}>
 				<Tabs value={value} onChange={handleChange} aria-label="basic tabs example">

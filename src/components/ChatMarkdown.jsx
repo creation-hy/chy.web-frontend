@@ -2,7 +2,6 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import PropTypes from "prop-types";
 import {List, ListItem, ListItemText, Paper, Table, TableBody, TableCell, TableContainer, TableRow} from "@mui/material";
-import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import Divider from "@mui/material/Divider";
 import SyntaxHighlighter from "react-syntax-highlighter";
@@ -30,24 +29,12 @@ export const ChatMarkdown = ({children, ...props}) => {
 				hr: () => <Divider sx={{my: 1}}/>,
 				a: ({href, title, children}) => (<Link href={href} title={title}>{children}</Link>),
 				
-				p: ({children}) => (<Typography component="span">{children}</Typography>),
-				del: ({children}) => (<Typography component="span" sx={{textDecoration: "line-through"}}>{children}</Typography>),
-				em: ({children}) => (<Typography component="span" sx={{fontStyle: "italic"}}>{children}</Typography>),
-				strong: ({children}) => (<Typography component="span" sx={{fontWeight: "bold"}}>{children}</Typography>),
-				b: ({children}) => (<Typography component="span" sx={{fontWeight: "bold"}}>{children}</Typography>),
-				h1: ({children}) => (<Typography variant="h1">{children}</Typography>),
-				h2: ({children}) => (<Typography variant="h2">{children}</Typography>),
-				h3: ({children}) => (<Typography variant="h3">{children}</Typography>),
-				h4: ({children}) => (<Typography variant="h4">{children}</Typography>),
-				h5: ({children}) => (<Typography variant="h5">{children}</Typography>),
-				h6: ({children}) => (<Typography variant="h6">{children}</Typography>),
-				
 				table: ({children}) => (<TableContainer component={Paper} sx={{my: 0.5}}>
 					<Table size="small">{children}</Table>
 				</TableContainer>),
 				tbody: ({children}) => (<TableBody>{children}</TableBody>),
 				tr: ({children}) => (<TableRow>{children}</TableRow>),
-				td: ({children}) => (<TableCell><Typography component="span">{children}</Typography></TableCell>),
+				td: ({children}) => (<TableCell>{children}</TableCell>),
 				
 				ol: ({children}) => (<List sx={{
 					listStyleType: "decimal",

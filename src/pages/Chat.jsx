@@ -118,7 +118,7 @@ UserItem.propTypes = {
 	info: PropTypes.object,
 }
 
-const Message = ({messageId, isMe, username, content, quote, timestamp, setQuote, messageCard, setUsers}) => {
+const Message = ({messageId, isMe, username, content, quote, setQuote, messageCard, setUsers}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const [contentState, setContent] = useState(content.toString());
@@ -251,7 +251,6 @@ Message.propTypes = {
 	username: PropTypes.string,
 	content: PropTypes.string,
 	quote: PropTypes.object,
-	timestamp: PropTypes.string,
 	setQuote: PropTypes.func,
 	messageCard: PropTypes.object,
 	setUsers: PropTypes.func,
