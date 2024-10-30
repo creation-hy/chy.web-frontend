@@ -1,7 +1,6 @@
 import './App.css'
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import Blog from "src/pages/Blog.jsx";
-import Start from "src/pages/Start.jsx";
 import SignIn from "src/pages/sign-in/SignIn.jsx";
 import SignUp from "src/pages/SignUp.jsx";
 import Chat from "src/pages/Chat.jsx";
@@ -23,6 +22,7 @@ import Minesweeper from "src/pages/minesweeper/Minesweeper.jsx";
 import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useColorMode} from "src/components/ColorMode.jsx";
+import Start from "src/pages/Start.jsx";
 
 export default function App() {
 	const [colorMode] = useColorMode();
@@ -43,7 +43,8 @@ export default function App() {
 					<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
 						<BrowserRouter>
 							<Routes>
-								<Route path="/" element={<Start/>}/>
+								<Route path="/" element={<Chat/>}/>
+								<Route path="/about" element={<Start/>}/>
 								<Route path="/blog" element={<Blog/>}/>
 								<Route path="/login" element={<SignIn/>}/>
 								<Route path="/register" element={<SignUp/>}/>

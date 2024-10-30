@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import {Badge} from "@mui/material";
 
 export default function Start() {
-	document.title = "首页 - chy.web";
+	document.title = "关于 - chy.web";
 	
 	return (
 		<Box>

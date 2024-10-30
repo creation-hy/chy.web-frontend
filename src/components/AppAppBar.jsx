@@ -54,11 +54,8 @@ export const AppAppBar = () => {
 					<Box sx={{flexGrow: 1, display: 'flex', alignItems: 'center', px: 0}}>
 						<Box sx={{display: {xs: 'none', md: 'flex'}}}>
 							<Avatar src="/favicon.ico" sx={{width: 35, height: 35, mr: 1}}/>
-							<Button variant="text" href="/">
-								首页
-							</Button>
-							<Button variant="text" href="/chat">
-								聊天
+							<Button variant="text" href="/" sx={{textTransform: "none"}}>
+								Chat
 							</Button>
 							<Button variant="text" href="/ai-draw">
 								AI绘图
@@ -83,6 +80,9 @@ export const AppAppBar = () => {
 							</Button>
 							<Button variant="text" href="/ranking">
 								排行榜
+							</Button>
+							<Button variant="text" href="/about">
+								关于
 							</Button>
 						</Box>
 					</Box>
@@ -145,15 +145,9 @@ export const AppAppBar = () => {
 								<List sx={{width: "100%"}}>
 									<ListItemButton href="/">
 										<ListItemIcon>
-											<Home/>
-										</ListItemIcon>
-										<ListItemText primary="首页"/>
-									</ListItemButton>
-									<ListItemButton href="/chat">
-										<ListItemIcon>
 											<Chat/>
 										</ListItemIcon>
-										<ListItemText primary="聊天"/>
+										<ListItemText primary="Chat"/>
 									</ListItemButton>
 									<ListItemButton href="/ai-draw">
 										<ListItemIcon>
@@ -202,6 +196,12 @@ export const AppAppBar = () => {
 											<Leaderboard/>
 										</ListItemIcon>
 										<ListItemText primary="排行榜"/>
+									</ListItemButton>
+									<ListItemButton href="/about">
+										<ListItemIcon>
+											<Home/>
+										</ListItemIcon>
+										<ListItemText primary="关于"/>
 									</ListItemButton>
 								</List>
 							</Box>

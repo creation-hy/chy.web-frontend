@@ -1,7 +1,7 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
-import {Alert, Badge, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
+import {Badge, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
@@ -97,10 +97,10 @@ function UserItem({username, info}) {
 						}}>
 							{info.username}
 						</Typography>
-						<Typography variant="body2" color="textSecondary">
+						{info["lastMessageTime"] && <Typography variant="body2" color="textSecondary">
 							{lastMessageTime.toLocaleDateString() === currentTime.toLocaleDateString() ? lastMessageTime.toLocaleTimeString().substring(0, 5) :
 								lastMessageTime.getFullYear() === currentTime.getFullYear() ? lastMessageTime.toLocaleDateString().substring(5) : lastMessageTime.toLocaleDateString()}
-						</Typography>
+						</Typography>}
 					</Grid>
 				}
 				secondary={
@@ -448,7 +448,7 @@ export default function Chat() {
 	document.title = "Chat - chy.web";
 	
 	const urlParams = useRef(useParams());
-	const navigate = useNavigate();
+	const navigate = useRef(useNavigate());
 	const userJumped = useRef(false);
 	
 	const [users, setUsers] = useState([]);
@@ -469,7 +469,7 @@ export default function Chat() {
 		const isCurrentUser = currentUserVar === username;
 		currentUserVar = username;
 		setCurrentUser(username);
-		navigate("/chat/" + username);
+		navigate.current("/chat/" + username);
 		setQuote(null);
 		if (isMobile) {
 			document.getElementById("contacts").style.display = "none";
@@ -490,7 +490,8 @@ export default function Chat() {
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
 			messagesVar = startId === -1 ? res.data.result["message"] : [...res.data.result["message"], ...messagesVar];
 			flushSync(() => {
-				setLastOnline(res.data.result["isOnline"] ? "对方在线" : "上次上线：" + new Date(res.data.result["lastOnline"]).toLocaleString());
+				setLastOnline(res.data.result["isOnline"] ? "在线" : (
+					res.data.result["lastOnline"] ? "上次上线：" + new Date(res.data.result["lastOnline"]).toLocaleString() : "从未上线"));
 				setMessages([...messagesVar]);
 			});
 			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
@@ -506,7 +507,7 @@ export default function Chat() {
 	useEffect(() => {
 		if (!isLoading && !error) {
 			if (data.status !== 1) {
-				setLogged(false);
+				navigate.current("/login");
 				return;
 			}
 			setLogged(true);
@@ -542,166 +543,166 @@ export default function Chat() {
 		}));
 	}, [quote]);
 	
-	useEffect(() => {
-		const updateUserItem = (username, content, time, isCurrent) => {
-			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
-			if (userItem) {
-				userItem["lastMessageText"] = content;
-				userItem["lastMessageTime"] = time;
-				if (!isCurrent)
-					userItem["newMessageCount"]++;
-				usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
+	const updateUserItem = useCallback((username, content, time, isCurrent) => {
+		const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
+		if (userItem) {
+			userItem["lastMessageText"] = content;
+			userItem["lastMessageTime"] = time;
+			if (!isCurrent)
+				userItem["newMessageCount"]++;
+			usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
+			setUsers([...usersVar]);
+		} else {
+			axios.get("/api/user/find/" + username).then(res => {
+				usersVar = [{
+					username: username,
+					isOnline: res.data.result[0].isOnline,
+					lastMessageTime: time,
+					lastMessageText: content,
+					newMessageCount: isCurrent ? 0 : 1,
+				}, ...usersVar];
 				setUsers([...usersVar]);
-			} else {
-				axios.get("/api/user/find/" + username).then(res => {
-					usersVar = [{
-						username: username,
-						isOnline: res.data.result[0].isOnline,
-						lastMessageTime: time,
-						lastMessageText: content,
-						newMessageCount: isCurrent ? 0 : 1,
-					}, ...usersVar];
-					setUsers([...usersVar]);
-				});
-			}
+			});
+		}
+	}, []);
+	
+	const newMessage = useCallback((data) => {
+		axios.post("/api/chat/update-viewed", {target: currentUserVar}, {
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+		
+		const content = data.recipient === "ChatRoomSystem" ? data.sender + ": " + data.content : data.content;
+		updateUserItem(data.recipient === "ChatRoomSystem" ? data.recipient : (data.sender === myname ? data.recipient : data.sender),
+			content, data.time, true);
+		
+		messagesVar = [...messagesVar, {
+			id: data.id,
+			username: data.sender,
+			isMe: data.sender === myname,
+			content: data.content,
+			quote: data.quote,
+			time: data.time,
+		}];
+		
+		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
+		flushSync(() => setMessages([...messagesVar]));
+		if (scrollTop + clientHeight + 50 >= scrollHeight)
+			messageCard.current.scrollTop = scrollHeight;
+	}, [updateUserItem]);
+	
+	let firstRebirth = useRef(false);
+	
+	const stompOnConnect = useCallback(() => {
+		stomp.heartbeat.incoming = 10000;
+		stomp.heartbeat.outgoing = 10000;
+		
+		firstRebirth.current = true;
+		
+		if (disconnectErrorBarKey.current) {
+			closeSnackbar(disconnectErrorBarKey.current);
+			getMessages(currentUserVar, -1, true);
+			queryClient.current.invalidateQueries({queryKey: ["contacts"]});
+			disconnectErrorBarKey.current = null;
 		}
 		
-		const newMessage = (data) => {
-			axios.post("/api/chat/update-viewed", {target: currentUserVar}, {
-				headers: {
-					"Content-Type": "application/json",
-				},
-			});
-			
-			const content = data.recipient === "ChatRoomSystem" ? data.sender + ": " + data.content : data.content;
-			updateUserItem(data.recipient === "ChatRoomSystem" ? data.recipient : (data.sender === myname ? data.recipient : data.sender),
-				content, data.time, true);
-			
-			messagesVar = [...messagesVar, {
-				id: data.id,
-				username: data.sender,
-				isMe: data.sender === myname,
-				content: data.content,
-				quote: data.quote,
-				time: data.time,
-			}];
-			
-			const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
-			flushSync(() => setMessages([...messagesVar]));
-			if (scrollTop + clientHeight + 50 >= scrollHeight)
-				messageCard.current.scrollTop = scrollHeight;
-		};
+		stomp.subscribe("/topic/chat.online", (message) => {
+			const username = JSON.parse(message.body).username;
+			const userItem = usersVar.find(item => item.username === username);
+			if (userItem) {
+				userItem["isOnline"] = true;
+				setUsers([...usersVar]);
+			}
+			if (username === currentUserVar)
+				setLastOnline("在线");
+		});
 		
-		let firstRebirth = true;
+		stomp.subscribe("/topic/chat.offline", (message) => {
+			const data = JSON.parse(message.body);
+			const userItem = usersVar.find(item => item.username === data.username);
+			if (userItem) {
+				userItem["isOnline"] = false;
+				userItem["lastOnline"] = data["lastOnline"];
+				setUsers([...usersVar]);
+			}
+			if (data.username === currentUserVar)
+				setLastOnline("上次上线：" + data["lastOnline"]);
+		});
 		
-		const stompOnConnect = () => {
-			stomp.heartbeat.incoming = 10000;
-			stomp.heartbeat.outgoing = 10000;
-			
-			firstRebirth = true;
-			
-			if (disconnectErrorBarKey.current) {
-				closeSnackbar(disconnectErrorBarKey.current);
-				getMessages(currentUserVar, -1, true);
-				queryClient.current.invalidateQueries({queryKey: ["contacts"]});
-				disconnectErrorBarKey.current = null;
+		stomp.subscribe(`/user/queue/chat.message`, (message) => {
+			const data = JSON.parse(message.body);
+			if (myname === data.sender && currentUserVar === data.recipient ||
+				myname === data.recipient && currentUserVar === data.sender) {
+				newMessage(data);
+				if (settingsVar["allowNotification"] !== false && settingsVar["allowCurrentNotification"] !== false && data.sender !== myname)
+					notify("[私聊] " + data.sender + "说：",
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+			} else {
+				updateUserItem(data.sender === myname ? data.recipient : data.sender, data.content, data.time, false);
+				if (settingsVar["allowNotification"] !== false && data.sender !== myname)
+					notify("[私聊] " + data.sender + "说：",
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+			}
+		}, {"auto-delete": true});
+		
+		stomp.subscribe("/topic/chat.group.public.message", (message) => {
+			const data = JSON.parse(message.body);
+			if (currentUserVar === data.recipient) {
+				newMessage(data);
+				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false &&
+					settingsVar["allowCurrentNotification"] !== false && data.sender !== myname)
+					notify("[公共] " + data.sender + "说：",
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+			} else {
+				updateUserItem(data.recipient, data.sender + ": " + data.content, data.time, false);
+				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
+					notify("[公共] " + data.sender + "说：",
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+			}
+		});
+		
+		stomp.subscribe(`/user/queue/chat.delete`, (message) => {
+			const data = JSON.parse(message.body);
+			const item = messagesVar.find(item => item.id === data.id);
+			if (item) {
+				item.content = "消息已撤回";
+				item.id = -item.id;
+				setMessages([...messagesVar]);
 			}
 			
-			stomp.subscribe("/topic/chat.online", (message) => {
-				const username = JSON.parse(message.body).username;
-				const userItem = usersVar.find(item => item.username === username);
-				if (userItem) {
-					userItem["isOnline"] = true;
-					setUsers([...usersVar]);
-				}
-				if (username === currentUserVar)
-					setLastOnline("对方在线");
-			});
-			
-			stomp.subscribe("/topic/chat.offline", (message) => {
-				const data = JSON.parse(message.body);
+			if (data["isLatest"]) {
 				const userItem = usersVar.find(item => item.username === data.username);
 				if (userItem) {
-					userItem["isOnline"] = false;
-					userItem["lastOnline"] = data["lastOnline"];
+					userItem["lastMessageText"] = "消息已撤回";
 					setUsers([...usersVar]);
 				}
-				if (data.username === currentUserVar)
-					setLastOnline("上次上线：" + data["lastOnline"]);
-			});
-			
-			stomp.subscribe(`/user/queue/chat.message`, (message) => {
-				const data = JSON.parse(message.body);
-				if (myname === data.sender && currentUserVar === data.recipient ||
-					myname === data.recipient && currentUserVar === data.sender) {
-					newMessage(data);
-					if (settingsVar["allowNotification"] !== false && settingsVar["allowCurrentNotification"] !== false && data.sender !== myname)
-						notify("[私聊] " + data.sender + "说：",
-							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
-				} else {
-					updateUserItem(data.sender === myname ? data.recipient : data.sender, data.content, data.time, false);
-					if (settingsVar["allowNotification"] !== false && data.sender !== myname)
-						notify("[私聊] " + data.sender + "说：",
-							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
-				}
-			}, {"auto-delete": true});
-			
-			stomp.subscribe("/topic/chat.group.public.message", (message) => {
-				const data = JSON.parse(message.body);
-				if (currentUserVar === data.recipient) {
-					newMessage(data);
-					if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false &&
-						settingsVar["allowCurrentNotification"] !== false && data.sender !== myname)
-						notify("[公共] " + data.sender + "说：",
-							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
-				} else {
-					updateUserItem(data.recipient, data.sender + ": " + data.content, data.time, false);
-					if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
-						notify("[公共] " + data.sender + "说：",
-							settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
-				}
-			});
-			
-			stomp.subscribe(`/user/queue/chat.delete`, (message) => {
-				const data = JSON.parse(message.body);
-				const item = messagesVar.find(item => item.id === data.id);
-				if (item) {
-					item.content = "消息已撤回";
-					item.id = -item.id;
-					setMessages([...messagesVar]);
-				}
-				
-				if (data["isLatest"]) {
-					const userItem = usersVar.find(item => item.username === data.username);
-					if (userItem) {
-						userItem["lastMessageText"] = "消息已撤回";
-						setUsers([...usersVar]);
-					}
-				}
-			}, {"auto-delete": true});
-			
-			stomp.subscribe(`/topic/chat.group.public.delete`, (message) => {
-				const data = JSON.parse(message.body);
-				if (data.username === myname)
-					return;
-				
-				const item = messagesVar.find(item => item.id === data.id);
-				if (item) {
-					item.content = "消息已撤回";
-					item.id = -item.id;
-					setMessages([...messagesVar]);
-				}
-				
-				if (data["isLatest"]) {
-					const userItem = usersVar.find(item => item.username === "公共");
-					if (userItem) {
-						userItem["lastMessageText"] = data.username + ": 消息已撤回";
-						setUsers([...usersVar]);
-					}
-				}
-			});
-		};
+			}
+		}, {"auto-delete": true});
 		
+		stomp.subscribe(`/topic/chat.group.public.delete`, (message) => {
+			const data = JSON.parse(message.body);
+			if (data.username === myname)
+				return;
+			
+			const item = messagesVar.find(item => item.id === data.id);
+			if (item) {
+				item.content = "消息已撤回";
+				item.id = -item.id;
+				setMessages([...messagesVar]);
+			}
+			
+			if (data["isLatest"]) {
+				const userItem = usersVar.find(item => item.username === "公共");
+				if (userItem) {
+					userItem["lastMessageText"] = data.username + ": 消息已撤回";
+					setUsers([...usersVar]);
+				}
+			}
+		});
+	}, [getMessages, newMessage, updateUserItem]);
+	
+	useEffect(() => {
 		const stompConnect = () => {
 			socket = new SockJS(window.location.origin + "/api/websocket");
 			stomp = Stomp.over(() => socket);
@@ -714,7 +715,7 @@ export default function Chat() {
 		
 		const stompReconnect = async () => {
 			if (firstRebirth) {
-				firstRebirth = false;
+				firstRebirth.current = false;
 				disconnectErrorBarKey.current = enqueueSnackbar("服务器连接已断开，正在尝试重连...", {
 					variant: "error",
 					anchorOrigin: {vertical: "bottom", horizontal: "center"},
@@ -725,8 +726,11 @@ export default function Chat() {
 				setTimeout(stompConnect, 1000);
 		};
 		
-		stompConnect();
-		
+		if (logged)
+			stompConnect();
+	}, [getMessages, logged, stompOnConnect]);
+	
+	useEffect(() => {
 		let lastScrollStartId = -1;
 		messageCard.current.addEventListener("scroll", (event) => {
 			if (event.target.scrollTop <= 50 && lastScrollStartId !== messagesVar[0].id - 1 && messagesVar.length >= 30) {
@@ -736,12 +740,12 @@ export default function Chat() {
 		});
 	}, [getMessages]);
 	
-	return logged !== false ? (
+	return (
 		<Grid container sx={{flex: 1, height: 0, display: data ? "flex" : "none"}} gap={2}>
 			<Card id="contacts" sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
-					placeholder="搜索联系人"
+					placeholder="搜索用户"
 					sx={{fontSize: 14}}
 					onChange={(event) => {
 						if (abortController)
@@ -784,7 +788,12 @@ export default function Chat() {
 								onClick={() => getMessages(user.username)}
 								selected={currentUser === user.username}
 							>
-								<Avatar src={"/avatars/" + user.username + ".png"} alt={user.username}/>
+								<UserItem username={user.username} info={{
+									username: user.username,
+									isOnline: user.isOnline,
+									lastMessageText: "",
+									newMessageCount: 0,
+								}}/>
 							</ListItemButton>
 						))}
 					</List>
@@ -799,7 +808,7 @@ export default function Chat() {
 							document.getElementById("app-bar").style.display = "flex";
 							setCurrentUser(null);
 							currentUserVar = null;
-							navigate("/chat");
+							navigate.current("/chat");
 						}}>
 							<ArrowBack/>
 						</IconButton>}
@@ -905,5 +914,5 @@ export default function Chat() {
 				</Card>}
 			</Grid>
 		</Grid>
-	) : <Alert severity="error">请先登录！</Alert>;
+	);
 }
