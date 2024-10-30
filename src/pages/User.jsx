@@ -12,7 +12,7 @@ import Cookies from "js-cookie";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
-import {Edit, LockReset, Logout, PersonAdd, PersonAddDisabled, Verified} from "@mui/icons-material";
+import {EditOutlined, LockResetOutlined, LogoutOutlined, MailOutlined, PersonAddDisabledOutlined, PersonAddOutlined, Verified} from "@mui/icons-material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -78,7 +78,7 @@ function InfoContainer({value, username}) {
 			<Box>
 				{chatList.map((item) => (
 					<Grid container key={item.id} justifyContent='flex-start' alignItems="flex-start" sx={{my: 2.5}}>
-						<IconButton sx={{mr: 1.5, p: 0}} href={"/user/" + username}>
+						<IconButton sx={{mr: 1.5, p: 0}}>
 							<Avatar src={"/avatars/" + username + ".png"} alt={username}/>
 						</IconButton>
 						<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-end' spacing={0.7}>
@@ -109,13 +109,14 @@ function InfoContainer({value, username}) {
 			{data.result.map((item, index) => (
 				<Grid container key={index} alignItems="center" spacing={1.5}>
 					<Avatar src={"/avatars/" + item.username + ".png"} alt={item.username}/>
-					<Typography variant="h6" sx={{cursor: "pointer"}} onClick={() => {
-						window.location.href = item.username;
-					}}>
-						<Grid container gap={0.5} alignItems="center">
-							{item.username}{item["certification"] != null && (<Verified color="primary"/>)}
-						</Grid>
-					</Typography>
+					<Grid container gap={0.5} alignItems="center">
+						<Typography variant="h6" sx={{cursor: "pointer", fontWeight: "bold"}} onClick={() => {
+							window.location.href = item.username;
+						}}>
+							{item.username}
+						</Typography>
+						{item["certification"] != null && (<Verified color="primary"/>)}
+					</Grid>
 				</Grid>
 			))}
 		</Grid>
@@ -191,40 +192,63 @@ export default function User() {
 	return (
 		<Box>
 			<Card sx={{p: 2}}>
-				<Grid container direction="column">
-					<IconButton
-						onClick={isMe ? () => document.getElementById("avatar-upload").click() : null}
-						sx={{width: 75, height: 75, mb: 0.5}}
-					>
-						<Avatar
-							alt={username}
-							src={"/avatars/" + username + ".png"}
-							sx={{width: 75, height: 75}}
-						/>
-					</IconButton>
-					<input type="file" id="avatar-upload" style={{display: "none"}} onChange={uploadAvatar} accept="image/*"/>
-					<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
-					<Grid container spacing={1} alignItems="center" sx={{pb: 1}}>
-						<Typography gutterBottom variant="h6" display="flex" gap={0.5} alignItems="center" margin={0}>
-							{username}{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
-						</Typography>
-						<IconButton sx={{display: isMe ? "none" : "flex"}}
-						            onClick={() => doFollow(username)}>
-							{isFollowing == null ? null : (isFollowing ? <PersonAddDisabled fontSize="small"/> : <PersonAdd fontSize="small"/>)}
-						</IconButton>
-						<Box id="my-container" display={isMe ? "flex" : "none"}>
-							<IconButton onClick={() => setModifying(true)}>
-								<Edit fontSize="small"/>
+				<Grid container direction="column" gap={1.5}>
+					<Grid container alignItems="center" gap={1.5} sx={{flexWrap: "nowrap", width: "100%"}}>
+						{isMe ? (
+							<IconButton
+								onClick={() => document.getElementById("avatar-upload").click()}
+								sx={{width: 100, height: 100, mb: 0.5}}
+							>
+								<Avatar
+									alt={username}
+									src={"/avatars/" + username + ".png"}
+									sx={{width: 100, height: 100}}
+								/>
 							</IconButton>
-							<IconButton onClick={() => setResetPasswordOn(true)}>
-								<LockReset fontSize="small"/>
-							</IconButton>
-							<IconButton onClick={logOut}>
-								<Logout fontSize="small"/>
-							</IconButton>
-						</Box>
+						) : (
+							<Avatar
+								alt={username}
+								src={"/avatars/" + username + ".png"}
+								sx={{width: 100, height: 100}}
+							/>
+						)}
+						<input type="file" id="avatar-upload" style={{display: "none"}} onChange={uploadAvatar} accept="image/*"/>
+						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
+						<Grid container direction="column" justifyContent="center">
+							<Box display="flex" gap={0.5} alignItems="center" margin={0} flexShrink={1} sx={{width: "100%"}}>
+								<Typography variant="h5" fontWeight="bold" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
+									{username}
+								</Typography>
+								{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
+							</Box>
+							{isMe ? (
+								<Box sx={{pt: "2px"}}>
+									<IconButton onClick={() => setModifying(true)}>
+										<EditOutlined/>
+									</IconButton>
+									<IconButton onClick={() => setResetPasswordOn(true)}>
+										<LockResetOutlined/>
+									</IconButton>
+									<IconButton href={"/chat/" + username}>
+										<MailOutlined/>
+									</IconButton>
+									<IconButton onClick={logOut}>
+										<LogoutOutlined/>
+									</IconButton>
+								</Box>
+							) : (
+								<Box flexShrink={0}>
+									<IconButton onClick={() => doFollow(username)}>
+										{isFollowing == null ? null : (isFollowing ? <PersonAddDisabledOutlined/> : <PersonAddOutlined/>)}
+									</IconButton>
+									<IconButton href={"/chat/" + username}>
+										<MailOutlined/>
+									</IconButton>
+								</Box>
+							)}
+						</Grid>
 					</Grid>
-					<Box id="intro" sx={{color: "text.secondary", fontSize: 14}}>
+					<Box id="intro" sx={{color: "text.secondary", fontSize: 15}}>
 						<ChatMarkdown>{!isLoading ? data["intro"] : ""}</ChatMarkdown>
 					</Box>
 				</Grid>
