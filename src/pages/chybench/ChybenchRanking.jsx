@@ -28,16 +28,16 @@ export default function ChybenchRanking() {
 				<Table>
 					<TableHead>
 						<TableRow>
-							{data["result"]["index"].map((item, index) => (
-								<TableCell key={index} sx={{fontWeight: "bold"}}>{item}</TableCell>
+							{data.result.index.map((item) => (
+								<TableCell key={item}>{item}</TableCell>
 							))}
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{data["result"]["data"].map((item, index) => (
-							<TableRow key={index} selected={item["isMe"]}>
-								{item["row"].map((item, index) => (
-									<TableCell key={index}>{item}</TableCell>
+						{data.result.data.map((item, rowIndex) => (
+							<TableRow key={rowIndex} selected={item.isMe}>
+								{item.row.map((item, index) => (
+									<TableCell key={index}>{data.result.index[index] === "时间" ? new Date(item).toLocaleString() : item}</TableCell>
 								))}
 							</TableRow>
 						))}

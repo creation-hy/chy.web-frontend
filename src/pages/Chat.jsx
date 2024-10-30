@@ -59,6 +59,8 @@ function UserItem({username, info}) {
 	if (!info)
 		return null;
 	
+	const lastMessageTime = new Date(info["lastMessageTime"]), currentTime = new Date();
+	
 	return (
 		<>
 			<ListItemAvatar>
@@ -95,7 +97,8 @@ function UserItem({username, info}) {
 							{info.username}
 						</Typography>
 						<Typography variant="body2" color="textSecondary">
-							{info["lastMessageTime"]}
+							{lastMessageTime.toLocaleDateString() === currentTime.toLocaleDateString() ? lastMessageTime.toLocaleTimeString().substring(0, 5) :
+								lastMessageTime.getFullYear() === currentTime.getFullYear() ? lastMessageTime.toLocaleDateString().substring(5) : lastMessageTime.toLocaleDateString()}
 						</Typography>
 					</Grid>
 				}
@@ -481,7 +484,7 @@ export default function Chat() {
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
 			messagesVar = startId === -1 ? res.data.result["message"] : [...res.data.result["message"], ...messagesVar];
 			flushSync(() => {
-				setLastOnline(res.data.result["onlineStatus"]);
+				setLastOnline(res.data.result["isOnline"] ? "对方在线" : "上次上线：" + new Date(res.data.result["lastOnline"]).toLocaleString());
 				setMessages([...messagesVar]);
 			});
 			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
@@ -531,14 +534,10 @@ export default function Chat() {
 	
 	useEffect(() => {
 		const updateUserItem = (username, content, time, isCurrent) => {
-			const date = new Date(time), now = new Date();
-			const timeString = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate() ?
-				date.toLocaleTimeString().substring(0, 5) : date.toLocaleDateString().replace(/\//g, '-').substring(2);
-			
 			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
 			if (userItem) {
 				userItem["lastMessageText"] = content;
-				userItem["lastMessageTime"] = timeString;
+				userItem["lastMessageTime"] = time;
 				if (!isCurrent)
 					userItem["newMessageCount"]++;
 				usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
@@ -548,7 +547,7 @@ export default function Chat() {
 					usersVar = [{
 						username: username,
 						isOnline: res.data.result[0].isOnline,
-						lastMessageTime: timeString,
+						lastMessageTime: time,
 						lastMessageText: content,
 						newMessageCount: isCurrent ? 0 : 1,
 					}, ...usersVar];
