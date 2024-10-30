@@ -23,7 +23,8 @@ export default function ResetPassword({open, handleClose}) {
 				sx={{display: 'flex', flexDirection: 'column', gap: 2}}
 			>
 				<DialogContentText>
-					我们需要验证你的邮箱。
+					我们需要验证你的邮箱。<br/>
+					重置成功后，所有登陆此账号的设备都将强制注销。
 				</DialogContentText>
 				<Grid container gap={0.5}>
 					<TextField
