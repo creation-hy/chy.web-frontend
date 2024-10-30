@@ -48,6 +48,7 @@ import {useColorMode} from "src/components/ColorMode.jsx";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
+import {useNavigate, useParams} from "react-router";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -446,6 +447,10 @@ ChatToolBar.propTypes = {
 export default function Chat() {
 	document.title = "Chat - chy.web";
 	
+	const urlParams = useRef(useParams());
+	const navigate = useNavigate();
+	const userJumped = useRef(false);
+	
 	const [users, setUsers] = useState([]);
 	const [logged, setLogged] = useState(null);
 	const [currentUser, setCurrentUser] = useState(null);
@@ -464,6 +469,7 @@ export default function Chat() {
 		const isCurrentUser = currentUserVar === username;
 		currentUserVar = username;
 		setCurrentUser(username);
+		navigate("/chat/" + username);
 		setQuote(null);
 		if (isMobile) {
 			document.getElementById("contacts").style.display = "none";
@@ -514,8 +520,12 @@ export default function Chat() {
 				document.getElementById("page-main").style.paddingBottom = "24px";
 			usersVar = data.result;
 			setUsers(usersVar);
+			if (!userJumped.current && urlParams.current["username"]) {
+				getMessages(urlParams.current["username"]);
+				userJumped.current = true;
+			}
 		}
-	}, [data, error, isLoading]);
+	}, [data, error, getMessages, isLoading, urlParams]);
 	
 	const sendMessage = useCallback(() => {
 		const content = messageInput.current.value;
@@ -727,7 +737,7 @@ export default function Chat() {
 	}, [getMessages]);
 	
 	return logged !== false ? (
-		<Grid container sx={{flex: 1, height: 0}} gap={2}>
+		<Grid container sx={{flex: 1, height: 0, display: data ? "flex" : "none"}} gap={2}>
 			<Card id="contacts" sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
@@ -789,11 +799,12 @@ export default function Chat() {
 							document.getElementById("app-bar").style.display = "flex";
 							setCurrentUser(null);
 							currentUserVar = null;
+							navigate("/chat");
 						}}>
 							<ArrowBack/>
 						</IconButton>}
 						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"} sx={{flex: 1}}>
-							<Typography sx={{maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis"}}>
+							<Typography sx={{maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", fontWeight: "bold"}}>
 								{currentUser}
 							</Typography>
 							<Typography variant="body2" color="textSecondary"

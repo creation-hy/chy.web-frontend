@@ -55,6 +55,7 @@ export default function App() {
 								<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
 								<Route path="/minesweeper" element={<Minesweeper/>}/>
 								<Route path="/chat" element={<Chat/>}/>
+								<Route path="/chat/:username" element={<Chat/>}/>
 								<Route path="*" element={<Error/>}/>
 							</Routes>
 						</BrowserRouter>
