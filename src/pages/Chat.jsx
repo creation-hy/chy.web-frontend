@@ -467,10 +467,12 @@ export default function Chat() {
 		if (!username || currentUserVar === username && startId === -1 && !doRefresh)
 			return;
 		const isCurrentUser = currentUserVar === username;
-		currentUserVar = username;
-		setCurrentUser(username);
-		navigate.current("/chat/" + username);
-		setQuote(null);
+		if (!isCurrentUser) {
+			currentUserVar = username;
+			setCurrentUser(username);
+			navigate.current("/chat/" + username);
+			setQuote(null);
+		}
 		if (isMobile) {
 			document.getElementById("contacts").style.display = "none";
 			document.getElementById("chat-main").style.display = "flex";
