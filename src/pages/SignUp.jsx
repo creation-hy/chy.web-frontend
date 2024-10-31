@@ -14,6 +14,7 @@ import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import Cookies from "js-cookie";
+import {useQuery} from "@tanstack/react-query";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -43,6 +44,14 @@ export default function SignUp() {
 	const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 	const [nameError, setNameError] = useState(false);
 	const [nameErrorMessage, setNameErrorMessage] = useState('');
+	
+	const {data, isLoading, error} = useQuery({
+		queryKey: ["accountCheck"],
+		queryFn: () => axios.get("/api/account/check").then(res => res.data),
+	});
+	
+	if (data && data.status !== 0)
+		window.location.href = "/user/" + data.username;
 	
 	const register = (event) => {
 		event.preventDefault();

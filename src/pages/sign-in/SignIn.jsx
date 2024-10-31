@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -14,6 +14,8 @@ import {enqueueSnackbar} from 'notistack';
 import {X} from "@mui/icons-material";
 import Cookies from "js-cookie";
 import ResetPassword from "src/components/ResetPassword.jsx";
+import {Tab, Tabs} from "@mui/material";
+import {useQuery} from "@tanstack/react-query";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -35,21 +37,24 @@ const Card = styled(MuiCard)(({theme}) => ({
 }));
 
 export default function SignIn() {
-	document.title = "登陆 - chy.web";
+	document.title = "登录 - chy.web";
 	
+	const [loginMethod, setLoginMethod] = useState(0);
 	const [usernameError, setUsernameError] = useState(false);
 	const [usernameErrorMessage, setUsernameErrorMessage] = useState('');
 	const [passwordError, setPasswordError] = useState(false);
 	const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 	const [open, setOpen] = useState(false);
 	
-	const handleClickOpen = () => {
-		setOpen(true);
-	};
+	const emailText = useRef(null);
 	
-	const handleClose = () => {
-		setOpen(false);
-	};
+	const {data, isLoading, error} = useQuery({
+		queryKey: ["accountCheck"],
+		queryFn: () => axios.get("/api/account/check").then(res => res.data),
+	});
+	
+	if (data && data.status !== 0)
+		window.location.href = "/user/" + data.username;
 	
 	const logIn = (event) => {
 		event.preventDefault();
@@ -78,11 +83,12 @@ export default function SignIn() {
 		}
 		
 		if (isValid)
-			axios.post("/api/login", new FormData(document.getElementById('data-form')), {
-				headers: {
-					'Content-Type': 'application/json',
-				}
-			}).then(res => {
+			axios.post("/api/login/" + (loginMethod === 0 ? "password-login" : "verification-code-login"),
+				new FormData(document.getElementById('data-form')), {
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				}).then(res => {
 				const data = res.data;
 				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
 				if (data.status === 1) {
@@ -97,12 +103,17 @@ export default function SignIn() {
 	
 	return (
 		<Card variant="outlined">
-			<Typography
-				variant="h4"
-				sx={{width: '100%'}}
-			>
-				登陆
+			<Typography variant="h4" sx={{mb: -1}}>
+				登录
 			</Typography>
+			<Box sx={{borderBottom: 1, borderColor: "divider"}}>
+				<Tabs value={loginMethod} onChange={(event, value) => {
+					setLoginMethod(value);
+				}}>
+					<Tab label="密码登录"/>
+					<Tab label="验证码登录"/>
+				</Tabs>
+			</Box>
 			<Box
 				component="form"
 				id="data-form"
@@ -115,25 +126,50 @@ export default function SignIn() {
 					gap: 2,
 				}}
 			>
-				<FormControl>
-					<TextField
-						error={usernameError}
-						helperText={usernameErrorMessage}
-						id="username"
-						type="text"
-						name="username"
-						placeholder="yourname"
-						autoComplete="username"
-						autoFocus
-						required
-						fullWidth
-						variant="outlined"
-						label="用户名或邮箱"
-						color={usernameError ? 'error' : 'primary'}
-					/>
+				<FormControl sx={{display: "flex", flexDirection: "row", gap: 0.5}}>
+					{loginMethod === 0 ?
+						<TextField
+							error={usernameError}
+							helperText={usernameErrorMessage}
+							id="username"
+							name="username"
+							placeholder="yourname"
+							autoComplete="username"
+							autoFocus
+							required
+							label="用户名或邮箱"
+							color={usernameError ? 'error' : 'primary'}
+							sx={{flex: 1}}
+						/> :
+						<>
+							<TextField
+								inputRef={emailText}
+								error={usernameError}
+								helperText={usernameErrorMessage}
+								id="username"
+								name="email"
+								placeholder="your@email.com"
+								autoComplete="email"
+								autoFocus
+								required
+								label="邮箱"
+								color={usernameError ? 'error' : 'primary'}
+								sx={{flex: 1}}
+							/>
+							<Button variant="contained" onClick={() => {
+								axios.post("/api/login/send-verification", {email: emailText.current.value}, {
+									headers: {
+										"Content-Type": "application/json",
+									},
+								}).then(res => {
+									enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+								});
+							}}>验证</Button>
+						</>}
 				</FormControl>
 				<FormControl>
-					<TextField
+					{loginMethod === 0 ? <TextField
+						key="password"
 						error={passwordError}
 						helperText={passwordErrorMessage}
 						name="password"
@@ -141,31 +177,41 @@ export default function SignIn() {
 						type="password"
 						id="password"
 						autoComplete="current-password"
-						autoFocus
 						required
 						fullWidth
-						variant="outlined"
 						label="密码"
 						color={passwordError ? 'error' : 'primary'}
-					/>
+					/> : <TextField
+						key="verification"
+						error={passwordError}
+						helperText={passwordErrorMessage}
+						name="verificationCode"
+						placeholder="6位数字"
+						autoComplete="verification"
+						id="password"
+						required
+						fullWidth
+						label="验证码"
+						color={passwordError ? 'error' : 'primary'}
+					/>}
 					<Box display="flex" justifyContent="flex-end">
 						<Link
 							component="button"
 							type="button"
-							onClick={handleClickOpen}
+							onClick={() => setOpen(true)}
 							variant="body2"
 						>
 							忘记了密码？
 						</Link>
 					</Box>
 				</FormControl>
-				<ResetPassword open={open} handleClose={handleClose}/>
+				<ResetPassword open={open} handleClose={() => setOpen(false)}/>
 				<Button
 					type="submit"
 					fullWidth
 					variant="contained"
 				>
-					登陆
+					登录
 				</Button>
 				<Typography sx={{textAlign: 'center'}}>
 					还没有账号？{' '}
