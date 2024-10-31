@@ -736,7 +736,7 @@ export default function Chat() {
 	useEffect(() => {
 		let lastScrollStartId = -1;
 		messageCard.current.addEventListener("scroll", (event) => {
-			if (event.target.scrollTop <= 50 && lastScrollStartId !== messagesVar[0].id - 1 && messagesVar.length >= 30) {
+			if (event.target.scrollTop <= 50 && messagesVar.length > 0 && lastScrollStartId !== messagesVar[0].id - 1 && messagesVar.length >= 30) {
 				lastScrollStartId = messagesVar[0].id - 1;
 				getMessages(currentUserVar, lastScrollStartId);
 			}
