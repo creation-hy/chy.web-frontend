@@ -14,12 +14,12 @@ export default function AIDrawResult() {
 	if (isLoading || error)
 		return null;
 	
-	if (data["status"] !== 1)
-		return <Alert severity="error">{data["content"]}</Alert>;
+	if (data.status !== 1)
+		return <Alert severity="error">{data.content}</Alert>;
 	
 	return (
 		<Box>
-			{data["result"].map((item, index) => (
+			{data.result.map((item, index) => (
 				<img key={index} alt="generate pictures" src={"data:image/jpeg;base64," + item}/>
 			))}
 		</Box>

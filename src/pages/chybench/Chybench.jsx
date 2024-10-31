@@ -264,7 +264,7 @@ export default function Chybench() {
 				"Content-Type": "application/json",
 			},
 		}).then(res => {
-			enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 1 ? "success" : "error"});
+			enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 		});
 	}
 	

@@ -60,14 +60,14 @@ function UserItem({username, info}) {
 	if (!info)
 		return null;
 	
-	const lastMessageTime = new Date(info["lastMessageTime"]), currentTime = new Date();
+	const lastMessageTime = new Date(info.lastMessageTime), currentTime = new Date();
 	
 	return (
 		<>
 			<ListItemAvatar>
-				<Badge badgeContent={info["newMessageCount"]} overlap="circular" color="error">
+				<Badge badgeContent={info.newMessageCount} overlap="circular" color="error">
 					<Badge
-						badgeContent={info["isOnline"] || username === "ChatRoomSystem" ? " " : 0} overlap="circular"
+						badgeContent={info.isOnline || username === "ChatRoomSystem" ? " " : 0} overlap="circular"
 						anchorOrigin={{vertical: "bottom", horizontal: "right"}} color="success" variant="dot"
 						sx={{
 							"& .MuiBadge-badge": {
@@ -97,7 +97,7 @@ function UserItem({username, info}) {
 						}}>
 							{info.username}
 						</Typography>
-						{info["lastMessageTime"] && <Typography variant="body2" color="textSecondary">
+						{info.lastMessageTime && <Typography variant="body2" color="textSecondary">
 							{lastMessageTime.toLocaleDateString() === currentTime.toLocaleDateString() ? lastMessageTime.toLocaleTimeString().substring(0, 5) :
 								lastMessageTime.getFullYear() === currentTime.getFullYear() ? lastMessageTime.toLocaleDateString().substring(5) : lastMessageTime.toLocaleDateString()}
 						</Typography>}
@@ -109,7 +109,7 @@ function UserItem({username, info}) {
 						overflow: "hidden",
 						textOverflow: "ellipsis",
 					}}>
-						{info["lastMessageText"]}
+						{info.lastMessageText}
 					</Typography>
 				}
 			/>
@@ -229,7 +229,7 @@ const Message = ({messageId, isMe, username, content, quote, setQuote, messageCa
 								if (item.id.toString() === messageCard.current.lastElementChild.id.substring(8)) {
 									const userItem = usersVar.find(item => item.username === (currentUserVar === "ChatRoomSystem" ? "公共" : currentUserVar));
 									if (userItem) {
-										userItem["lastMessageText"] = currentUserVar === "ChatRoomSystem" ? myname + ": 消息已撤回" : "消息已撤回";
+										userItem.lastMessageText = currentUserVar === "ChatRoomSystem" ? myname + ": 消息已撤回" : "消息已撤回";
 										setUsers([...usersVar]);
 									}
 								}
@@ -484,14 +484,14 @@ export default function Chat() {
 		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
 			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
 			if (userItem) {
-				userItem["newMessageCount"] = 0;
+				userItem.newMessageCount = 0;
 				setUsers([...usersVar]);
 			}
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
-			messagesVar = startId === -1 ? res.data.result["message"] : [...res.data.result["message"], ...messagesVar];
+			messagesVar = startId === -1 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
 			flushSync(() => {
-				setLastOnline(res.data.result["isOnline"] ? "在线" : (
-					res.data.result["lastOnline"] ? "上次上线：" + new Date(res.data.result["lastOnline"]).toLocaleString() : "从未上线"));
+				setLastOnline(res.data.result.isOnline ? "在线" : (
+					res.data.result.lastOnline ? "上次上线：" + new Date(res.data.result.lastOnline).toLocaleString() : "从未上线"));
 				setMessages([...messagesVar]);
 			});
 			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
@@ -549,7 +549,7 @@ export default function Chat() {
 			userItem["lastMessageText"] = content;
 			userItem["lastMessageTime"] = time;
 			if (!isCurrent)
-				userItem["newMessageCount"]++;
+				userItem.newMessageCount++;
 			usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
 			setUsers([...usersVar]);
 		} else {
@@ -611,7 +611,7 @@ export default function Chat() {
 			const username = JSON.parse(message.body).username;
 			const userItem = usersVar.find(item => item.username === username);
 			if (userItem) {
-				userItem["isOnline"] = true;
+				userItem.isOnline = true;
 				setUsers([...usersVar]);
 			}
 			if (username === currentUserVar)
@@ -622,12 +622,12 @@ export default function Chat() {
 			const data = JSON.parse(message.body);
 			const userItem = usersVar.find(item => item.username === data.username);
 			if (userItem) {
-				userItem["isOnline"] = false;
-				userItem["lastOnline"] = data["lastOnline"];
+				userItem.isOnline = false;
+				userItem.lastOnline = data.lastOnline;
 				setUsers([...usersVar]);
 			}
 			if (data.username === currentUserVar)
-				setLastOnline("上次上线：" + data["lastOnline"]);
+				setLastOnline("上次上线：" + data.lastOnline);
 		});
 		
 		stomp.subscribe(`/user/queue/chat.message`, (message) => {

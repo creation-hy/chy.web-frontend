@@ -93,10 +93,10 @@ export const AppAppBar = () => {
 							alignItems: 'center',
 						}}
 					>
-						{!isLoading && !error && data["status"] === 0 ? (
+						{!isLoading && !error && data.status === 0 ? (
 							<Box>
 								<Button variant="text" href="/login">
-									登陆
+									登录
 								</Button>
 								<Button variant="contained" href="/register">
 									注册
@@ -125,7 +125,7 @@ export const AppAppBar = () => {
 						<SwipeableDrawer anchor="left" open={open} onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
 							<Box sx={{backgroundColor: 'background.default', minHeight: "100%", width: 250}}>
 								<Box sx={{mt: 2.5, mb: 1.5}}>
-									{!isLoading && !error && data["status"] === 0 ? (
+									{!isLoading && !error && data.status === 0 ? (
 										<Grid container direction="column" gap={1.5}>
 											<Button variant="contained" href="/register" sx={{mx: 2}}>
 												注册

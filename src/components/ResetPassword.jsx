@@ -24,7 +24,7 @@ export default function ResetPassword({open, handleClose}) {
 			>
 				<DialogContentText>
 					我们需要验证你的邮箱。<br/>
-					重置成功后，所有登陆此账号的设备都将强制注销。
+					重置成功后，所有登录此账号的设备都将强制注销。
 				</DialogContentText>
 				<Grid container gap={0.5}>
 					<TextField
@@ -40,7 +40,7 @@ export default function ResetPassword({open, handleClose}) {
 						sx={{flex: 1}}
 					/>
 					<Button variant="contained" onClick={() => {
-						axios.post("/api/account/reset-password/get-verification", {email: emailText.current.value}, {
+						axios.post("/api/account/reset-password/send-verification", {email: emailText.current.value}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
@@ -52,7 +52,7 @@ export default function ResetPassword({open, handleClose}) {
 				<TextField
 					inputRef={verificationText}
 					autoComplete="verification"
-					name="verification"
+					name="verificationCode"
 					required
 					fullWidth
 					id="verification"
@@ -76,7 +76,7 @@ export default function ResetPassword({open, handleClose}) {
 				<Button onClick={() => {
 					axios.post("/api/account/reset-password/reset", {
 						email: emailText.current.value,
-						verification: verificationText.current.value,
+						verificationCode: verificationText.current.value,
 						password: passwordText.current.value,
 					}, {
 						headers: {

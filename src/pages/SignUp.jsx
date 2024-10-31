@@ -119,7 +119,7 @@ export default function SignUp() {
 				}
 			}).then(res => {
 				const data = res.data;
-				enqueueSnackbar(data["content"], {variant: data["status"] === 1 ? "success" : "error"});
+				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
 			});
 		}
 	};
@@ -200,7 +200,7 @@ export default function SignUp() {
 				<FormControl>
 					<TextField
 						autoComplete="verification"
-						name="verification"
+						name="verificationCode"
 						required
 						fullWidth
 						id="verification"
@@ -222,7 +222,7 @@ export default function SignUp() {
 						variant="body2"
 						sx={{alignSelf: 'center'}}
 					>
-						登陆
+						登录
 					</Link>
 				</Typography>
 			</Box>

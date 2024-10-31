@@ -136,7 +136,7 @@ export default function Minesweeper() {
 						"Content-Type": "application/json",
 					},
 				}).then(res => {
-					enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 1 ? "success" : "error"});
+					enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 				});
 			else
 				enqueueSnackbar("检测到作弊行为，本次成绩不会上传", {variant: "error"});

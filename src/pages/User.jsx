@@ -25,12 +25,6 @@ import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
 import ResetPassword from "src/components/ResetPassword.jsx";
 
-function a11yProps(index) {
-	return {
-		id: `simple-tab-${index}`,
-	};
-}
-
 function InfoContainer({value, username}) {
 	const opt = value === 0 ? "info" : (value === 1 ? "chat" : (value === 2 ? "following" : "follower"));
 	const url = opt === "chat" ? "/chat/-1" : "/" + opt;
@@ -67,9 +61,9 @@ function InfoContainer({value, username}) {
 	if (value === 0)
 		return (
 			<Typography>
-				用户编号：{data["userId"]}<br/>
-				性别：{data["sex"]}<br/>
-				注册时间：{new Date(data["regTime"]).toLocaleString()}
+				用户编号：{data.userId}<br/>
+				性别：{data["gender"]}<br/>
+				注册时间：{new Date(data["registrationTime"]).toLocaleString()}
 			</Typography>
 		);
 	
@@ -115,7 +109,7 @@ function InfoContainer({value, username}) {
 						}}>
 							{item.username}
 						</Typography>
-						{item["certification"] != null && (<Verified color="primary"/>)}
+						{!item.verification && (<Verified color="primary"/>)}
 					</Grid>
 				</Grid>
 			))}
@@ -152,7 +146,7 @@ const uploadAvatar = (event) => {
 			"Content-Type": "multipart/form-data",
 		},
 	}).then((res) => {
-		enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 0 ? "error" : "success"});
+		enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
 	});
 }
 
@@ -178,7 +172,7 @@ export default function User() {
 	});
 	
 	if (!isLoading && !error && !inited) {
-		if (data["userId"] == null)
+		if (!data.userId)
 			return (
 				<Alert severity="error">用户不存在！</Alert>
 			);
@@ -219,7 +213,7 @@ export default function User() {
 								<Typography variant="h5" fontWeight="bold" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
 									{username}
 								</Typography>
-								{!isLoading && data["certification"] != null && (<Verified color="primary"/>)}
+								{!isLoading && !data.verification && (<Verified color="primary"/>)}
 							</Box>
 							{isMe ? (
 								<Box sx={{pt: "2px"}}>
@@ -248,17 +242,17 @@ export default function User() {
 							)}
 						</Grid>
 					</Grid>
-					<Box id="intro" sx={{color: "text.secondary", fontSize: 15}}>
-						<ChatMarkdown>{!isLoading ? data["intro"] : ""}</ChatMarkdown>
+					<Box id="introduction" sx={{color: "text.secondary", fontSize: 15}}>
+						<ChatMarkdown>{!isLoading ? data["introduction"] : ""}</ChatMarkdown>
 					</Box>
 				</Grid>
 			</Card>
 			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2, mt: 1}}>
 				<Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-					<Tab label="信息" {...a11yProps(0)} data-option="info"/>
-					<Tab label="动态" {...a11yProps(1)} data-option="chat"/>
-					<Tab label="关注" {...a11yProps(2)} data-option="following" id="tab-following"/>
-					<Tab label="粉丝" {...a11yProps(3)} data-option="follower" id="tab-follower"/>
+					<Tab label="信息" data-option="info"/>
+					<Tab label="动态" data-option="chat"/>
+					<Tab label="关注" data-option="following" id="tab-following"/>
+					<Tab label="粉丝" data-option="follower" id="tab-follower"/>
 				</Tabs>
 			</Box>
 			<InfoContainer value={value} username={username}/>
@@ -275,8 +269,8 @@ export default function User() {
 							"Content-Type": "application/json",
 						},
 					}).then(res => {
-						enqueueSnackbar(res.data["content"], {variant: res.data["status"] === 1 ? "success" : "error"});
-						if (res.data["status"] === 1)
+						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+						if (res.data.status === 1)
 							setTimeout(() => window.location.reload(), 500);
 					});
 					setModifying(false);
@@ -285,13 +279,13 @@ export default function User() {
 				<DialogTitle>修改信息</DialogTitle>
 				<DialogContent>
 					<FormControl margin="dense">
-						<InputLabel id="select-sex-label">性别</InputLabel>
+						<InputLabel id="select-gender-label">性别</InputLabel>
 						<Select
-							labelId="select-sex-label"
+							labelId="select-gender-label"
 							label="性别"
 							variant="outlined"
-							defaultValue={!isLoading && data["sex"]}
-							name="sex"
+							defaultValue={!isLoading && data["gender"]}
+							name="gender"
 						>
 							<MenuItem value="未知">未知</MenuItem>
 							<MenuItem value="男">男</MenuItem>
@@ -303,7 +297,7 @@ export default function User() {
 							<MenuItem value="MtX">MtX</MenuItem>
 							<MenuItem value="FtM">FtM</MenuItem>
 							<MenuItem value="FtX">FtX</MenuItem>
-							<MenuItem value="Intersex">Intersex</MenuItem>
+							<MenuItem value="Non-binary">Non-binary</MenuItem>
 							<MenuItem value="无">无</MenuItem>
 							<MenuItem value="汉堡王">汉堡王</MenuItem>
 							<MenuItem value="西瓜霜">西瓜霜</MenuItem>
@@ -316,8 +310,8 @@ export default function User() {
 						fullWidth
 						multiline
 						maxRows={10}
-						defaultValue={!isLoading && data["intro"]}
-						name="intro"
+						defaultValue={!isLoading && data["introduction"]}
+						name="introduction"
 						margin="normal"
 					/>
 				</DialogContent>
