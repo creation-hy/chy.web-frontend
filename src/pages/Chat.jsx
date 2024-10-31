@@ -716,11 +716,12 @@ export default function Chat() {
 		const stompReconnect = async () => {
 			if (firstRebirth) {
 				firstRebirth.current = false;
-				disconnectErrorBarKey.current = enqueueSnackbar("服务器连接已断开，正在尝试重连...", {
-					variant: "error",
-					anchorOrigin: {vertical: "bottom", horizontal: "center"},
-					persist: true,
-				});
+				if (!disconnectErrorBarKey.current)
+					disconnectErrorBarKey.current = enqueueSnackbar("服务器连接已断开，正在尝试重连...", {
+						variant: "error",
+						anchorOrigin: {vertical: "bottom", horizontal: "center"},
+						persist: true,
+					});
 				stompConnect();
 			} else
 				setTimeout(stompConnect, 1000);
