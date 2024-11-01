@@ -8,13 +8,12 @@ import IconButton from '@mui/material/IconButton';
 import Container from '@mui/material/Container';
 import MenuIcon from '@mui/icons-material/Menu';
 import Avatar from "@mui/material/Avatar";
-import axios from "axios";
 import Grid from "@mui/material/Grid2";
 import {List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
-import {Analytics, Article, Chat, DarkMode, Draw, Forum, Games, Home, Leaderboard, LightMode} from "@mui/icons-material";
-import {useQuery} from "@tanstack/react-query";
+import {Analytics, Article, Chat, DarkMode, Draw, Forum, Info, Leaderboard, LightMode, SportsEsports} from "@mui/icons-material";
 import {isMobile} from "react-device-detect";
 import {useColorMode} from "src/components/ColorMode.jsx";
+import {useClientUser} from "src/components/ClientUser.jsx";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -33,15 +32,11 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 export const AppAppBar = () => {
 	const [open, setOpen] = useState(false);
 	const [colorMode, toggleColorMode] = useColorMode();
+	const {clientUser, setClientUser, clientUserLoading} = useClientUser();
 	
 	const toggleDrawer = (newOpen) => () => {
 		setOpen(newOpen);
 	};
-	
-	const {data, isLoading, error} = useQuery({
-		queryKey: ["accountCheck"],
-		queryFn: () => axios.get("/api/account/check").then(res => res.data),
-	});
 	
 	return (
 		<AppBar
@@ -93,7 +88,7 @@ export const AppAppBar = () => {
 							alignItems: 'center',
 						}}
 					>
-						{!isLoading && !error && data.status === 0 ? (
+						{clientUserLoading ? null : (!clientUser ? (
 							<Box>
 								<Button variant="text" href="/login">
 									登录
@@ -102,13 +97,13 @@ export const AppAppBar = () => {
 									注册
 								</Button>
 							</Box>
-						) : (!isLoading && !error ? (
+						) : (
 							<Box>
-								<IconButton sx={{width: 35, height: 35}} href={"/user/" + data.username}>
-									<Avatar sx={{width: 35, height: 35}} alt={data.username} src={"/avatars/" + data.username + ".png"}/>
+								<IconButton sx={{width: 35, height: 35}} href={"/user/" + clientUser.username}>
+									<Avatar sx={{width: 35, height: 35}} alt={clientUser.username} src={"/avatars/" + clientUser.username + ".png"}/>
 								</IconButton>
 							</Box>
-						) : (<Box/>))}
+						))}
 						<IconButton color="primary" size="small" onClick={toggleColorMode}>
 							{colorMode === "light" ? <LightMode fontSize="small"/> : <DarkMode fontSize="small"/>}
 						</IconButton>
@@ -125,7 +120,7 @@ export const AppAppBar = () => {
 						<SwipeableDrawer anchor="left" open={open} onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
 							<Box sx={{backgroundColor: 'background.default', minHeight: "100%", width: 250}}>
 								<Box sx={{mt: 2.5, mb: 1.5}}>
-									{!isLoading && !error && data.status === 0 ? (
+									{clientUserLoading ? null : (!clientUser ? (
 										<Grid container direction="column" gap={1.5}>
 											<Button variant="contained" href="/register" sx={{mx: 2}}>
 												注册
@@ -134,13 +129,14 @@ export const AppAppBar = () => {
 												登录
 											</Button>
 										</Grid>
-									) : (!isLoading && !error ? (
+									) : (
 										<Box display="flex" justifyContent="center">
-											<IconButton sx={{width: 50, height: 50}} href={"/user/" + data.username}>
-												<Avatar sx={{width: 50, height: 50}} alt={data.username} src={"/avatars/" + data.username + ".png"}/>
+											<IconButton sx={{width: 50, height: 50}} href={"/user/" + clientUser.username}>
+												<Avatar sx={{width: 50, height: 50}} alt={clientUser.username}
+												        src={"/avatars/" + clientUser.username + ".png"}/>
 											</IconButton>
 										</Box>
-									) : <Box/>)}
+									))}
 								</Box>
 								<List sx={{width: "100%"}}>
 									<ListItemButton href="/">
@@ -157,19 +153,19 @@ export const AppAppBar = () => {
 									</ListItemButton>
 									<ListItemButton href="https://creation-hy.top:8080/greedy-snake">
 										<ListItemIcon>
-											<Games/>
+											<SportsEsports/>
 										</ListItemIcon>
 										<ListItemText primary="贪吃蛇"/>
 									</ListItemButton>
 									<ListItemButton href="https://creation-hy.top:8080/sgs">
 										<ListItemIcon>
-											<Games/>
+											<SportsEsports/>
 										</ListItemIcon>
 										<ListItemText primary="三国杀"/>
 									</ListItemButton>
 									<ListItemButton href="/minesweeper">
 										<ListItemIcon>
-											<Games/>
+											<SportsEsports/>
 										</ListItemIcon>
 										<ListItemText primary="扫雷"/>
 									</ListItemButton>
@@ -199,7 +195,7 @@ export const AppAppBar = () => {
 									</ListItemButton>
 									<ListItemButton href="/about">
 										<ListItemIcon>
-											<Home/>
+											<Info/>
 										</ListItemIcon>
 										<ListItemText primary="关于"/>
 									</ListItemButton>
