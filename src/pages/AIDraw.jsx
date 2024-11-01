@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import {Upload, Visibility} from "@mui/icons-material";
+import Typography from "@mui/material/Typography";
 
 export default function AIDraw() {
 	document.title = "AI绘图 - chy.web";
@@ -27,6 +28,7 @@ export default function AIDraw() {
 					});
 				}}
 			>
+				<Typography variant="h4">AI 绘图</Typography>
 				<TextField
 					name="positive"
 					label="Prompt"

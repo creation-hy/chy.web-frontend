@@ -9,8 +9,19 @@ import Container from '@mui/material/Container';
 import MenuIcon from '@mui/icons-material/Menu';
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid2";
-import {List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
-import {Analytics, Article, Chat, DarkMode, Draw, Forum, Info, Leaderboard, LightMode, SportsEsports} from "@mui/icons-material";
+import {Badge, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
+import {
+	AnalyticsOutlined,
+	ArticleOutlined,
+	ChatBubbleOutline,
+	DarkMode,
+	DrawOutlined,
+	ForumOutlined,
+	InfoOutlined,
+	LeaderboardOutlined,
+	LightMode,
+	SportsEsportsOutlined
+} from "@mui/icons-material";
 import {isMobile} from "react-device-detect";
 import {useColorMode} from "src/components/ColorMode.jsx";
 import {useClientUser} from "src/components/ClientUser.jsx";
@@ -49,11 +60,13 @@ export const AppAppBar = () => {
 					<Box sx={{flexGrow: 1, display: 'flex', alignItems: 'center', px: 0}}>
 						<Box sx={{display: {xs: 'none', md: 'flex'}}}>
 							<Avatar src="/favicon.ico" sx={{width: 35, height: 35, mr: 1}}/>
-							<Button variant="text" href="/" sx={{textTransform: "none"}}>
-								Chat
+							<Button variant="text" href="/">
+								<Badge badgeContent={clientUser ? clientUser.newMessageCount : 0} color="error">
+									<ChatBubbleOutline/>
+								</Badge>
 							</Button>
 							<Button variant="text" href="/ai-draw">
-								AI绘图
+								<DrawOutlined/>
 							</Button>
 							<Button variant="text" href="https://creation-hy.top:8080/greedy-snake">
 								贪吃蛇
@@ -74,10 +87,10 @@ export const AppAppBar = () => {
 								Blog
 							</Button>
 							<Button variant="text" href="/ranking">
-								排行榜
+								<LeaderboardOutlined/>
 							</Button>
 							<Button variant="text" href="/about">
-								关于
+								<InfoOutlined/>
 							</Button>
 						</Box>
 					</Box>
@@ -141,61 +154,63 @@ export const AppAppBar = () => {
 								<List sx={{width: "100%"}}>
 									<ListItemButton href="/">
 										<ListItemIcon>
-											<Chat/>
+											<Badge badgeContent={clientUser ? clientUser.newMessageCount : 0} color="error">
+												<ChatBubbleOutline/>
+											</Badge>
 										</ListItemIcon>
 										<ListItemText primary="Chat"/>
 									</ListItemButton>
 									<ListItemButton href="/ai-draw">
 										<ListItemIcon>
-											<Draw/>
+											<DrawOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="AI绘图"/>
 									</ListItemButton>
 									<ListItemButton href="https://creation-hy.top:8080/greedy-snake">
 										<ListItemIcon>
-											<SportsEsports/>
+											<SportsEsportsOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="贪吃蛇"/>
 									</ListItemButton>
 									<ListItemButton href="https://creation-hy.top:8080/sgs">
 										<ListItemIcon>
-											<SportsEsports/>
+											<SportsEsportsOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="三国杀"/>
 									</ListItemButton>
 									<ListItemButton href="/minesweeper">
 										<ListItemIcon>
-											<SportsEsports/>
+											<SportsEsportsOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="扫雷"/>
 									</ListItemButton>
 									<ListItemButton href="/chybench">
 										<ListItemIcon>
-											<Analytics/>
+											<AnalyticsOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="Chybench"/>
 									</ListItemButton>
 									<ListItemButton href="https://creation-hy.top:8080/bbs">
 										<ListItemIcon>
-											<Forum/>
+											<ForumOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="BBS"/>
 									</ListItemButton>
 									<ListItemButton href="/blog">
 										<ListItemIcon>
-											<Article/>
+											<ArticleOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="Blog"/>
 									</ListItemButton>
 									<ListItemButton href="/ranking">
 										<ListItemIcon>
-											<Leaderboard/>
+											<LeaderboardOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="排行榜"/>
 									</ListItemButton>
 									<ListItemButton href="/about">
 										<ListItemIcon>
-											<Info/>
+											<InfoOutlined/>
 										</ListItemIcon>
 										<ListItemText primary="关于"/>
 									</ListItemButton>

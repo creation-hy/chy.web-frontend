@@ -49,6 +49,7 @@ import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {useNavigate, useParams} from "react-router";
+import {useClientUser} from "src/components/ClientUser.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -459,9 +460,17 @@ export default function Chat() {
 	const [quote, setQuote] = useState(null);
 	const [matchList, setMatchList] = useState([]);
 	const [abortController, setAbortController] = useState(null);
-	const messageCard = useRef(null), messageInput = useRef(null);
+	
+	const messageCard = useRef(null);
+	const messageInput = useRef(null);
 	const disconnectErrorBarKey = useRef(null);
 	const queryClient = useRef(useQueryClient());
+	
+	const {clientUser, setClientUser, clientUserLoading} = useClientUser();
+	const clientUserRef = useRef(null);
+	
+	if (!clientUserLoading)
+		clientUserRef.current = clientUser;
 	
 	const getMessages = useCallback((username, startId = -1, doRefresh = false) => {
 		if (!username || currentUserVar === username && startId === -1 && !doRefresh)
@@ -486,6 +495,10 @@ export default function Chat() {
 		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
 			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
 			if (userItem) {
+				setClientUser({
+					...clientUserRef,
+					newMessageCount: Math.max(0, clientUserRef.current.newMessageCount - userItem.newMessageCount),
+				});
 				userItem.newMessageCount = 0;
 				setUsers([...usersVar]);
 			}
@@ -498,7 +511,7 @@ export default function Chat() {
 			});
 			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
 		});
-	}, []);
+	}, [setClientUser]);
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["contacts"],
@@ -545,12 +558,12 @@ export default function Chat() {
 		}));
 	}, [quote]);
 	
-	const updateUserItem = useCallback((username, content, time, isCurrent) => {
+	const updateUserItem = useCallback((username, content, time, isCurrent, sender) => {
 		const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
 		if (userItem) {
 			userItem["lastMessageText"] = content;
 			userItem["lastMessageTime"] = time;
-			if (!isCurrent)
+			if (sender !== myname && !isCurrent)
 				userItem.newMessageCount++;
 			usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
 			setUsers([...usersVar]);
@@ -561,23 +574,28 @@ export default function Chat() {
 					isOnline: res.data.result[0].isOnline,
 					lastMessageTime: time,
 					lastMessageText: content,
-					newMessageCount: isCurrent ? 0 : 1,
+					newMessageCount: sender !== myname && !isCurrent ? 1 : 0,
 				}, ...usersVar];
 				setUsers([...usersVar]);
 			});
 		}
-	}, []);
+		if (sender !== myname && !isCurrent)
+			setClientUser({
+				...clientUserRef,
+				newMessageCount: clientUserRef.current.newMessageCount + 1,
+			});
+	}, [setClientUser]);
 	
 	const newMessage = useCallback((data) => {
 		axios.post("/api/chat/update-viewed", {target: currentUserVar}, {
 			headers: {
 				"Content-Type": "application/json",
 			},
-		});
+		}).then(() => queryClient.current.invalidateQueries({queryKey: ["accountCheck"]}));
 		
 		const content = data.recipient === "ChatRoomSystem" ? data.sender + ": " + data.content : data.content;
 		updateUserItem(data.recipient === "ChatRoomSystem" ? data.recipient : (data.sender === myname ? data.recipient : data.sender),
-			content, data.time, true);
+			content, data.time, true, data.sender);
 		
 		messagesVar = [...messagesVar, {
 			id: data.id,
@@ -629,7 +647,7 @@ export default function Chat() {
 				setUsers([...usersVar]);
 			}
 			if (data.username === currentUserVar)
-				setLastOnline("上次上线：" + data.lastOnline);
+				setLastOnline("上次上线：" + new Date(data.lastOnline).toLocaleString());
 		});
 		
 		stomp.subscribe(`/user/queue/chat.message`, (message) => {
@@ -641,7 +659,7 @@ export default function Chat() {
 					notify("[私聊] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
 			} else {
-				updateUserItem(data.sender === myname ? data.recipient : data.sender, data.content, data.time, false);
+				updateUserItem(data.sender === myname ? data.recipient : data.sender, data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && data.sender !== myname)
 					notify("[私聊] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
@@ -657,7 +675,7 @@ export default function Chat() {
 					notify("[公共] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
 			} else {
-				updateUserItem(data.recipient, data.sender + ": " + data.content, data.time, false);
+				updateUserItem(data.recipient, data.sender + ": " + data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
 					notify("[公共] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);

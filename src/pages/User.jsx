@@ -109,7 +109,7 @@ function InfoContainer({value, username}) {
 						}}>
 							{item.username}
 						</Typography>
-						{!item.verification && (<Verified color="primary"/>)}
+						{item["verification"] && (<Verified color="primary"/>)}
 					</Grid>
 				</Grid>
 			))}
@@ -213,7 +213,7 @@ export default function User() {
 								<Typography variant="h5" fontWeight="bold" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
 									{username}
 								</Typography>
-								{!isLoading && !data.verification && (<Verified color="primary"/>)}
+								{!isLoading && data["verification"] && (<Verified color="primary"/>)}
 							</Box>
 							{isMe ? (
 								<Box sx={{pt: "2px"}}>
