@@ -494,7 +494,7 @@ export default function Chat() {
 			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
 			if (userItem) {
 				setClientUser({
-					...clientUserRef,
+					...clientUserRef.current,
 					newMessageCount: Math.max(0, clientUserRef.current.newMessageCount - userItem.newMessageCount),
 				});
 				userItem.newMessageCount = 0;
@@ -579,7 +579,7 @@ export default function Chat() {
 		}
 		if (sender !== myname && !isCurrent)
 			setClientUser({
-				...clientUserRef,
+				...clientUserRef.current,
 				newMessageCount: clientUserRef.current.newMessageCount + 1,
 			});
 	}, [setClientUser]);
