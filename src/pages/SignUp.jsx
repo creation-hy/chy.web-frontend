@@ -45,7 +45,7 @@ export default function SignUp() {
 	const [nameError, setNameError] = useState(false);
 	const [nameErrorMessage, setNameErrorMessage] = useState('');
 	
-	const {data, isLoading, error} = useQuery({
+	const {data} = useQuery({
 		queryKey: ["accountCheck"],
 		queryFn: () => axios.get("/api/account/check").then(res => res.data),
 	});

@@ -43,7 +43,7 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 export const AppAppBar = () => {
 	const [open, setOpen] = useState(false);
 	const [colorMode, toggleColorMode] = useColorMode();
-	const {clientUser, setClientUser, clientUserLoading} = useClientUser();
+	const {clientUser, clientUserLoading} = useClientUser();
 	
 	const toggleDrawer = (newOpen) => () => {
 		setOpen(newOpen);

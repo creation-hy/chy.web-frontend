@@ -48,7 +48,7 @@ export default function SignIn() {
 	
 	const emailText = useRef(null);
 	
-	const {data, isLoading, error} = useQuery({
+	const {data} = useQuery({
 		queryKey: ["accountCheck"],
 		queryFn: () => axios.get("/api/account/check").then(res => res.data),
 	});
