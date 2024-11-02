@@ -50,6 +50,7 @@ import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
+import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -60,8 +61,6 @@ let socket, stomp;
 function UserItem({username, info}) {
 	if (!info)
 		return null;
-	
-	const lastMessageTime = new Date(info.lastMessageTime), currentTime = new Date();
 	
 	return (
 		<>
@@ -99,8 +98,7 @@ function UserItem({username, info}) {
 							{info.username}
 						</Typography>
 						{info.lastMessageTime && <Typography variant="body2" color="textSecondary">
-							{lastMessageTime.toLocaleDateString() === currentTime.toLocaleDateString() ? lastMessageTime.toLocaleTimeString().substring(0, 5) :
-								lastMessageTime.getFullYear() === currentTime.getFullYear() ? lastMessageTime.toLocaleDateString().substring(5) : lastMessageTime.toLocaleDateString()}
+							{convertDateToLocaleOffsetString(info.lastMessageTime)}
 						</Typography>}
 					</Grid>
 				}
@@ -506,7 +504,7 @@ export default function Chat() {
 			messagesVar = startId === -1 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
 			flushSync(() => {
 				setLastOnline(res.data.result.isOnline ? "在线" : (
-					res.data.result.lastOnline ? "上次上线：" + new Date(res.data.result.lastOnline).toLocaleString() : "从未上线"));
+					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleOffsetString(res.data.result.lastOnline) : "从未上线"));
 				setMessages([...messagesVar]);
 			});
 			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
@@ -647,7 +645,7 @@ export default function Chat() {
 				setUsers([...usersVar]);
 			}
 			if (data.username === currentUserVar)
-				setLastOnline("上次上线：" + new Date(data.lastOnline).toLocaleString());
+				setLastOnline("上次上线：" + convertDateToLocaleOffsetString(data.lastOnline));
 		});
 		
 		stomp.subscribe(`/user/queue/chat.message`, (message) => {
@@ -850,14 +848,14 @@ export default function Chat() {
 									const message = res.data.result.message;
 									if (!message.length)
 										break;
-									text = message.map((item) => ("**" + item.username + " " + new Date(item.time) + "**\n\n" + item.text)).join("\n\n")
+									text = message.map((item) => ("## " + item.username + " " + convertDateToLocaleAbsoluteString(item.time) + "\n\n" + item.text)).join("\n\n")
 										+ "\n\n" + text;
 									startId = message[0].id;
 								}
 								const link = document.createElement("a");
 								link.href = URL.createObjectURL(new Blob([text], {type: "text/plain;charset=utf-8"}));
 								link.style.display = "none";
-								link.download = "ChyChat-" + currentUserVar + ".md";
+								link.download = "ChyChat-" + currentUserVar + ".txt";
 								document.body.appendChild(link);
 								link.click();
 								document.body.removeChild(link);
@@ -870,14 +868,14 @@ export default function Chat() {
 						</Box>
 					</Grid>
 				</Card>}
-				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 1, maxWidth: "100%"}}>
+				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}}>
 					{messages.map((message, index) => {
 						const currentDate = new Date(message.time);
 						const previousDate = new Date(!index ? 0 : messages[index - 1].time);
 						const showTime = currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000;
 						return (
 							<Fragment key={message.id}>
-								{showTime && <Grid container><Chip label={currentDate.toLocaleString()} sx={{mx: "auto"}}/></Grid>}
+								{showTime && <Grid container><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
 								<Message
 									messageId={message.id}
 									isMe={message.isMe}

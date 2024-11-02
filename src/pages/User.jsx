@@ -24,6 +24,7 @@ import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
 import ResetPassword from "src/components/ResetPassword.jsx";
+import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 
 function InfoContainer({value, username}) {
 	const opt = value === 0 ? "info" : (value === 1 ? "chat" : (value === 2 ? "following" : "follower"));
@@ -63,7 +64,7 @@ function InfoContainer({value, username}) {
 			<Typography>
 				用户编号：{data.userId}<br/>
 				性别：{data["gender"]}<br/>
-				注册时间：{new Date(data["registrationTime"]).toLocaleString()}
+				注册时间：{convertDateToLocaleDateString(data["registrationTime"])}
 			</Typography>
 		);
 	
@@ -88,7 +89,7 @@ function InfoContainer({value, username}) {
 									<ChatMarkdown>{item.content}</ChatMarkdown>
 								</Box>
 								<Typography variant="caption" display="block" textAlign="right" mt={1}>
-									{new Date(item.time).toLocaleString()}
+									{convertDateToLocaleAbsoluteString(item.time)}
 								</Typography>
 							</Paper>
 						</Grid>

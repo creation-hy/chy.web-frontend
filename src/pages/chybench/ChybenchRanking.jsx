@@ -9,6 +9,7 @@ import {useQuery} from "@tanstack/react-query";
 import FormControl from "@mui/material/FormControl";
 import Typography from "@mui/material/Typography";
 import {UserSimpleItem} from "src/pages/Ranking.jsx";
+import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 
 export default function ChybenchRanking() {
 	document.title = "排行榜 - Chybench - chy.web";
@@ -40,7 +41,7 @@ export default function ChybenchRanking() {
 							<TableRow key={rowIndex} selected={item.isMe}>
 								{item.row.map((item, index) => (
 									<TableCell key={index}>{
-										data.result.index[index] === "时间" ? <Typography>{new Date(item).toLocaleDateString()}</Typography> : (
+										data.result.index[index] === "时间" ? <Typography>{convertDateToLocaleDateString(item)}</Typography> : (
 											data.result.index[index] === "用户" ? <UserSimpleItem username={item}/> : <Typography>{item}</Typography>)
 									}</TableCell>
 								))}
