@@ -21,7 +21,7 @@ const getDayOfYear = (date) => {
 	return Math.floor(diff / oneDay);
 }
 
-const digitToChinese = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+const digitToChinese = ['日', '一', '二', '三', '四', '五', '六'];
 
 export const convertDateToLocaleAbsoluteString = (inputDate) => {
 	const date = new Date(inputDate);
@@ -32,16 +32,17 @@ export const convertDateToLocaleAbsoluteString = (inputDate) => {
 	}
 	
 	const localeTimeString = date.toLocaleTimeString().substring(0, 5);
+	const dayOfYearOffset = getDayOfYear(currentDate) - getDayOfYear(date);
 	
 	if (date.getFullYear() !== currentDate.getFullYear()) {
 		return `${date.getFullYear() % 100}年${date.getMonth()}月${date.getDate()}日 ${localeTimeString}`;
 	} else if (!isSameWeek(date, currentDate)) {
 		return `${date.getMonth() + 1}月${date.getDate()}日 ${localeTimeString}`;
-	} else if (currentDate.getDay() - date.getDay() > 2) {
+	} else if (dayOfYearOffset > 2) {
 		return `周${digitToChinese[date.getDay()]} ${localeTimeString}`;
-	} else if (currentDate.getDay() - date.getDay() === 2) {
+	} else if (dayOfYearOffset === 2) {
 		return `前天 ${localeTimeString}`;
-	} else if (currentDate.getDay() - date.getDay() === 1) {
+	} else if (dayOfYearOffset === 1) {
 		return `昨天 ${localeTimeString}`;
 	} else {
 		return localeTimeString;
