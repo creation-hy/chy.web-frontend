@@ -493,10 +493,11 @@ export default function Chat() {
 		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
 			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
 			if (userItem) {
-				setClientUser({
-					...clientUserRef.current,
-					newMessageCount: Math.max(0, clientUserRef.current.newMessageCount - userItem.newMessageCount),
-				});
+				if (clientUserRef.current)
+					setClientUser({
+						...clientUserRef.current,
+						newMessageCount: Math.max(0, clientUserRef.current.newMessageCount - userItem.newMessageCount),
+					});
 				userItem.newMessageCount = 0;
 				setUsers([...usersVar]);
 			}
@@ -577,7 +578,7 @@ export default function Chat() {
 				setUsers([...usersVar]);
 			});
 		}
-		if (sender !== myname && !isCurrent)
+		if (sender !== myname && !isCurrent && clientUserRef.current)
 			setClientUser({
 				...clientUserRef.current,
 				newMessageCount: clientUserRef.current.newMessageCount + 1,
