@@ -1,4 +1,4 @@
-import {createContext, useContext, useEffect, useState} from "react";
+import {createContext, useCallback, useContext, useEffect, useMemo, useState} from "react";
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
 import axios from "axios";
@@ -6,22 +6,30 @@ import axios from "axios";
 const ClientUserContext = createContext(null);
 
 export const ClientUserProvider = ({children}) => {
-	const [clientUser, setClientUser] = useState(null);
+	const [clientUserJSON, setClientUserJSON] = useState({data: undefined, isLoading: true});
 	
-	const {data, isLoading, error} = useQuery({
+	const {data} = useQuery({
 		queryKey: ["accountCheck"],
 		queryFn: () => axios.get("/api/account/check").then(res => res.data),
 	});
 	
-	const clientUserLoading = isLoading;
-	
 	useEffect(() => {
 		if (data)
-			setClientUser(data.user);
+			setClientUserJSON({data: data.user, isLoading: false});
 	}, [data]);
 	
+	const setClientUser = useCallback((newUser) => {
+		setClientUserJSON({data: newUser, isLoading: false});
+	}, []);
+	
+	const value = useMemo(() => ({
+		clientUser: clientUserJSON.data,
+		setClientUser,
+		clientUserLoading: clientUserJSON.isLoading,
+	}), [clientUserJSON.data, clientUserJSON.isLoading, setClientUser]);
+	
 	return (
-		<ClientUserContext.Provider value={{clientUser, setClientUser, clientUserLoading}}>
+		<ClientUserContext.Provider value={value}>
 			{children}
 		</ClientUserContext.Provider>
 	);
