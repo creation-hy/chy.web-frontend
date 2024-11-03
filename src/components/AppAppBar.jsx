@@ -13,6 +13,7 @@ import {Badge, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer
 import {
 	AnalyticsOutlined,
 	ArticleOutlined,
+	AutoAwesome,
 	ChatBubbleOutline,
 	DarkMode,
 	DrawOutlined,
@@ -118,13 +119,15 @@ export const AppAppBar = () => {
 							</Box>
 						))}
 						<IconButton color="primary" size="small" onClick={toggleColorMode}>
-							{colorMode === "light" ? <LightMode fontSize="small"/> : <DarkMode fontSize="small"/>}
+							{colorMode === "auto" ? <AutoAwesome fontSize="small"/> : (colorMode === "light" ? <LightMode fontSize="small"/> :
+								<DarkMode fontSize="small"/>)}
 						</IconButton>
 					</Box>
 					<Box sx={{display: {sm: 'flex', md: 'none'}}}>
 						<Grid container spacing={1} justify="center" alignItems="center">
 							<IconButton size="small" onClick={toggleColorMode}>
-								{colorMode === "light" ? <LightMode fontSize="small"/> : <DarkMode fontSize="small"/>}
+								{colorMode === "auto" ? <AutoAwesome fontSize="small"/> : (colorMode === "light" ? <LightMode fontSize="small"/> :
+									<DarkMode fontSize="small"/>)}
 							</IconButton>
 							<IconButton aria-label="Menu button" onClick={toggleDrawer(true)} sx={{width: 36, height: 36}}>
 								<MenuIcon/>

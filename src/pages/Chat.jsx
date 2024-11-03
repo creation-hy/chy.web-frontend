@@ -44,7 +44,7 @@ import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
 import Picker from "@emoji-mart/react";
-import {useColorMode} from "src/components/ColorMode.jsx";
+import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
@@ -280,7 +280,7 @@ const notify = (title, body, iconId) => {
 };
 
 const ChatToolBar = (inputField) => {
-	const [colorMode] = useColorMode();
+	const [binaryColorMode] = useBinaryColorMode();
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
 	const [fontStyle, setFontStyle] = useState("");
@@ -395,7 +395,7 @@ const ChatToolBar = (inputField) => {
 			</Dialog>
 			<Dialog open={onEmojiPicker} onClose={() => handleEmojiPicker(false)} PaperProps={{sx: {borderRadius: "10px", margin: 0}}}>
 				<Picker
-					theme={colorMode}
+					theme={binaryColorMode}
 					locale="zh"
 					onEmojiSelect={(emoji) => {
 						inputField.inputField.current.value += emoji.native;

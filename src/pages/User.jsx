@@ -62,9 +62,8 @@ function InfoContainer({value, username}) {
 	if (value === 0)
 		return (
 			<Typography>
-				用户编号：{data.userId}<br/>
-				性别：{data["gender"]}<br/>
-				注册时间：{convertDateToLocaleDateString(data["registrationTime"])}
+				注册时间：{convertDateToLocaleDateString(data["registrationTime"])}<br/>
+				性别：{data["gender"]}
 			</Typography>
 		);
 	

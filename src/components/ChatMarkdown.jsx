@@ -6,7 +6,7 @@ import Link from "@mui/material/Link";
 import Divider from "@mui/material/Divider";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import {tomorrow, tomorrowNight} from "react-syntax-highlighter/dist/cjs/styles/hljs";
-import {useColorMode} from "src/components/ColorMode.jsx";
+import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import remarkBreaks from "remark-breaks";
 
 export const ChatMarkdown = ({children, ...props}) => {
@@ -19,7 +19,7 @@ export const ChatMarkdown = ({children, ...props}) => {
 		.replace(/(?<!((?<!\S)([*_-]{3,})(?!\S)))\n{2,}(?!((?<!\S)([*_-]{3,})(?!\S)))/g,
 			(match) => "\n\n" + "\u00A0  \n".repeat(match.length - 1));
 	
-	const [colorMode] = useColorMode();
+	const [binaryColorMode] = useBinaryColorMode();
 	
 	return (
 		<Markdown
@@ -58,7 +58,7 @@ export const ChatMarkdown = ({children, ...props}) => {
 					
 					return match ? (
 						<SyntaxHighlighter
-							style={colorMode === "light" ? tomorrow : tomorrowNight}
+							style={binaryColorMode === "light" ? tomorrow : tomorrowNight}
 							language={match ? match[1] : undefined}
 							PreTag="div"
 							className="syntax-highlighter"
@@ -67,8 +67,8 @@ export const ChatMarkdown = ({children, ...props}) => {
 						</SyntaxHighlighter>
 					) : (
 						<code style={{
-							color: colorMode === "light" ? "black" : "white",
-							backgroundColor: colorMode === "light" ? "white" : "rgb(29, 31, 33)",
+							color: binaryColorMode === "light" ? "black" : "white",
+							backgroundColor: binaryColorMode === "light" ? "white" : "rgb(29, 31, 33)",
 							borderRadius: 4,
 							padding: "1px 4px",
 							marginLeft: 2,

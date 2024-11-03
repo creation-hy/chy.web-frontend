@@ -20,14 +20,14 @@ import Error from "src/pages/Error.jsx";
 import Minesweeper from "src/pages/minesweeper/Minesweeper.jsx";
 import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
-import {useColorMode} from "src/components/ColorMode.jsx";
+import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Start from "src/pages/Start.jsx";
 
 export default function App() {
-	const [colorMode] = useColorMode();
+	const [binaryColorMode] = useBinaryColorMode();
 	
 	return (
-		<ThemeProvider theme={createTheme(getDefaultTheme(colorMode))}>
+		<ThemeProvider theme={createTheme(getDefaultTheme(binaryColorMode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
 			<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
