@@ -15,7 +15,7 @@ import {X} from "@mui/icons-material";
 import Cookies from "js-cookie";
 import ResetPassword from "src/components/ResetPassword.jsx";
 import {Tab, Tabs} from "@mui/material";
-import {useQuery} from "@tanstack/react-query";
+import {useClientUser} from "src/components/ClientUser.jsx";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -48,13 +48,10 @@ export default function SignIn() {
 	
 	const emailText = useRef(null);
 	
-	const {data} = useQuery({
-		queryKey: ["accountCheck"],
-		queryFn: () => axios.get("/api/account/check").then(res => res.data),
-	});
+	const {clientUser} = useClientUser();
 	
-	if (data && data.status !== 0)
-		window.location.href = "/user/" + data.username;
+	if (clientUser)
+		window.location.href = "/user/" + clientUser.username;
 	
 	const logIn = (event) => {
 		event.preventDefault();

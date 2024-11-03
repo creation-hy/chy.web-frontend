@@ -51,6 +51,7 @@ import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
+import SignUp from "src/pages/SignUp.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -521,7 +522,7 @@ export default function Chat() {
 	useEffect(() => {
 		if (!isLoading && !error) {
 			if (data.status !== 1) {
-				navigate.current("/login");
+				setLogged(false);
 				return;
 			}
 			setLogged(true);
@@ -760,8 +761,11 @@ export default function Chat() {
 		});
 	}, [getMessages]);
 	
+	if (logged === false)
+		return <SignUp/>;
+	
 	return (
-		<Grid container sx={{flex: 1, height: 0, display: data ? "flex" : "none"}} gap={2}>
+		<Grid container sx={{flex: 1, height: 0, display: data && data.status === 1 ? "flex" : "none"}} gap={2}>
 			<Card id="contacts" sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
