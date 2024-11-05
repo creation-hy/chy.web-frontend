@@ -114,7 +114,7 @@ export const AppAppBar = () => {
 						) : (
 							<Box>
 								<IconButton sx={{width: 35, height: 35}} href={"/user/" + clientUser.username}>
-									<Avatar sx={{width: 35, height: 35}} alt={clientUser.username} src={"/avatars/" + clientUser.username + ".png"}/>
+									<Avatar sx={{width: 35, height: 35}} alt={clientUser.displayName} src={"/avatars/" + clientUser.username + ".png"}/>
 								</IconButton>
 							</Box>
 						))}
@@ -148,7 +148,7 @@ export const AppAppBar = () => {
 									) : (
 										<Box display="flex" justifyContent="center">
 											<IconButton sx={{width: 50, height: 50}} href={"/user/" + clientUser.username}>
-												<Avatar sx={{width: 50, height: 50}} alt={clientUser.username}
+												<Avatar sx={{width: 50, height: 50}} alt={clientUser.displayName}
 												        src={"/avatars/" + clientUser.username + ".png"}/>
 											</IconButton>
 										</Box>

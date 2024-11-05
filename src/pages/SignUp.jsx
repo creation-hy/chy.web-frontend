@@ -146,7 +146,7 @@ export default function SignUp() {
 				component="form"
 				id="data-form"
 				onSubmit={register}
-				sx={{display: 'flex', flexDirection: 'column', gap: 2}}
+				sx={{display: 'flex', flexDirection: 'column', gap: 2, mt: 1}}
 			>
 				<FormControl>
 					<TextField
@@ -155,7 +155,7 @@ export default function SignUp() {
 						required
 						fullWidth
 						id="username"
-						placeholder="中英文、下划线、横杠、点"
+						placeholder="大小写字母、横杠、下划线、点"
 						error={nameError}
 						helperText={nameErrorMessage}
 						color={nameError ? 'error' : 'primary'}
