@@ -26,13 +26,13 @@ import IconButton from "@mui/material/IconButton";
 import ResetPassword from "src/components/ResetPassword.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 
-function InfoContainer({value, username}) {
+function InfoContainer({value, info}) {
 	const opt = value === 0 ? "info" : (value === 1 ? "chat" : (value === 2 ? "following" : "follower"));
 	const url = opt === "chat" ? "/chat/-1" : "/" + opt;
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: [opt],
-		queryFn: () => axios.get("/api/user/" + username + url).then(res => res.data),
+		queryFn: () => axios.get("/api/user/" + info.username + url).then(res => res.data),
 	});
 	
 	const [chatList, setChatList] = useState([]);
@@ -47,16 +47,16 @@ function InfoContainer({value, username}) {
 				if (document.documentElement.scrollHeight - window.scrollY - window.innerHeight <= 50 &&
 					lastScrollStartId !== chatListRef.current[chatListRef.current.length - 1].id - 1) {
 					lastScrollStartId = chatListRef.current[chatListRef.current.length - 1].id - 1;
-					axios.get("/api/user/" + username + "/chat/" + lastScrollStartId).then(res => {
+					axios.get("/api/user/" + info.username + "/chat/" + lastScrollStartId).then(res => {
 						chatListRef.current = [...chatListRef.current, ...res.data.result];
 						setChatList([...chatListRef.current]);
 					});
 				}
 			});
 		}
-	}, [data, error, isLoading, username, value]);
+	}, [data, error, info.username, isLoading, value]);
 	
-	if (error || isLoading)
+	if (!data)
 		return null;
 	
 	if (value === 0)
@@ -73,7 +73,7 @@ function InfoContainer({value, username}) {
 				{chatList.map((item) => (
 					<Grid container key={item.id} justifyContent='flex-start' alignItems="flex-start" sx={{my: 2.5}}>
 						<IconButton sx={{mr: 1.5, p: 0}}>
-							<Avatar src={"/avatars/" + username + ".png"} alt={username}/>
+							<Avatar src={"/avatars/" + info.username + ".png"} alt={info.displayName}/>
 						</IconButton>
 						<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-end' spacing={0.7}>
 							<Paper
@@ -102,12 +102,12 @@ function InfoContainer({value, username}) {
 		<Grid container direction="column" spacing={3}>
 			{data.result.map((item, index) => (
 				<Grid container key={index} alignItems="center" spacing={1.5}>
-					<Avatar src={"/avatars/" + item.username + ".png"} alt={item.username}/>
+					<Avatar src={"/avatars/" + item.username + ".png"} alt={item.displayName}/>
 					<Grid container gap={0.5} alignItems="center">
 						<Typography variant="h6" sx={{cursor: "pointer", fontWeight: "bold"}} onClick={() => {
 							window.location.href = item.username;
 						}}>
-							{item.username}
+							{item.displayName}
 						</Typography>
 						{item["verification"] && (<Verified color="primary"/>)}
 					</Grid>
@@ -119,7 +119,7 @@ function InfoContainer({value, username}) {
 
 InfoContainer.propTypes = {
 	value: PropTypes.number.isRequired,
-	username: PropTypes.string.isRequired,
+	info: PropTypes.object,
 }
 
 const doFollow = (username, setIsFollowing) => {
@@ -150,15 +150,13 @@ const uploadAvatar = (event) => {
 	});
 }
 
+const myname = Cookies.get("username");
+
 export default function User() {
 	const {username} = useParams();
 	
-	document.title = username + "的主页 - chy.web";
-	
 	const [value, setValue] = useState(0);
 	const [modifying, setModifying] = useState(false);
-	const [inited, setInited] = useState(false);
-	const [isMe, setIsMe] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
 	const [resetPasswordOn, setResetPasswordOn] = useState(false);
 	
@@ -166,56 +164,63 @@ export default function User() {
 		setValue(newValue);
 	};
 	
-	const {data, isLoading, error} = useQuery({
+	const {data, isLoading} = useQuery({
 		queryKey: ["user-init"],
 		queryFn: () => axios.get("/api/user/" + username + "/info").then(res => res.data),
 	});
 	
-	if (!isLoading && !error && !inited) {
-		if (!data.userId)
-			return (
-				<Alert severity="error">用户不存在！</Alert>
-			);
-		document.getElementById("tab-following").innerHTML += "(" + data["followingCount"] + ")";
-		document.getElementById("tab-follower").innerHTML += "(" + data["followerCount"] + ")";
-		setIsFollowing(data["alreadyFollowing"]);
-		setIsMe(username === Cookies.get("username"));
-		setInited(true);
-	}
+	useEffect(() => {
+		if (data && data.username) {
+			document.getElementById("tab-following").innerHTML += "(" + data["followingCount"] + ")";
+			document.getElementById("tab-follower").innerHTML += "(" + data["followerCount"] + ")";
+			setIsFollowing(data["alreadyFollowing"]);
+		}
+	}, [data]);
+	
+	if (isLoading)
+		return null;
+	
+	if (!data || !data.username)
+		return <Alert severity="error">用户不存在！</Alert>;
+	
+	document.title = `${data.displayName} (@${data.username}) 的主页 - chy.web`;
 	
 	return (
-		<Box>
+		<Box maxWidth="md" alignSelf="center" width="100%">
 			<Card sx={{p: 2}}>
 				<Grid container direction="column" gap={1.5}>
-					<Grid container alignItems="center" gap={1.5} sx={{flexWrap: "nowrap", width: "100%"}}>
-						{isMe ? (
+					<Grid container alignItems="center" gap={1.5} wrap="nowrap" width="100%">
+						{data.username === myname ? (
 							<IconButton
 								onClick={() => document.getElementById("avatar-upload").click()}
 								sx={{width: 100, height: 100, mb: 0.5}}
 							>
 								<Avatar
-									alt={username}
-									src={"/avatars/" + username + ".png"}
+									alt={data.displayName}
+									src={"/avatars/" + data.username + ".png"}
 									sx={{width: 100, height: 100}}
 								/>
 							</IconButton>
 						) : (
 							<Avatar
-								alt={username}
-								src={"/avatars/" + username + ".png"}
+								alt={data.displayName}
+								src={"/avatars/" + data.username + ".png"}
 								sx={{width: 100, height: 100}}
 							/>
 						)}
-						<input type="file" id="avatar-upload" style={{display: "none"}} onChange={uploadAvatar} accept="image/*"/>
+						<input type="file" id="avatar-upload" onChange={uploadAvatar} accept="image/*" hidden/>
 						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container direction="column" justifyContent="center">
-							<Box display="flex" gap={0.5} alignItems="center" margin={0} flexShrink={1} sx={{width: "100%"}}>
-								<Typography variant="h5" fontWeight="bold" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
-									{username}
+							<Box display="flex" gap={0.5} alignItems="center" margin={0} flexShrink={1} flexWrap="nowrap" width="100%">
+								<Typography variant="h5" fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis">
+									{data.displayName}
 								</Typography>
 								{!isLoading && data["verification"] && (<Verified color="primary"/>)}
 							</Box>
-							{isMe ? (
+							<Typography color="text.secondary" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
+								@{data.username}
+							</Typography>
+							{data.username === myname ? (
 								<Box sx={{pt: "2px"}}>
 									<IconButton onClick={() => setModifying(true)}>
 										<EditOutlined/>
@@ -223,7 +228,7 @@ export default function User() {
 									<IconButton onClick={() => setResetPasswordOn(true)}>
 										<LockResetOutlined/>
 									</IconButton>
-									<IconButton href={"/chat/" + username}>
+									<IconButton href={"/chat/" + data.username}>
 										<MailOutlined/>
 									</IconButton>
 									<IconButton onClick={logOut}>
@@ -232,18 +237,18 @@ export default function User() {
 								</Box>
 							) : (
 								<Box flexShrink={0}>
-									<IconButton onClick={() => doFollow(username)}>
+									<IconButton onClick={() => doFollow(data.username)}>
 										{isFollowing == null ? null : (isFollowing ? <PersonAddDisabledOutlined/> : <PersonAddOutlined/>)}
 									</IconButton>
-									<IconButton href={"/chat/" + username}>
+									<IconButton href={"/chat/" + data.username}>
 										<MailOutlined/>
 									</IconButton>
 								</Box>
 							)}
 						</Grid>
 					</Grid>
-					<Box id="introduction" sx={{color: "text.secondary", fontSize: 15}}>
-						<ChatMarkdown>{!isLoading ? data["introduction"] : ""}</ChatMarkdown>
+					<Box id="introduction" sx={{fontSize: 15}}>
+						<ChatMarkdown>{data["introduction"]}</ChatMarkdown>
 					</Box>
 				</Grid>
 			</Card>
@@ -255,7 +260,7 @@ export default function User() {
 					<Tab label="粉丝" data-option="follower" id="tab-follower"/>
 				</Tabs>
 			</Box>
-			<InfoContainer value={value} username={username}/>
+			<InfoContainer value={value} info={data}/>
 			<Dialog
 				open={modifying}
 				onClose={() => setModifying(false)}
@@ -264,6 +269,7 @@ export default function User() {
 				onSubmit={(event) => {
 					event.preventDefault();
 					const formData = new FormData(event.currentTarget);
+					formData.set("displayName", formData.get("displayName").trim());
 					axios.post("/api/account/modify", formData, {
 						headers: {
 							"Content-Type": "application/json",
@@ -278,39 +284,49 @@ export default function User() {
 			>
 				<DialogTitle>修改信息</DialogTitle>
 				<DialogContent>
-					<FormControl margin="dense">
-						<InputLabel id="select-gender-label">性别</InputLabel>
-						<Select
-							labelId="select-gender-label"
-							label="性别"
-							variant="outlined"
-							defaultValue={!isLoading && data["gender"]}
-							name="gender"
-						>
-							<MenuItem value="未知">未知</MenuItem>
-							<MenuItem value="男">男</MenuItem>
-							<MenuItem value="女">女</MenuItem>
-							<MenuItem value="男の娘">男の娘</MenuItem>
-							<MenuItem value="假小子">假小子</MenuItem>
-							<MenuItem value="Futanari">Futanari</MenuItem>
-							<MenuItem value="MtF">MtF</MenuItem>
-							<MenuItem value="MtX">MtX</MenuItem>
-							<MenuItem value="FtM">FtM</MenuItem>
-							<MenuItem value="FtX">FtX</MenuItem>
-							<MenuItem value="Non-binary">Non-binary</MenuItem>
-							<MenuItem value="无">无</MenuItem>
-							<MenuItem value="汉堡王">汉堡王</MenuItem>
-							<MenuItem value="西瓜霜">西瓜霜</MenuItem>
-							<MenuItem value="北洋军阀">北洋军阀</MenuItem>
-							<MenuItem value="其它">其它</MenuItem>
-						</Select>
-					</FormControl>
+					<Grid container>
+						<TextField
+							label="昵称"
+							defaultValue={data.displayName}
+							name="displayName"
+							margin="dense"
+							sx={{flex: 1, mr: 1}}
+							required
+						/>
+						<FormControl margin="dense">
+							<InputLabel id="select-gender-label">性别</InputLabel>
+							<Select
+								labelId="select-gender-label"
+								label="性别"
+								variant="outlined"
+								defaultValue={data["gender"]}
+								name="gender"
+							>
+								<MenuItem value="未知">未知</MenuItem>
+								<MenuItem value="男">男</MenuItem>
+								<MenuItem value="女">女</MenuItem>
+								<MenuItem value="男の娘">男の娘</MenuItem>
+								<MenuItem value="假小子">假小子</MenuItem>
+								<MenuItem value="Futanari">Futanari</MenuItem>
+								<MenuItem value="MtF">MtF</MenuItem>
+								<MenuItem value="MtX">MtX</MenuItem>
+								<MenuItem value="FtM">FtM</MenuItem>
+								<MenuItem value="FtX">FtX</MenuItem>
+								<MenuItem value="Non-binary">Non-binary</MenuItem>
+								<MenuItem value="无">无</MenuItem>
+								<MenuItem value="汉堡王">汉堡王</MenuItem>
+								<MenuItem value="西瓜霜">西瓜霜</MenuItem>
+								<MenuItem value="北洋军阀">北洋军阀</MenuItem>
+								<MenuItem value="其它">其它</MenuItem>
+							</Select>
+						</FormControl>
+					</Grid>
 					<TextField
 						label="简介"
 						fullWidth
 						multiline
 						maxRows={10}
-						defaultValue={!isLoading && data["introduction"]}
+						defaultValue={data["introduction"]}
 						name="introduction"
 						margin="normal"
 					/>
