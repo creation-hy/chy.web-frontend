@@ -7,14 +7,14 @@ import Grid from "@mui/material/Grid2";
 import Avatar from "@mui/material/Avatar";
 import Link from "@mui/material/Link";
 import PropTypes from "prop-types";
+import Cookies from "js-cookie";
 
-export const UserSimpleItem = ({username}) => {
+export const UserSimpleItem = ({username, displayName}) => {
 	return (
-		<Link href={"/user/" + username} underline="none" width="max-content"
-		      display="flex" flexWrap="nowrap" alignItems="center" gap={1}>
-			<Avatar src={"/avatars/" + username + ".png"}/>
-			<Typography sx={{fontWeight: "bold", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis"}}>
-				{username}
+		<Link href={"/user/" + username} underline="none" display="flex" alignItems="center" gap={1}>
+			<Avatar src={"/avatars/" + username + ".png"} alt={displayName}/>
+			<Typography fontWeight="bold" maxWidth={150} noWrap textOverflow="ellipsis">
+				{displayName}
 			</Typography>
 		</Link>
 	);
@@ -22,7 +22,10 @@ export const UserSimpleItem = ({username}) => {
 
 UserSimpleItem.propTypes = {
 	username: PropTypes.string,
+	displayName: PropTypes.string,
 }
+
+const myname = Cookies.get("username");
 
 export default function Ranking() {
 	document.title = "排行榜 - chy.web";
@@ -41,7 +44,7 @@ export default function Ranking() {
 				<Box key={index} width="100%">
 					<Typography variant="h4">{table.item}</Typography>
 					<TableContainer component={Paper}>
-						<Table>
+						<Table sx={{whiteSpace: "nowrap"}}>
 							<TableHead>
 								<TableRow>
 									{table.index.map((cellItem, index) => (
@@ -52,11 +55,12 @@ export default function Ranking() {
 								</TableRow>
 							</TableHead>
 							<TableBody>
-								{table.data.map((rowItem, index) => (
-									<TableRow key={index} selected={rowItem.isMe}>
-										{rowItem.row.map((cellItem, index) => (
+								{table.data.map((rowData, index) => (
+									<TableRow key={index} selected={rowData.username === myname}>
+										{rowData.row.map((cellItem, index) => (
 											<TableCell key={index}>{table.index[index] === "用户" ?
-												<UserSimpleItem username={cellItem}/> : <Typography>{cellItem}</Typography>
+												<UserSimpleItem username={rowData.username} displayName={rowData.displayName}/> :
+												<Typography>{cellItem}</Typography>
 											}</TableCell>
 										))}
 									</TableRow>

@@ -7,9 +7,12 @@ import {useState} from "react";
 import axios from "axios";
 import {useQuery} from "@tanstack/react-query";
 import FormControl from "@mui/material/FormControl";
-import Typography from "@mui/material/Typography";
 import {UserSimpleItem} from "src/pages/Ranking.jsx";
+import Cookies from "js-cookie";
+import Typography from "@mui/material/Typography";
 import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
+
+const myname = Cookies.get("username");
 
 export default function ChybenchRanking() {
 	document.title = "排行榜 - Chybench - chy.web";
@@ -26,23 +29,27 @@ export default function ChybenchRanking() {
 		if (isLoading || error)
 			return null;
 		
+		const indexDisplay = ["排名", "相比第一名", "用户", "跑分", "GPU型号", "系统", "浏览器", "日期"];
+		const indexKey = ["id", "percentage", "user", "score", "gpuName", "os", "browser", "date"];
+		
 		return (
 			<TableContainer component={Paper}>
-				<Table>
+				<Table sx={{whiteSpace: "nowrap"}}>
 					<TableHead>
 						<TableRow>
-							{data.result.index.map((item) => (
+							{indexDisplay.map((item) => (
 								<TableCell key={item}><Typography fontWeight="bold">{item}</Typography></TableCell>
 							))}
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{data.result.data.map((item, rowIndex) => (
-							<TableRow key={rowIndex} selected={item.isMe}>
-								{item.row.map((item, index) => (
+						{data.result.map((rowData, rowIndex) => (
+							<TableRow key={rowIndex} selected={rowData.username === myname}>
+								{indexKey.map((item, index) => (
 									<TableCell key={index}>{
-										data.result.index[index] === "时间" ? <Typography>{convertDateToLocaleDateString(item)}</Typography> : (
-											data.result.index[index] === "用户" ? <UserSimpleItem username={item}/> : <Typography>{item}</Typography>)
+										item === "date" ? <Typography>{convertDateToLocaleDateString(rowData[item])}</Typography> :
+											(item === "user" ? <UserSimpleItem username={rowData.username} displayName={rowData.displayName}/> :
+												<Typography>{rowData[item]}</Typography>)
 									}</TableCell>
 								))}
 							</TableRow>
