@@ -445,6 +445,7 @@ export default function Chat() {
 	const [users, setUsers] = useState(null);
 	const [logged, setLogged] = useState(null);
 	const [currentUser, setCurrentUser] = useState(null);
+	const [currentUserDisplayName, setCurrentUserDisplayName] = useState(null);
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
@@ -492,6 +493,7 @@ export default function Chat() {
 		}
 		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
 			const userItem = usersVar.find(item => item.username === username);
+			setCurrentUserDisplayName(res.data.result.displayName);
 			if (userItem) {
 				if (clientUserRef.current)
 					setClientUser({
@@ -840,17 +842,17 @@ export default function Chat() {
 							}
 							document.getElementById("app-bar").style.display = "flex";
 							setCurrentUser(null);
+							setCurrentUserDisplayName(null);
 							currentUserVar = null;
 							navigate.current("/chat");
 						}}>
 							<ArrowBack/>
 						</IconButton>}
 						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"} sx={{flex: 1}}>
-							<Typography sx={{maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", fontWeight: "bold"}}>
-								{currentUser}
+							<Typography maxWidth="100%" overflow="hidden" textOverflow="ellipsis" fontWeight="bold" noWrap>
+								{currentUserDisplayName}
 							</Typography>
-							<Typography variant="body2" color="textSecondary"
-							            sx={{maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>
+							<Typography variant="body2" color="textSecondary" maxWidth="100%" noWrap overflow="hidden" textOverflow="ellipsis">
 								{lastOnline}
 							</Typography>
 						</Grid>
