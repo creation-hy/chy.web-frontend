@@ -864,7 +864,7 @@ export default function Chat() {
 									const message = res.data.result.message;
 									if (!message.length)
 										break;
-									text = message.map((item) => (`## ${item.displayName} (@${item.username}) ${convertDateToLocaleAbsoluteString(item.time)}\n\n` + item.text)).join("\n\n")
+									text = message.map((item) => (`## ${item.displayName} (@${item.username}) ${convertDateToLocaleAbsoluteString(item.time)}\n\n` + item.content)).join("\n\n")
 										+ "\n\n" + text;
 									startId = message[0].id;
 								}
