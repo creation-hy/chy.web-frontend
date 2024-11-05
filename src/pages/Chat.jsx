@@ -7,7 +7,7 @@ import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 import Divider from "@mui/material/Divider";
-import Typography from "@mui/material/Typography";
+import Typography from "@mui/material/Typography"
 import {
 	AddLinkOutlined,
 	AddPhotoAlternateOutlined,
@@ -59,17 +59,14 @@ let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSe
 let usersVar = [], messagesVar = [];
 let socket, stomp;
 
-function UserItem({username, info}) {
-	if (!info)
-		return null;
-	
+function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText}) {
 	return (
 		<>
 			<ListItemAvatar>
-				<Badge badgeContent={info.newMessageCount} overlap="circular" color="error">
+				<Badge badgeContent={newMessageCount} overlap="circular" color="error">
 					<Badge
-						badgeContent={info.isOnline || username === "ChatRoomSystem" ? " " : 0} overlap="circular"
-						anchorOrigin={{vertical: "bottom", horizontal: "right"}} color="success" variant="dot"
+						badgeContent={isOnline === true ? " " : 0} overlap="circular" color="success" variant="dot"
+						anchorOrigin={{vertical: "bottom", horizontal: "right"}}
 						sx={{
 							"& .MuiBadge-badge": {
 								backgroundColor: '#44b700',
@@ -78,7 +75,7 @@ function UserItem({username, info}) {
 							}
 						}}
 					>
-						<Avatar src={"/avatars/" + username + ".png"} alt={username}/>
+						<Avatar src={"/avatars/" + username + ".png"} alt={displayName}/>
 					</Badge>
 				</Badge>
 			</ListItemAvatar>
@@ -96,10 +93,10 @@ function UserItem({username, info}) {
 							textOverflow: "ellipsis",
 							flexShrink: 1,
 						}}>
-							{info.username}
+							{displayName}
 						</Typography>
-						{info.lastMessageTime && <Typography variant="body2" color="textSecondary">
-							{convertDateToLocaleOffsetString(info.lastMessageTime)}
+						{lastMessageTime && <Typography variant="body2" color="textSecondary">
+							{convertDateToLocaleOffsetString(lastMessageTime)}
 						</Typography>}
 					</Grid>
 				}
@@ -109,7 +106,7 @@ function UserItem({username, info}) {
 						overflow: "hidden",
 						textOverflow: "ellipsis",
 					}}>
-						{info.lastMessageText}
+						{lastMessageText}
 					</Typography>
 				}
 			/>
@@ -119,17 +116,24 @@ function UserItem({username, info}) {
 
 UserItem.propTypes = {
 	username: PropTypes.string,
-	info: PropTypes.object,
+	displayName: PropTypes.string,
+	isOnline: PropTypes.bool,
+	newMessageCount: PropTypes.number,
+	lastMessageTime: PropTypes.string,
+	lastMessageText: PropTypes.string,
 }
 
-const Message = ({messageId, isMe, username, content, quote, setQuote, messageCard, setUsers}) => {
+const Message = ({messageId, username, displayName, content, quote, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
-	const [contentState, setContent] = useState(content.toString());
+	
+	const isMe = username === myname;
 	
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
-			{!isMe && <IconButton sx={{mr: 1, p: 0}} href={"/user/" + username}><Avatar src={"/avatars/" + username + ".png"} alt={username}/></IconButton>}
+			{!isMe && <IconButton sx={{mr: 1, p: 0}} href={"/user/" + username}>
+				<Avatar src={"/avatars/" + username + ".png"} alt={displayName}/>
+			</IconButton>}
 			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
 				<Paper
 					elevation={3}
@@ -150,14 +154,14 @@ const Message = ({messageId, isMe, username, content, quote, setQuote, messageCa
 					}}
 				>
 					<Box>
-						<ChatMarkdown>{contentState}</ChatMarkdown>
+						<ChatMarkdown>{content}</ChatMarkdown>
 					</Box>
 				</Paper>
 				{quote != null &&
 					<Chip
 						variant="outlined"
-						avatar={<Avatar alt={quote.username} src={"/avatars/" + quote.username + ".png"}/>}
-						label={quote.username + ": " + quote.content}
+						avatar={<Avatar alt={quote.displayName} src={"/avatars/" + quote.username + ".png"}/>}
+						label={quote.displayName + ": " + quote.content}
 						onClick={() => {
 							if (document.getElementById("message-" + quote.id))
 								document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"});
@@ -165,13 +169,15 @@ const Message = ({messageId, isMe, username, content, quote, setQuote, messageCa
 					/>
 				}
 			</Grid>
-			{isMe && <IconButton sx={{ml: 1, p: 0}} href={"/user/" + username}><Avatar src={"/avatars/" + username + ".png"} alt={username}/></IconButton>}
+			{isMe && <IconButton sx={{ml: 1, p: 0}} href={"/user/" + username}>
+				<Avatar src={"/avatars/" + username + ".png"} alt={displayName}/>
+			</IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
 				<DialogTitle>
-					来自{username}的消息
+					{displayName} (@{username}):
 				</DialogTitle>
 				<DialogContent>
-					<ChatMarkdown>{contentState}</ChatMarkdown>
+					<ChatMarkdown>{content}</ChatMarkdown>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>
@@ -184,7 +190,7 @@ const Message = ({messageId, isMe, username, content, quote, setQuote, messageCa
 				anchorReference="anchorPosition"
 				anchorPosition={contextMenu ? {top: contextMenu.mouseY, left: contextMenu.mouseX} : undefined}
 			>
-				<MenuItem onClick={() => navigator.clipboard.writeText(contentState)}>
+				<MenuItem onClick={() => navigator.clipboard.writeText(content)}>
 					<ListItemIcon>
 						<ContentCopyOutlined/>
 					</ListItemIcon>
@@ -204,7 +210,8 @@ const Message = ({messageId, isMe, username, content, quote, setQuote, messageCa
 					setQuote({
 						id: messageId,
 						username: username,
-						content: contentState,
+						displayName: displayName,
+						content: content,
 					});
 				}}>
 					<ListItemIcon>
@@ -221,20 +228,6 @@ const Message = ({messageId, isMe, username, content, quote, setQuote, messageCa
 						},
 					}).then(res => {
 						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-						if (res.data.status === 1) {
-							setContent("消息已撤回");
-							const item = messagesVar.find(item => item.id === messageId);
-							if (item) {
-								item.content = "消息已撤回";
-								if (item.id.toString() === messageCard.current.lastElementChild.id.substring(8)) {
-									const userItem = usersVar.find(item => item.username === (currentUserVar === "ChatRoomSystem" ? "公共" : currentUserVar));
-									if (userItem) {
-										userItem.lastMessageText = currentUserVar === "ChatRoomSystem" ? myname + ": 消息已撤回" : "消息已撤回";
-										setUsers([...usersVar]);
-									}
-								}
-							}
-						}
 					});
 				}}>
 					<ListItemIcon>
@@ -251,13 +244,11 @@ const Message = ({messageId, isMe, username, content, quote, setQuote, messageCa
 
 Message.propTypes = {
 	messageId: PropTypes.number,
-	isMe: PropTypes.bool,
 	username: PropTypes.string,
+	displayName: PropTypes.string,
 	content: PropTypes.string,
 	quote: PropTypes.object,
 	setQuote: PropTypes.func,
-	messageCard: PropTypes.object,
-	setUsers: PropTypes.func,
 }
 
 const notify = (title, body, iconId) => {
@@ -451,7 +442,7 @@ export default function Chat() {
 	const navigate = useRef(useNavigate());
 	const userJumped = useRef(false);
 	
-	const [users, setUsers] = useState([]);
+	const [users, setUsers] = useState(null);
 	const [logged, setLogged] = useState(null);
 	const [currentUser, setCurrentUser] = useState(null);
 	const [messages, setMessages] = useState([]);
@@ -463,7 +454,11 @@ export default function Chat() {
 	const messageCard = useRef(null);
 	const messageInput = useRef(null);
 	const disconnectErrorBarKey = useRef(null);
+	const lastScrollStartId = useRef(-1);
 	const queryClient = useRef(useQueryClient());
+	
+	const chatMainComponent = useRef(null);
+	const contactsComponent = useRef(null);
 	
 	const {clientUser, setClientUser, clientUserLoading} = useClientUser();
 	const clientUserRef = useRef(null);
@@ -482,8 +477,12 @@ export default function Chat() {
 			setQuote(null);
 		}
 		if (isMobile) {
-			document.getElementById("contacts").style.display = "none";
-			document.getElementById("chat-main").style.display = "flex";
+			if (contactsComponent.current) {
+				contactsComponent.current.style.display = "none";
+			}
+			if (chatMainComponent.current) {
+				chatMainComponent.current.style.display = "flex";
+			}
 			document.getElementById("app-bar").style.display = "none";
 		}
 		try {
@@ -492,7 +491,7 @@ export default function Chat() {
 			console.log("你的浏览器不支持通知，人家也没办法呀……", e);
 		}
 		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
-			const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
+			const userItem = usersVar.find(item => item.username === username);
 			if (userItem) {
 				if (clientUserRef.current)
 					setClientUser({
@@ -531,7 +530,6 @@ export default function Chat() {
 			document.getElementById("footer").style.display = "none";
 			if (isMobile) {
 				document.getElementById("page-main").style.paddingBottom = "12px";
-				document.getElementById("chat-main").style.paddingTop = "16px";
 			} else
 				document.getElementById("page-main").style.paddingBottom = "24px";
 			usersVar = data.result;
@@ -558,11 +556,11 @@ export default function Chat() {
 		}));
 	}, [quote]);
 	
-	const updateUserItem = useCallback((username, content, time, isCurrent, sender) => {
-		const userItem = usersVar.find(item => item.username === (username === "ChatRoomSystem" ? "公共" : username));
+	const updateUserItem = useCallback((username, displayName, content, time, isCurrent, sender) => {
+		const userItem = usersVar.find(item => item.username === username);
 		if (userItem) {
-			userItem["lastMessageText"] = content;
-			userItem["lastMessageTime"] = time;
+			userItem.lastMessageText = content;
+			userItem.lastMessageTime = time;
 			if (sender !== myname && !isCurrent)
 				userItem.newMessageCount++;
 			usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
@@ -571,6 +569,7 @@ export default function Chat() {
 			axios.get("/api/user/find/" + username).then(res => {
 				usersVar = [{
 					username: username,
+					displayName: displayName,
 					isOnline: res.data.result[0].isOnline,
 					lastMessageTime: time,
 					lastMessageText: content,
@@ -593,14 +592,14 @@ export default function Chat() {
 			},
 		}).then(() => queryClient.current.invalidateQueries({queryKey: ["accountCheck"]}));
 		
-		const content = data.recipient === "ChatRoomSystem" ? data.sender + ": " + data.content : data.content;
+		const content = data.recipient === "ChatRoomSystem" ? data.senderDisplayName + ": " + data.content : data.content;
 		updateUserItem(data.recipient === "ChatRoomSystem" ? data.recipient : (data.sender === myname ? data.recipient : data.sender),
-			content, data.time, true, data.sender);
+			data.recipient === "ChatRoomSystem" ? data.recipientDisplayName : data.senderDisplayName, content, data.time, true, data.sender);
 		
 		messagesVar = [...messagesVar, {
 			id: data.id,
 			username: data.sender,
-			isMe: data.sender === myname,
+			displayName: data.senderDisplayName,
 			content: data.content,
 			quote: data.quote,
 			time: data.time,
@@ -659,7 +658,9 @@ export default function Chat() {
 					notify("[私聊] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
 			} else {
-				updateUserItem(data.sender === myname ? data.recipient : data.sender, data.content, data.time, false, data.sender);
+				updateUserItem(data.sender === myname ? data.recipient : data.sender,
+					data.sender === myname ? data.recipientDisplayName : data.senderDisplayName,
+					data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && data.sender !== myname)
 					notify("[私聊] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
@@ -675,7 +676,7 @@ export default function Chat() {
 					notify("[公共] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
 			} else {
-				updateUserItem(data.recipient, data.sender + ": " + data.content, data.time, false, data.sender);
+				updateUserItem(data.recipient, data.recipientDisplayName, data.senderDisplayName + ": " + data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
 					notify("[公共] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
@@ -685,6 +686,7 @@ export default function Chat() {
 		stomp.subscribe(`/user/queue/chat.delete`, (message) => {
 			const data = JSON.parse(message.body);
 			const item = messagesVar.find(item => item.id === data.id);
+			
 			if (item) {
 				item.content = "消息已撤回";
 				item.id = -item.id;
@@ -692,9 +694,9 @@ export default function Chat() {
 			}
 			
 			if (data["isLatest"]) {
-				const userItem = usersVar.find(item => item.username === data.username);
+				const userItem = usersVar.find(item => item.username === (data.sender === myname ? data.recipient : data.sender));
 				if (userItem) {
-					userItem["lastMessageText"] = "消息已撤回";
+					userItem.lastMessageText = "消息已撤回";
 					setUsers([...usersVar]);
 				}
 			}
@@ -702,8 +704,6 @@ export default function Chat() {
 		
 		stomp.subscribe(`/topic/chat.group.public.delete`, (message) => {
 			const data = JSON.parse(message.body);
-			if (data.username === myname)
-				return;
 			
 			const item = messagesVar.find(item => item.id === data.id);
 			if (item) {
@@ -713,9 +713,9 @@ export default function Chat() {
 			}
 			
 			if (data["isLatest"]) {
-				const userItem = usersVar.find(item => item.username === "公共");
+				const userItem = usersVar.find(item => item.username === "ChatRoomSystem");
 				if (userItem) {
-					userItem["lastMessageText"] = data.username + ": 消息已撤回";
+					userItem.lastMessageText = data.displayName + ": 消息已撤回";
 					setUsers([...usersVar]);
 				}
 			}
@@ -751,22 +751,12 @@ export default function Chat() {
 			stompConnect();
 	}, [getMessages, logged, stompOnConnect]);
 	
-	useEffect(() => {
-		let lastScrollStartId = -1;
-		messageCard.current.addEventListener("scroll", (event) => {
-			if (event.target.scrollTop <= 50 && messagesVar.length > 0 && lastScrollStartId !== messagesVar[0].id - 1 && messagesVar.length >= 30) {
-				lastScrollStartId = messagesVar[0].id - 1;
-				getMessages(currentUserVar, lastScrollStartId);
-			}
-		});
-	}, [getMessages]);
-	
 	if (logged === false)
 		return <SignUp/>;
 	
 	return (
-		<Grid container sx={{flex: 1, height: 0, display: data && data.status === 1 ? "flex" : "none"}} gap={2}>
-			<Card id="contacts" sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
+		<Grid container sx={{flex: 1, height: 0, display: !users ? "none" : "flex"}} gap={2}>
+			<Card ref={contactsComponent} sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
 					placeholder="搜索用户"
@@ -790,18 +780,32 @@ export default function Chat() {
 							onClick={() => getMessages("ChatRoomSystem")}
 							selected={currentUser === "ChatRoomSystem"}
 						>
-							<UserItem username="ChatRoomSystem" info={users.find(item => item.username === "公共")}/>
+							{users != null && <UserItem
+								username="ChatRoomSystem"
+								displayName="公共"
+								isOnline={false}
+								newMessageCount={users.find(item => item.username === "ChatRoomSystem").newMessageCount}
+								lastMessageTime={users.find(item => item.username === "ChatRoomSystem").lastMessageTime}
+								lastMessageText={users.find(item => item.username === "ChatRoomSystem").lastMessageText}
+							/>}
 						</ListItemButton>
 					</List>
 					<Divider/>
 					<List sx={{display: matchList.length === 0 ? "block" : "none"}}>
-						{users.map((user) => (user.username !== "公共" &&
+						{users != null && users.map((user) => (user.username !== "ChatRoomSystem" &&
 							<ListItemButton
 								key={user.username}
 								onClick={() => getMessages(user.username)}
 								selected={currentUser === user.username}
 							>
-								<UserItem username={user.username} info={user}/>
+								<UserItem
+									username={user.username}
+									displayName={user.displayName}
+									isOnline={user.isOnline}
+									newMessageCount={user.newMessageCount}
+									lastMessageTime={user.lastMessageTime}
+									lastMessageText={user.lastMessageText}
+								/>
 							</ListItemButton>
 						))}
 					</List>
@@ -812,23 +816,28 @@ export default function Chat() {
 								onClick={() => getMessages(user.username)}
 								selected={currentUser === user.username}
 							>
-								<UserItem username={user.username} info={{
-									username: user.username,
-									isOnline: user.isOnline,
-									lastMessageText: "",
-									newMessageCount: 0,
-								}}/>
+								<UserItem
+									username={user.username}
+									displayName={user.displayName}
+									isOnline={user.isOnline}
+									newMessageCount={0}
+								/>
 							</ListItemButton>
 						))}
 					</List>
 				</Box>
 			</Card>
-			<Grid container id="chat-main" direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex"}} gap={1.5}>
+			<Grid container ref={chatMainComponent} direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex", pt: isMobile ? 2 : 0}}
+			      gap={1.5}>
 				{currentUser != null && <Card sx={{width: "100%"}}>
 					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 1.5} gap={1.5}>
 						{isMobile && <IconButton onClick={() => {
-							document.getElementById("contacts").style.display = "flex";
-							document.getElementById("chat-main").style.display = "none";
+							if (contactsComponent.current) {
+								contactsComponent.current.style.display = "flex";
+							}
+							if (chatMainComponent.current) {
+								chatMainComponent.current.style.display = "none";
+							}
 							document.getElementById("app-bar").style.display = "flex";
 							setCurrentUser(null);
 							currentUserVar = null;
@@ -853,7 +862,7 @@ export default function Chat() {
 									const message = res.data.result.message;
 									if (!message.length)
 										break;
-									text = message.map((item) => ("## " + item.username + " " + convertDateToLocaleAbsoluteString(item.time) + "\n\n" + item.text)).join("\n\n")
+									text = message.map((item) => (`## ${item.displayName} (@${item.username}) ${convertDateToLocaleAbsoluteString(item.time)}\n\n` + item.text)).join("\n\n")
 										+ "\n\n" + text;
 									startId = message[0].id;
 								}
@@ -873,7 +882,12 @@ export default function Chat() {
 						</Box>
 					</Grid>
 				</Card>}
-				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}}>
+				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}} onScroll={(event) => {
+					if (event.target.scrollTop <= 50 && messagesVar.length > 0 && lastScrollStartId.current !== messagesVar[0].id - 1 && messagesVar.length >= 30) {
+						lastScrollStartId.current = messagesVar[0].id - 1;
+						getMessages(currentUserVar, lastScrollStartId.current);
+					}
+				}}>
 					{messages.map((message, index) => {
 						const currentDate = new Date(message.time);
 						const previousDate = new Date(!index ? 0 : messages[index - 1].time);
@@ -883,14 +897,12 @@ export default function Chat() {
 								{showTime && <Grid container><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
 								<Message
 									messageId={message.id}
-									isMe={message.isMe}
 									username={message.username}
+									displayName={message.displayName}
 									content={message.content}
 									quote={message.quote}
 									timestamp={message.time}
 									setQuote={setQuote}
-									messageCard={messageCard}
-									setUsers={setUsers}
 								/>
 							</Fragment>
 						);
@@ -900,8 +912,8 @@ export default function Chat() {
 					{quote != null &&
 						<Chip
 							variant="outlined"
-							avatar={<Avatar alt={quote.username} src={"/avatars/" + quote.username + ".png"}/>}
-							label={quote.username + ": " + quote.content}
+							avatar={<Avatar alt={quote.displayName} src={"/avatars/" + quote.username + ".png"}/>}
+							label={quote.displayName + ": " + quote.content}
 							clickable
 							onClick={() => document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"})}
 							onDelete={() => setQuote(null)}
