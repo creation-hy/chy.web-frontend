@@ -820,7 +820,7 @@ export default function Chat() {
 							>
 								<UserItem
 									username={user.username}
-									displayName={user.displayName}
+									displayName={`${user.displayName} (@${user.username})`}
 									isOnline={user.isOnline}
 									newMessageCount={0}
 								/>
