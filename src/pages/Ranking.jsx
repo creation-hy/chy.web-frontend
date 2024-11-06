@@ -4,15 +4,15 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import Avatar from "@mui/material/Avatar";
 import Link from "@mui/material/Link";
 import PropTypes from "prop-types";
 import Cookies from "js-cookie";
+import {UserAvatar} from "src/components/UserAvatar.jsx";
 
 export const UserSimpleItem = ({username, displayName}) => {
 	return (
 		<Link href={"/user/" + username} underline="none" display="flex" alignItems="center" gap={1}>
-			<Avatar src={"/avatars/" + username + ".png"} alt={displayName}/>
+			<UserAvatar username={username} displayName={displayName}/>
 			<Typography fontWeight="bold" maxWidth={150} noWrap textOverflow="ellipsis">
 				{displayName}
 			</Typography>

@@ -25,6 +25,7 @@ import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
 import ResetPassword from "src/components/ResetPassword.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
+import {UserAvatar} from "src/components/UserAvatar.jsx";
 
 function InfoContainer({value, info}) {
 	const opt = value === 0 ? "info" : (value === 1 ? "chat" : (value === 2 ? "following" : "follower"));
@@ -73,7 +74,7 @@ function InfoContainer({value, info}) {
 				{chatList.map((item) => (
 					<Grid container key={item.id} justifyContent='flex-start' alignItems="flex-start" sx={{my: 2.5}}>
 						<IconButton sx={{mr: 1.5, p: 0}}>
-							<Avatar src={"/avatars/" + info.username + ".png"} alt={info.displayName}/>
+							<UserAvatar username={info.username} displayName={info.displayName}/>
 						</IconButton>
 						<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-end' spacing={0.7}>
 							<Paper
@@ -195,18 +196,10 @@ export default function User() {
 								onClick={() => document.getElementById("avatar-upload").click()}
 								sx={{width: 100, height: 100, mb: 0.5}}
 							>
-								<Avatar
-									alt={data.displayName}
-									src={"/avatars/" + data.username + ".png"}
-									sx={{width: 100, height: 100}}
-								/>
+								<UserAvatar username={data.username} displayName={data.displayName} width={100} height={100}/>
 							</IconButton>
 						) : (
-							<Avatar
-								alt={data.displayName}
-								src={"/avatars/" + data.username + ".png"}
-								sx={{width: 100, height: 100}}
-							/>
+							<UserAvatar username={data.username} displayName={data.displayName} width={100} height={100}/>
 						)}
 						<input type="file" id="avatar-upload" onChange={uploadAvatar} accept="image/*" hidden/>
 						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>

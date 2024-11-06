@@ -26,6 +26,7 @@ import {
 import {isMobile} from "react-device-detect";
 import {useColorMode} from "src/components/ColorMode.jsx";
 import {useClientUser} from "src/components/ClientUser.jsx";
+import {UserAvatar} from "src/components/UserAvatar.jsx";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -114,7 +115,7 @@ export const AppAppBar = () => {
 						) : (
 							<Box>
 								<IconButton sx={{width: 35, height: 35}} href={"/user/" + clientUser.username}>
-									<Avatar sx={{width: 35, height: 35}} alt={clientUser.displayName} src={"/avatars/" + clientUser.username + ".png"}/>
+									<UserAvatar username={clientUser.username} displayName={clientUser.displayName} width={35} height={35}/>
 								</IconButton>
 							</Box>
 						))}
@@ -148,8 +149,7 @@ export const AppAppBar = () => {
 									) : (
 										<Box display="flex" justifyContent="center">
 											<IconButton sx={{width: 50, height: 50}} href={"/user/" + clientUser.username}>
-												<Avatar sx={{width: 50, height: 50}} alt={clientUser.displayName}
-												        src={"/avatars/" + clientUser.username + ".png"}/>
+												<UserAvatar username={clientUser.username} displayName={clientUser.displayName} width={50} height={50}/>
 											</IconButton>
 										</Box>
 									))}

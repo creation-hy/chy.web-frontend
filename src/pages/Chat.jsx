@@ -2,7 +2,6 @@ import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
 import {Badge, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
-import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
@@ -52,6 +51,7 @@ import {useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
+import {UserAvatar} from "src/components/UserAvatar.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -75,7 +75,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 							}
 						}}
 					>
-						<Avatar src={"/avatars/" + username + ".png"} alt={displayName}/>
+						<UserAvatar username={username} displayName={displayName}/>
 					</Badge>
 				</Badge>
 			</ListItemAvatar>
@@ -132,7 +132,7 @@ const Message = ({messageId, username, displayName, content, quote, setQuote}) =
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
 			{!isMe && <IconButton sx={{mr: 1, p: 0}} href={"/user/" + username}>
-				<Avatar src={"/avatars/" + username + ".png"} alt={displayName}/>
+				<UserAvatar username={username} displayName={displayName}/>
 			</IconButton>}
 			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
 				<Paper
@@ -160,7 +160,7 @@ const Message = ({messageId, username, displayName, content, quote, setQuote}) =
 				{quote != null &&
 					<Chip
 						variant="outlined"
-						avatar={<Avatar alt={quote.displayName} src={"/avatars/" + quote.username + ".png"}/>}
+						avatar={<UserAvatar username={quote.username} displayName={quote.displayName}/>}
 						label={quote.displayName + ": " + quote.content}
 						onClick={() => {
 							if (document.getElementById("message-" + quote.id))
@@ -170,7 +170,7 @@ const Message = ({messageId, username, displayName, content, quote, setQuote}) =
 				}
 			</Grid>
 			{isMe && <IconButton sx={{ml: 1, p: 0}} href={"/user/" + username}>
-				<Avatar src={"/avatars/" + username + ".png"} alt={displayName}/>
+				<UserAvatar username={username} displayName={displayName}/>
 			</IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
 				<DialogTitle>
@@ -914,7 +914,7 @@ export default function Chat() {
 					{quote != null &&
 						<Chip
 							variant="outlined"
-							avatar={<Avatar alt={quote.displayName} src={"/avatars/" + quote.username + ".png"}/>}
+							avatar={<UserAvatar username={quote.username} displayName={quote.displayName}/>}
 							label={quote.displayName + ": " + quote.content}
 							clickable
 							onClick={() => document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"})}
