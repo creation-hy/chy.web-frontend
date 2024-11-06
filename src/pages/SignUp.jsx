@@ -9,12 +9,13 @@ import Typography from '@mui/material/Typography';
 import MuiCard from '@mui/material/Card';
 import {styled} from '@mui/material/styles';
 import {GoogleIcon} from 'src/pages/sign-in/CustomIcons';
-import {X} from "@mui/icons-material";
+import {Apple, HowToRegOutlined} from "@mui/icons-material";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import Cookies from "js-cookie";
 import {useQuery} from "@tanstack/react-query";
+import {LoadingButton} from "@mui/lab";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -44,6 +45,9 @@ export default function SignUp() {
 	const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 	const [nameError, setNameError] = useState(false);
 	const [nameErrorMessage, setNameErrorMessage] = useState('');
+	
+	const [verifyLoading, setVerifyLoading] = useState(false);
+	const [registerLoading, setRegisterLoading] = useState(false);
 	
 	const {data} = useQuery({
 		queryKey: ["accountCheck"],
@@ -89,7 +93,8 @@ export default function SignUp() {
 			setNameErrorMessage('');
 		}
 		
-		if (isValid)
+		if (isValid) {
+			setRegisterLoading(true);
 			axios.post("/api/register", new FormData(document.getElementById("data-form")), {
 				headers: {
 					'Content-Type': 'application/json',
@@ -97,12 +102,14 @@ export default function SignUp() {
 			}).then(res => {
 				const data = res.data;
 				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
+				setRegisterLoading(false);
 				if (data.status === 1) {
 					Cookies.set("username", data.username, {expires: 30, path: "/"});
 					Cookies.set("user_token", data["userToken"], {expires: 30, path: "/"});
 					window.location.href = "/";
 				}
 			});
+		}
 		
 		return false;
 	};
@@ -122,6 +129,7 @@ export default function SignUp() {
 		}
 		
 		if (isValid) {
+			setVerifyLoading(true);
 			axios.post("/api/register/send-verification", {email: email.value}, {
 				headers: {
 					'Content-Type': 'application/json',
@@ -129,6 +137,7 @@ export default function SignUp() {
 			}).then(res => {
 				const data = res.data;
 				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
+				setVerifyLoading(false);
 			});
 		}
 	};
@@ -196,13 +205,14 @@ export default function SignUp() {
 							/>
 						</Grid>
 						<Grid display="flex">
-							<Button
+							<LoadingButton
 								type="button"
 								variant="contained"
+								loading={verifyLoading}
 								onClick={verify}
 							>
 								验证
-							</Button>
+							</LoadingButton>
 						</Grid>
 					</Grid>
 				</FormControl>
@@ -217,13 +227,16 @@ export default function SignUp() {
 						label="验证码"
 					/>
 				</FormControl>
-				<Button
+				<LoadingButton
 					type="submit"
 					fullWidth
 					variant="contained"
+					loading={registerLoading}
+					loadingPosition="start"
+					startIcon={<HowToRegOutlined/>}
 				>
 					注册
-				</Button>
+				</LoadingButton>
 				<Typography sx={{textAlign: 'center'}}>
 					已经有账号了？{' '}
 					<Link
@@ -245,17 +258,19 @@ export default function SignUp() {
 					variant="outlined"
 					onClick={() => alert('敬请期待！')}
 					startIcon={<GoogleIcon/>}
+					sx={{textTransform: 'none'}}
 				>
-					使用 Google 注册
+					使用 Google 登录
 				</Button>
 				<Button
 					type="submit"
 					fullWidth
 					variant="outlined"
 					onClick={() => alert('敬请期待！')}
-					startIcon={<X/>}
+					startIcon={<Apple sx={{color: "black"}}/>}
+					sx={{textTransform: 'none'}}
 				>
-					使用 Apple 注册
+					使用 Apple 登录
 				</Button>
 			</Box>
 		</Card>

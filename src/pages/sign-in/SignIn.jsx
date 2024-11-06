@@ -11,11 +11,12 @@ import {styled} from '@mui/material/styles';
 import {GoogleIcon} from './CustomIcons';
 import axios from "axios";
 import {enqueueSnackbar} from 'notistack';
-import {X} from "@mui/icons-material";
+import {Apple, LoginOutlined} from "@mui/icons-material";
 import Cookies from "js-cookie";
 import ResetPassword from "src/components/ResetPassword.jsx";
 import {Tab, Tabs} from "@mui/material";
 import {useClientUser} from "src/components/ClientUser.jsx";
+import {LoadingButton} from "@mui/lab";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -45,6 +46,9 @@ export default function SignIn() {
 	const [passwordError, setPasswordError] = useState(false);
 	const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 	const [open, setOpen] = useState(false);
+	
+	const [verifyLoading, setVerifyLoading] = useState(false);
+	const [loginLoading, setLoginLoading] = useState(false);
 	
 	const emailText = useRef(null);
 	
@@ -79,7 +83,8 @@ export default function SignIn() {
 			setPasswordErrorMessage('');
 		}
 		
-		if (isValid)
+		if (isValid) {
+			setLoginLoading(true);
 			axios.post("/api/login/" + (loginMethod === 0 ? "password-login" : "verification-code-login"),
 				new FormData(document.getElementById('data-form')), {
 					headers: {
@@ -88,12 +93,14 @@ export default function SignIn() {
 				}).then(res => {
 				const data = res.data;
 				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
+				setLoginLoading(false);
 				if (data.status === 1) {
 					Cookies.set("username", data.username, {path: "/", expires: 30});
 					Cookies.set("user_token", data["userToken"], {path: "/", expires: 30});
 					window.location.href = "/";
 				}
 			});
+		}
 		
 		return false;
 	};
@@ -153,15 +160,23 @@ export default function SignIn() {
 								color={usernameError ? 'error' : 'primary'}
 								sx={{flex: 1}}
 							/>
-							<Button variant="contained" onClick={() => {
-								axios.post("/api/login/send-verification", {email: emailText.current.value}, {
-									headers: {
-										"Content-Type": "application/json",
-									},
-								}).then(res => {
-									enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-								});
-							}}>验证</Button>
+							<LoadingButton
+								variant="contained"
+								loading={verifyLoading}
+								onClick={() => {
+									setVerifyLoading(true);
+									axios.post("/api/login/send-verification", {email: emailText.current.value}, {
+										headers: {
+											"Content-Type": "application/json",
+										},
+									}).then(res => {
+										enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+										setVerifyLoading(false);
+									});
+								}}
+							>
+								验证
+							</LoadingButton>
 						</>}
 				</FormControl>
 				<FormControl>
@@ -203,13 +218,16 @@ export default function SignIn() {
 					</Box>
 				</FormControl>
 				<ResetPassword open={open} handleClose={() => setOpen(false)}/>
-				<Button
+				<LoadingButton
 					type="submit"
 					fullWidth
 					variant="contained"
+					loading={loginLoading}
+					loadingPosition="start"
+					startIcon={<LoginOutlined/>}
 				>
 					登录
-				</Button>
+				</LoadingButton>
 				<Typography sx={{textAlign: 'center'}}>
 					还没有账号？{' '}
 					<Link
@@ -231,6 +249,7 @@ export default function SignIn() {
 					variant="outlined"
 					onClick={() => alert('敬请期待！')}
 					startIcon={<GoogleIcon/>}
+					sx={{textTransform: 'none'}}
 				>
 					使用 Google 登录
 				</Button>
@@ -239,7 +258,8 @@ export default function SignIn() {
 					fullWidth
 					variant="outlined"
 					onClick={() => alert('敬请期待！')}
-					startIcon={<X/>}
+					startIcon={<Apple sx={{color: "black"}}/>}
+					sx={{textTransform: 'none'}}
 				>
 					使用 Apple 登录
 				</Button>
