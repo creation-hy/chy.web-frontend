@@ -8,13 +8,17 @@ import Button from "@mui/material/Button";
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
-import {useRef} from "react";
+import {useRef, useState} from "react";
 import {enqueueSnackbar} from "notistack";
+import {LoadingButton} from "@mui/lab";
+import Cookies from "js-cookie";
 
 export default function ResetPassword({open, handleClose}) {
 	const emailText = useRef(null);
 	const verificationText = useRef(null);
 	const passwordText = useRef(null);
+	
+	const [verifyLoading, setVerifyLoading] = useState(false);
 	
 	return (
 		<Dialog open={open} onClose={handleClose} fullWidth PaperProps={{sx: {maxWidth: 450}}}>
@@ -39,15 +43,23 @@ export default function ResetPassword({open, handleClose}) {
 						type="email"
 						sx={{flex: 1}}
 					/>
-					<Button variant="contained" onClick={() => {
-						axios.post("/api/account/reset-password/send-verification", {email: emailText.current.value}, {
-							headers: {
-								"Content-Type": "application/json",
-							},
-						}).then(res => {
-							enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-						});
-					}}>验证</Button>
+					<LoadingButton
+						variant="contained"
+						loading={verifyLoading}
+						onClick={() => {
+							setVerifyLoading(true);
+							axios.post("/api/account/reset-password/send-verification", {email: emailText.current.value}, {
+								headers: {
+									"Content-Type": "application/json",
+								},
+							}).then(res => {
+								enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+								setVerifyLoading(false);
+							});
+						}}
+					>
+						验证
+					</LoadingButton>
 				</Grid>
 				<TextField
 					inputRef={verificationText}
@@ -84,8 +96,11 @@ export default function ResetPassword({open, handleClose}) {
 						},
 					}).then(res => {
 						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-						if (res.data.status === 1)
-							handleClose();
+						if (res.data.status === 1) {
+							Cookies.remove("username");
+							Cookies.remove("user_token");
+							setTimeout(() => window.location.href = "/login", 1000);
+						}
 					});
 				}}>更改</Button>
 			</DialogActions>
