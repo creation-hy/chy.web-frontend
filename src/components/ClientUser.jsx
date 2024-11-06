@@ -2,6 +2,7 @@ import {createContext, useCallback, useContext, useEffect, useMemo, useState} fr
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const ClientUserContext = createContext(null);
 
@@ -12,6 +13,11 @@ export const ClientUserProvider = ({children}) => {
 		queryKey: ["accountCheck"],
 		queryFn: () => axios.get("/api/account/check").then(res => res.data),
 	});
+	
+	if (data && data.status !== 1) {
+		Cookies.remove("username");
+		Cookies.remove("user_token");
+	}
 	
 	useEffect(() => {
 		if (data)
