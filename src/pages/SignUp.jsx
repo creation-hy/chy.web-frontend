@@ -122,7 +122,7 @@ export default function SignUp() {
 		}
 		
 		if (isValid) {
-			axios.post("/api/account/send-verification", {email: email.value}, {
+			axios.post("/api/register/send-verification", {email: email.value}, {
 				headers: {
 					'Content-Type': 'application/json',
 				}
