@@ -11,7 +11,7 @@ import Grid from "@mui/material/Grid2";
 import Cookies from "js-cookie";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
-import {useQuery} from "@tanstack/react-query";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {EditOutlined, LockResetOutlined, LogoutOutlined, MailOutlined, PersonAddDisabledOutlined, PersonAddOutlined, Verified} from "@mui/icons-material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -123,13 +123,16 @@ InfoContainer.propTypes = {
 	info: PropTypes.object,
 }
 
-const doFollow = (username, setIsFollowing) => {
+const doFollow = (username, setIsFollowing, queryClient) => {
 	axios.post("/api/user/" + username + "/follow").then(res => {
 		enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
-		if (res.data.status === 1)
+		if (res.data.status === 1) {
 			setIsFollowing(true);
-		else if (res.data.status === 2)
+			queryClient.invalidateQueries({queryKey: ["follower"]});
+		} else if (res.data.status === 2) {
 			setIsFollowing(false);
+			queryClient.invalidateQueries({queryKey: ["follower"]});
+		}
 	})
 };
 
@@ -160,6 +163,8 @@ export default function User() {
 	const [modifying, setModifying] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
 	const [resetPasswordOn, setResetPasswordOn] = useState(false);
+	
+	const queryClient = useQueryClient();
 	
 	const handleChange = (event, newValue) => {
 		setValue(newValue);
@@ -230,7 +235,7 @@ export default function User() {
 								</Box>
 							) : (
 								<Box flexShrink={0}>
-									<IconButton onClick={() => doFollow(data.username)}>
+									<IconButton onClick={() => doFollow(data.username, setIsFollowing, queryClient)}>
 										{isFollowing == null ? null : (isFollowing ? <PersonAddDisabledOutlined/> : <PersonAddOutlined/>)}
 									</IconButton>
 									<IconButton href={"/chat/" + data.username}>
