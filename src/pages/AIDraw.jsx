@@ -1,18 +1,20 @@
 import Card from "@mui/material/Card";
-import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid2";
 import Button from "@mui/material/Button";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import {Close, Upload} from "@mui/icons-material";
+import {Close, DrawOutlined} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
-import {Alert, ButtonBase, ImageList, ImageListItem, ImageListItemBar, Tab, Tabs} from "@mui/material";
+import {Alert, ButtonBase, ImageList, ImageListItem, ImageListItemBar, Slider, Switch, Tab, Tabs, useMediaQuery} from "@mui/material";
 import {useState} from "react";
 import {convertDateToLocaleAbsoluteString} from "src/assets/DateUtils.jsx";
 import {isMobile} from "react-device-detect";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Divider from "@mui/material/Divider";
 
 const GeneratedResult = () => {
 	const {data, isLoading, error} = useQuery({
@@ -78,55 +80,132 @@ const GeneratedResult = () => {
 }
 
 const TextToImageUI = () => {
+	const [width, setWidth] = useState(512);
+	const [height, setHeight] = useState(512);
+	
+	const [professionalMode, setProfessionalMode] = useState(localStorage.getItem("ai-draw.professional-mode") === "true");
+	const [steps, setSteps] = useState(30);
+	const [cfg, setCfg] = useState(7);
+	
+	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down('md'));
+	
 	return (
-		<Card variant="outlined" sx={{padding: 3, alignSelf: "center", width: "100%", maxWidth: 800}}>
-			<Grid
-				component="form"
-				direction="column"
-				container
-				spacing={2}
-				onSubmit={(event) => {
-					event.preventDefault();
-					axios.post("/api/ai-draw/submit", new FormData(event.currentTarget), {
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					}).then(res => {
-						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-					});
-				}}
-			>
-				<TextField
-					name="positive"
-					label="Prompt"
-					placeholder="some words, seperated by commas"
-					multiline
-				/>
-				<TextField
-					name="negative"
-					label="Negative Prompt"
-					placeholder="some words, seperated by commas"
-					multiline
-				/>
-				<Grid container>
+		<Grid
+			container
+			spacing={2}
+			component="form"
+			direction={isSmallScreen ? "column-reverse" : "row"}
+			justifyContent="flex-end"
+			flex={1}
+			onSubmit={(event) => {
+				event.preventDefault();
+				axios.post("/api/ai-draw/submit", new FormData(event.currentTarget), {
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				}).then(res => {
+					enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+				});
+			}}
+		>
+			<Card variant="outlined" sx={{width: isSmallScreen ? "100%" : 300, px: 3, py: 2.5}}>
+				<Grid
+					direction="column"
+					container
+					spacing={2}
+				>
+					<Box>
+						<Typography gutterBottom={!isSmallScreen}>
+							宽度：{width}px
+						</Typography>
+						<Slider
+							name="width"
+							value={width}
+							min={128}
+							step={64}
+							max={1024}
+							onChange={(event, value) => setWidth(value)}
+						/>
+					</Box>
+					<Box>
+						<Typography gutterBottom={!isSmallScreen}>
+							高度：{height}px
+						</Typography>
+						<Slider
+							name="height"
+							value={height}
+							min={128}
+							step={64}
+							max={1024}
+							onChange={(event, value) => setHeight(value)}
+						/>
+					</Box>
+					<Divider sx={{mt: isSmallScreen ? -1 : -0.5}}/>
+					<Grid container alignItems="center" sx={{mt: -0.5}}>
+						高级
+						<Switch checked={professionalMode} onChange={(event, value) => {
+							setProfessionalMode(value);
+							localStorage.setItem("ai-draw.professional-mode", value.toString());
+						}}/>
+					</Grid>
+					{professionalMode && (
+						<>
+							<Box>
+								<Typography gutterBottom={!isSmallScreen}>
+									推理步数：{steps}
+								</Typography>
+								<Slider
+									name="step"
+									value={steps}
+									min={10}
+									max={40}
+									onChange={(event, value) => setSteps(value)}
+								/>
+							</Box>
+							<Box>
+								<Typography gutterBottom={!isSmallScreen}>
+									CFG Scale：{cfg}
+								</Typography>
+								<Slider
+									name="cfg"
+									value={cfg}
+									min={0}
+									step={0.5}
+									max={30}
+									onChange={(event, value) => setCfg(value)}
+								/>
+							</Box>
+							<TextField label="种子" fullWidth name="seed"/>
+						</>
+					)}
+				</Grid>
+			</Card>
+			<Card variant="outlined" sx={{padding: 2.5, flex: isSmallScreen ? 0 : 1}}>
+				<Grid container direction="column" spacing={2}>
 					<TextField
-						name="width"
-						label="Width"
-						placeholder="100~768"
-						sx={{flexGrow: 1}}
+						name="positive"
+						label="图片描述"
+						placeholder="英文单词，用逗号隔开"
+						multiline
+						maxRows={10}
+						minRows={3}
+						fullWidth
 					/>
 					<TextField
-						name="height"
-						label="Height"
-						placeholder="100~768"
-						sx={{flexGrow: 1}}
+						name="negative"
+						label="负面描述"
+						placeholder="英文单词，用逗号隔开"
+						multiline
+						maxRows={10}
+						minRows={2}
+						fullWidth
 					/>
+					<Grid container justifyContent="flex-end">
+						<Button variant="contained" type="submit" startIcon={<DrawOutlined/>}>绘制</Button>
+					</Grid>
 				</Grid>
-				<Grid container>
-					<Button variant="contained" type="submit" sx={{flexGrow: 1}} startIcon={<Upload/>}>提交</Button>
-				</Grid>
-			</Grid>
-		</Card>
+			</Card>
+		</Grid>
 	);
 }
 
@@ -136,7 +215,7 @@ export default function AIDraw() {
 	const [menuValue, setMenuValue] = useState(0);
 	
 	return (
-		<Box>
+		<Grid container direction="column" sx={{flex: 1}}>
 			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2.5, mt: 1}}>
 				<Tabs value={menuValue} onChange={(event, value) => setMenuValue(value)} centered>
 					<Tab label="文生图"/>
@@ -144,6 +223,6 @@ export default function AIDraw() {
 				</Tabs>
 			</Box>
 			{menuValue === 0 ? <TextToImageUI/> : <GeneratedResult/>}
-		</Box>
+		</Grid>
 	);
 }
