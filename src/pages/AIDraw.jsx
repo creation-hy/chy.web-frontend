@@ -4,19 +4,23 @@ import Grid from "@mui/material/Grid2";
 import Button from "@mui/material/Button";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import {Upload} from "@mui/icons-material";
+import {Close, Upload} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
-import {Alert, ImageList, ImageListItem, ImageListItemBar, Tab, Tabs} from "@mui/material";
+import {Alert, ButtonBase, ImageList, ImageListItem, ImageListItemBar, Tab, Tabs} from "@mui/material";
 import {useState} from "react";
 import {convertDateToLocaleAbsoluteString} from "src/assets/DateUtils.jsx";
 import {isMobile} from "react-device-detect";
+import Dialog from "@mui/material/Dialog";
+import IconButton from "@mui/material/IconButton";
 
 const GeneratedResult = () => {
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["ai-draw-result"],
 		queryFn: () => axios.get("/api/ai-draw/result").then(res => res.data),
 	});
+	
+	const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
 	
 	if (isLoading || error)
 		return null;
@@ -25,25 +29,51 @@ const GeneratedResult = () => {
 		return <Alert severity="error">{data.content}</Alert>;
 	
 	return (
-		<ImageList variant="quilted" cols={isMobile ? 2 : 3}>
-			{data.result.map((item) => (
-				<ImageListItem key={item.id}>
-					<img
-						alt="Generated images"
-						src={"/api/ai-draw-result/" + item.id + ".png"}
-						style={{borderRadius: 15}}
-					/>
-					<ImageListItemBar
-						title={item.width + "*" + item.height}
-						subtitle={convertDateToLocaleAbsoluteString(item.time)}
-						sx={{
-							borderBottomLeftRadius: 15,
-							borderBottomRightRadius: 15,
+		<Box>
+			<ImageList cols={isMobile ? 2 : 3}>
+				{data.result.map((item) => (
+					<ButtonBase sx={{borderRadius: "15px"}}>
+						<ImageListItem key={item.id} sx={{width: "100% !important", height: "100% !important"}}>
+							<img
+								alt="Generated images"
+								src={"/api/ai-draw-result/" + item.id + ".png"}
+								style={{borderRadius: "15px"}}
+								onClick={(event) => setImagePreviewUrl(event.currentTarget.src)}
+							/>
+							<ImageListItemBar
+								title={item.width + "*" + item.height}
+								subtitle={convertDateToLocaleAbsoluteString(item.time)}
+								sx={{
+									borderBottomLeftRadius: "15px",
+									borderBottomRightRadius: "15px",
+								}}
+							/>
+						</ImageListItem>
+					</ButtonBase>
+				))}
+			</ImageList>
+			<Dialog open={imagePreviewUrl != null} onClose={() => setImagePreviewUrl(null)} maxWidth="xl">
+				{imagePreviewUrl != null && <>
+					<IconButton
+						onClick={() => setImagePreviewUrl(null)}
+						style={{
+							position: 'absolute',
+							top: 10,
+							right: 10,
+							color: 'white',
+							backgroundColor: 'rgba(0, 0, 0, 0.5)',
+							zIndex: 1,
 						}}
+					>
+						<Close/>
+					</IconButton>
+					<img
+						src={imagePreviewUrl}
+						alt="Image preview"
 					/>
-				</ImageListItem>
-			))}
-		</ImageList>
+				</>}
+			</Dialog>
+		</Box>
 	);
 }
 
