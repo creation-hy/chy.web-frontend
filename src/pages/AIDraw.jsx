@@ -1,12 +1,11 @@
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid2";
-import Button from "@mui/material/Button";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import {Close, DrawOutlined} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
-import {Alert, ButtonBase, ImageList, ImageListItem, ImageListItemBar, Slider, Switch, Tab, Tabs, useMediaQuery} from "@mui/material";
+import {Alert, ButtonBase, ImageList, ImageListItem, ImageListItemBar, InputLabel, Slider, Switch, Tab, Tabs, useMediaQuery} from "@mui/material";
 import {useState} from "react";
 import {convertDateToLocaleAbsoluteString} from "src/assets/DateUtils.jsx";
 import {isMobile} from "react-device-detect";
@@ -15,6 +14,10 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Divider from "@mui/material/Divider";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import {LoadingButton} from "@mui/lab";
 
 const GeneratedResult = () => {
 	const {data, isLoading, error} = useQuery({
@@ -87,6 +90,28 @@ const TextToImageUI = () => {
 	const [steps, setSteps] = useState(30);
 	const [cfg, setCfg] = useState(7);
 	
+	const modelList = [
+		"sweetSugarSyndrome_v15.safetensors",
+		"Anything-V3.0.ckpt",
+		"AnythingXL_v50.safetensors",
+		"CuteYukiMixAdorable_X.safetensors",
+		"CuteYukiMixAdorable_v40.safetensors",
+		"CuteYukiMixAdorable_kemiaomiao.safetensors",
+		"MeinaMix_meinaV11.safetensors",
+	];
+	const modelDisplayNameList = [
+		"SweetSugarSyndrome v1.5",
+		"Anything V3 Plus",
+		"Anything V5",
+		"CuteYukiMix X",
+		"CuteYukiMix V4",
+		"CuteYukiMix Kemiaomiao",
+		"MeinaMix V11",
+	]
+	const [modelName, setModelName] = useState(localStorage.getItem("ai-draw.model-name") || modelList[0]);
+	
+	const [submitLoading, setSubmitLoading] = useState(false);
+	
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down('md'));
 	
 	return (
@@ -99,12 +124,14 @@ const TextToImageUI = () => {
 			flex={1}
 			onSubmit={(event) => {
 				event.preventDefault();
+				setSubmitLoading(true);
 				axios.post("/api/ai-draw/submit", new FormData(event.currentTarget), {
 					headers: {
 						'Content-Type': 'application/json',
 					},
 				}).then(res => {
 					enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+					setSubmitLoading(false);
 				});
 			}}
 		>
@@ -175,6 +202,24 @@ const TextToImageUI = () => {
 									onChange={(event, value) => setCfg(value)}
 								/>
 							</Box>
+							<FormControl margin="dense" fullWidth>
+								<InputLabel id="model-label">模型</InputLabel>
+								<Select
+									labelId="model-label"
+									label="模型"
+									name="modelName"
+									variant="outlined"
+									value={modelName}
+									onChange={(event) => {
+										setModelName(event.target.value);
+										localStorage.setItem("ai-draw.model-name", event.target.value.toString());
+									}}
+								>
+									{modelList.map((item, index) => (
+										<MenuItem key={item} value={item}>{modelDisplayNameList[index]}</MenuItem>
+									))}
+								</Select>
+							</FormControl>
 							<TextField label="种子" fullWidth name="seed"/>
 						</>
 					)}
@@ -201,7 +246,15 @@ const TextToImageUI = () => {
 						fullWidth
 					/>
 					<Grid container justifyContent="flex-end">
-						<Button variant="contained" type="submit" startIcon={<DrawOutlined/>}>绘制</Button>
+						<LoadingButton
+							variant="contained"
+							type="submit"
+							startIcon={<DrawOutlined/>}
+							loading={submitLoading}
+							loadingPosition="start"
+						>
+							绘制
+						</LoadingButton>
 					</Grid>
 				</Grid>
 			</Card>
