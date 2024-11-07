@@ -959,7 +959,7 @@ export default function Chat() {
 						onKeyDown={(event) => {
 							if (!isMobile && event.keyCode === 13) {
 								event.preventDefault();
-								if (event.metaKey)
+								if (event.metaKey || event.ctrlKey)
 									document.execCommand("insertLineBreak");
 								else
 									sendMessage();
