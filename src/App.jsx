@@ -13,7 +13,6 @@ import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
 import Footer from "src/components/Footer.jsx";
 import Ranking from "src/pages/Ranking.jsx";
-import AIDrawResult from "src/pages/AIDrawResult.jsx";
 import Chybench from "src/pages/chybench/Chybench.jsx";
 import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
 import Error from "src/pages/Error.jsx";
@@ -43,7 +42,6 @@ export default function App() {
 							<Route path="/user/:username" element={<User/>}/>
 							<Route path="/ranking" element={<Ranking/>}/>
 							<Route path="/ai-draw" element={<AIDraw/>}/>
-							<Route path="/ai-draw/result" element={<AIDrawResult/>}/>
 							<Route path="/chybench" element={<Chybench/>}/>
 							<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
 							<Route path="/minesweeper" element={<Minesweeper/>}/>

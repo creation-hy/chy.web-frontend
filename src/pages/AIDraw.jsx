@@ -4,14 +4,36 @@ import Grid from "@mui/material/Grid2";
 import Button from "@mui/material/Button";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import {Upload, Visibility} from "@mui/icons-material";
-import Typography from "@mui/material/Typography";
+import {Upload} from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import {useQuery} from "@tanstack/react-query";
+import {Alert, Tab, Tabs} from "@mui/material";
+import {useState} from "react";
 
-export default function AIDraw() {
-	document.title = "AI绘图 - chy.web";
+const GeneratedResult = () => {
+	const {data, isLoading, error} = useQuery({
+		queryKey: ["ai-draw-result"],
+		queryFn: () => axios.get("/api/ai-draw/result").then(res => res.data),
+	});
+	
+	if (isLoading || error)
+		return null;
+	
+	if (data.status !== 1)
+		return <Alert severity="error">{data.content}</Alert>;
 	
 	return (
-		<Card variant="outlined" sx={{padding: 4, alignSelf: "center", width: "100%", maxWidth: 800}}>
+		<Box>
+			{data.result.map((item) => (
+				<img key={item.id} alt="Generated images" src={"/api/ai-draw-result/" + item.id + ".png"}/>
+			))}
+		</Box>
+	);
+}
+
+const TextToImageUI = () => {
+	return (
+		<Card variant="outlined" sx={{padding: 3, alignSelf: "center", width: "100%", maxWidth: 800}}>
 			<Grid
 				component="form"
 				direction="column"
@@ -28,7 +50,6 @@ export default function AIDraw() {
 					});
 				}}
 			>
-				<Typography variant="h4">AI 绘图</Typography>
 				<TextField
 					name="positive"
 					label="Prompt"
@@ -45,39 +66,38 @@ export default function AIDraw() {
 					<TextField
 						name="width"
 						label="Width"
-						placeholder="100~768 (default: 512)"
+						placeholder="100~768"
 						sx={{flexGrow: 1}}
 					/>
 					<TextField
 						name="height"
 						label="Height"
-						placeholder="100~768 (default: 512)"
+						placeholder="100~768"
 						sx={{flexGrow: 1}}
 					/>
 				</Grid>
-				<TextField
-					name="step"
-					label="Steps"
-					placeholder="10~30 (default: 20)"
-				/>
-				<TextField
-					name="seed"
-					label="Seed"
-					placeholder="0~10^9 (default: random)"
-				/>
-				<TextField
-					name="cfg"
-					label="CFG Scale"
-					placeholder="1~30 (default: 7)"
-				/>
 				<Grid container>
 					<Button variant="contained" type="submit" sx={{flexGrow: 1}} startIcon={<Upload/>}>提交</Button>
-					<Button
-						variant="contained" type="button" sx={{flexGrow: 1}} startIcon={<Visibility/>}
-						href={window.location.href + "/result"}
-					>查看结果</Button>
 				</Grid>
 			</Grid>
 		</Card>
+	);
+}
+
+export default function AIDraw() {
+	document.title = "AI绘图 - chy.web";
+	
+	const [menuValue, setMenuValue] = useState(0);
+	
+	return (
+		<Grid container direction="column" spacing={2}>
+			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2, mt: 1}}>
+				<Tabs value={menuValue} onChange={(event, value) => setMenuValue(value)} centered>
+					<Tab label="文生图"/>
+					<Tab label="我的作品"/>
+				</Tabs>
+			</Box>
+			{menuValue === 0 ? <TextToImageUI/> : <GeneratedResult/>}
+		</Grid>
 	);
 }
