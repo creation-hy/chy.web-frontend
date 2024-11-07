@@ -513,7 +513,7 @@ export default function Chat() {
 					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleOffsetString(res.data.result.lastOnline) : "从未上线"));
 				setMessages([...messagesVar]);
 			});
-			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
+			setTimeout(() => messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom, 0);
 		});
 	}, [setClientUser]);
 	
@@ -613,7 +613,7 @@ export default function Chat() {
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
 		flushSync(() => setMessages([...messagesVar]));
 		if (scrollTop + clientHeight + 50 >= scrollHeight)
-			messageCard.current.scrollTop = scrollHeight;
+			setTimeout(() => messageCard.current.scrollTop = scrollHeight, 0);
 	}, [updateUserItem]);
 	
 	let firstRebirth = useRef(false);
