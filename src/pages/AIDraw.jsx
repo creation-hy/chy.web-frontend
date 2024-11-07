@@ -83,6 +83,9 @@ const GeneratedResult = () => {
 }
 
 const TextToImageUI = () => {
+	const [positivePrompt, setPositivePrompt] = useState(localStorage.getItem("ai-draw.positive") || "");
+	const [negativePrompt, setNegativePrompt] = useState(localStorage.getItem("ai-draw.negative") || "");
+	
 	const [width, setWidth] = useState(512);
 	const [height, setHeight] = useState(512);
 	
@@ -231,6 +234,11 @@ const TextToImageUI = () => {
 						name="positive"
 						label="图片描述"
 						placeholder="英文单词，用逗号隔开"
+						value={positivePrompt}
+						onChange={(event) => {
+							setPositivePrompt(event.target.value);
+							localStorage.setItem("ai-draw.positive", event.target.value.toString());
+						}}
 						multiline
 						maxRows={10}
 						minRows={3}
@@ -240,6 +248,11 @@ const TextToImageUI = () => {
 						name="negative"
 						label="负面描述"
 						placeholder="英文单词，用逗号隔开"
+						value={negativePrompt}
+						onChange={(event) => {
+							setNegativePrompt(event.target.value);
+							localStorage.setItem("ai-draw.negative", event.target.value.toString());
+						}}
 						multiline
 						maxRows={10}
 						minRows={2}
