@@ -7,8 +7,10 @@ import {enqueueSnackbar} from "notistack";
 import {Upload} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
-import {Alert, Tab, Tabs} from "@mui/material";
+import {Alert, ImageList, ImageListItem, ImageListItemBar, Tab, Tabs} from "@mui/material";
 import {useState} from "react";
+import {convertDateToLocaleAbsoluteString} from "src/assets/DateUtils.jsx";
+import {isMobile} from "react-device-detect";
 
 const GeneratedResult = () => {
 	const {data, isLoading, error} = useQuery({
@@ -23,11 +25,25 @@ const GeneratedResult = () => {
 		return <Alert severity="error">{data.content}</Alert>;
 	
 	return (
-		<Box>
+		<ImageList variant="quilted" cols={isMobile ? 2 : 3}>
 			{data.result.map((item) => (
-				<img key={item.id} alt="Generated images" src={"/api/ai-draw-result/" + item.id + ".png"}/>
+				<ImageListItem key={item.id}>
+					<img
+						alt="Generated images"
+						src={"/api/ai-draw-result/" + item.id + ".png"}
+						style={{borderRadius: 15}}
+					/>
+					<ImageListItemBar
+						title={item.width + "*" + item.height}
+						subtitle={convertDateToLocaleAbsoluteString(item.time)}
+						sx={{
+							borderBottomLeftRadius: 15,
+							borderBottomRightRadius: 15,
+						}}
+					/>
+				</ImageListItem>
 			))}
-		</Box>
+		</ImageList>
 	);
 }
 
@@ -90,14 +106,14 @@ export default function AIDraw() {
 	const [menuValue, setMenuValue] = useState(0);
 	
 	return (
-		<Grid container direction="column" spacing={2}>
-			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2, mt: 1}}>
+		<Box>
+			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2.5, mt: 1}}>
 				<Tabs value={menuValue} onChange={(event, value) => setMenuValue(value)} centered>
 					<Tab label="文生图"/>
 					<Tab label="我的作品"/>
 				</Tabs>
 			</Box>
 			{menuValue === 0 ? <TextToImageUI/> : <GeneratedResult/>}
-		</Grid>
+		</Box>
 	);
 }
