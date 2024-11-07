@@ -59,7 +59,7 @@ let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSe
 let usersVar = [], messagesVar = [];
 let socket, stomp;
 
-function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText}) {
+function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, displayNameNode}) {
 	return (
 		<>
 			<ListItemAvatar>
@@ -93,7 +93,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 							textOverflow: "ellipsis",
 							flexShrink: 1,
 						}}>
-							{displayName}
+							{displayNameNode ? displayNameNode : displayName}
 						</Typography>
 						{lastMessageTime && <Typography variant="body2" color="textSecondary">
 							{convertDateToLocaleOffsetString(lastMessageTime)}
@@ -121,6 +121,7 @@ UserItem.propTypes = {
 	newMessageCount: PropTypes.number,
 	lastMessageTime: PropTypes.string,
 	lastMessageText: PropTypes.string,
+	displayNameNode: PropTypes.node,
 }
 
 const Message = ({messageId, username, displayName, content, quote, setQuote}) => {
@@ -449,11 +450,13 @@ export default function Chat() {
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
-	const [matchList, setMatchList] = useState([]);
+	const [matchList, setMatchList] = useState(null);
 	const [abortController, setAbortController] = useState(null);
 	
 	const messageCard = useRef(null);
 	const messageInput = useRef(null);
+	const userSearchField = useRef(null);
+	
 	const disconnectErrorBarKey = useRef(null);
 	const lastScrollStartId = useRef(-1);
 	const queryClient = useRef(useQueryClient());
@@ -760,6 +763,7 @@ export default function Chat() {
 		<Grid container sx={{flex: 1, height: 0, display: !users ? "none" : "flex"}} gap={2}>
 			<Card ref={contactsComponent} sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
+					inputRef={userSearchField}
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
 					placeholder="搜索用户"
 					sx={{fontSize: 14}}
@@ -767,7 +771,7 @@ export default function Chat() {
 						if (abortController)
 							abortController.abort();
 						if (event.target.value === "")
-							setMatchList([]);
+							setMatchList(null);
 						else {
 							const controller = new AbortController();
 							setAbortController(controller);
@@ -793,7 +797,7 @@ export default function Chat() {
 						</ListItemButton>
 					</List>
 					<Divider/>
-					<List sx={{display: matchList.length === 0 ? "block" : "none"}}>
+					{!matchList && <List>
 						{users != null && users.map((user) => (user.username !== "ChatRoomSystem" &&
 							<ListItemButton
 								key={user.username}
@@ -810,23 +814,47 @@ export default function Chat() {
 								/>
 							</ListItemButton>
 						))}
-					</List>
-					<List sx={{display: matchList.length === 0 ? "none" : "block"}}>
-						{matchList.map((user) => (
-							<ListItemButton
-								key={user.username}
-								onClick={() => getMessages(user.username)}
-								selected={currentUser === user.username}
-							>
-								<UserItem
-									username={user.username}
-									displayName={`${user.displayName} (@${user.username})`}
-									isOnline={user.isOnline}
-									newMessageCount={0}
-								/>
-							</ListItemButton>
-						))}
-					</List>
+					</List>}
+					{matchList != null && <List>
+						{matchList.map((user) => {
+							const displayNameIndex = user.displayName.toLowerCase().indexOf(userSearchField.current.value.toLowerCase());
+							const usernameIndex = user.username.toLowerCase().indexOf(userSearchField.current.value.toLowerCase());
+							const keyLength = userSearchField.current.value.length;
+							let beforeHighlight, highlight, afterHighlight;
+							
+							if (displayNameIndex !== -1) {
+								beforeHighlight = user.displayName.slice(0, displayNameIndex);
+								highlight = user.displayName.slice(displayNameIndex, displayNameIndex + keyLength);
+								afterHighlight = `${user.displayName.slice(displayNameIndex + keyLength)} (@${user.username})`;
+							} else {
+								beforeHighlight = `${user.displayName} (@${user.username.slice(0, usernameIndex)}`;
+								highlight = user.username.slice(usernameIndex, usernameIndex + keyLength);
+								afterHighlight = `${user.username.slice(usernameIndex + keyLength)})`;
+							}
+							
+							return (
+								<ListItemButton
+									key={user.username}
+									onClick={() => getMessages(user.username)}
+									selected={currentUser === user.username}
+								>
+									<UserItem
+										username={user.username}
+										displayName={`${user.displayName} (@${user.username})`}
+										isOnline={user.isOnline}
+										newMessageCount={0}
+										displayNameNode={
+											<>
+												{beforeHighlight}
+												<Typography component="span" color="primary">{highlight}</Typography>
+												{afterHighlight}
+											</>
+										}
+									/>
+								</ListItemButton>
+							);
+						})}
+					</List>}
 				</Box>
 			</Card>
 			<Grid container ref={chatMainComponent} direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex", pt: isMobile ? 2 : 0}}
