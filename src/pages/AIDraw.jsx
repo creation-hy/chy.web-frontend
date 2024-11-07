@@ -5,7 +5,21 @@ import {enqueueSnackbar} from "notistack";
 import {Close, DrawOutlined} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
-import {Alert, ButtonBase, ImageList, ImageListItem, ImageListItemBar, InputLabel, Slider, Switch, Tab, Tabs, useMediaQuery} from "@mui/material";
+import {
+	Alert,
+	ButtonBase,
+	ImageList,
+	ImageListItem,
+	ImageListItemBar,
+	InputLabel,
+	Slider,
+	Switch,
+	Tab,
+	Tabs,
+	ToggleButton,
+	ToggleButtonGroup,
+	useMediaQuery
+} from "@mui/material";
 import {useState} from "react";
 import {convertDateToLocaleAbsoluteString} from "src/assets/DateUtils.jsx";
 import {isMobile} from "react-device-detect";
@@ -37,8 +51,8 @@ const GeneratedResult = () => {
 		<Box>
 			<ImageList cols={isMobile ? 2 : 3}>
 				{data.result.map((item) => (
-					<ButtonBase sx={{borderRadius: "15px"}}>
-						<ImageListItem key={item.id} sx={{width: "100% !important", height: "100% !important"}}>
+					<ButtonBase key={item.id} sx={{borderRadius: "15px"}}>
+						<ImageListItem sx={{width: "100% !important", height: "100% !important"}}>
 							<img
 								alt="Generated images"
 								src={"/api/ai-draw-result/" + item.id + ".png"}
@@ -86,32 +100,39 @@ const TextToImageUI = () => {
 	const [positivePrompt, setPositivePrompt] = useState(localStorage.getItem("ai-draw.positive") || "");
 	const [negativePrompt, setNegativePrompt] = useState(localStorage.getItem("ai-draw.negative") || "");
 	
-	const [width, setWidth] = useState(512);
-	const [height, setHeight] = useState(512);
+	const [width, setWidth] = useState(Number(localStorage.getItem("ai-draw.width")) || 512);
+	const [height, setHeight] = useState(Number(localStorage.getItem("ai-draw.height")) || 512);
+	const [batchSize, setBatchSize] = useState(Number(localStorage.getItem("ai-draw.batch-size")) || 1)
 	
 	const [professionalMode, setProfessionalMode] = useState(localStorage.getItem("ai-draw.professional-mode") === "true");
-	const [steps, setSteps] = useState(30);
-	const [cfg, setCfg] = useState(7);
+	const [steps, setSteps] = useState(Number(localStorage.getItem("ai-draw.steps")) || 30);
+	const [cfg, setCfg] = useState(Number(localStorage.getItem("ai-draw.cfg")) || 7);
 	
 	const modelList = [
 		"sweetSugarSyndrome_v15.safetensors",
+		"MeinaMix_meinaV11.safetensors",
+		"MeinaMix_v12Final.safetensors",
 		"Anything-V3.0.ckpt",
 		"AnythingXL_v50.safetensors",
 		"CuteYukiMixAdorable_X.safetensors",
-		"CuteYukiMixAdorable_v40.safetensors",
-		"CuteYukiMixAdorable_kemiaomiao.safetensors",
-		"MeinaMix_meinaV11.safetensors",
+		"CuteYukiMixAdorable_naiV3style.safetensors",
+		"CuteYukiMixAdorable_midchapter3.safetensors",
+		"CounterfeitV30_v30.safetensors"
 	];
 	const modelDisplayNameList = [
 		"SweetSugarSyndrome v1.5",
+		"MeinaMix V11",
+		"MeinaMix V12 Final",
 		"Anything V3 Plus",
 		"Anything V5",
 		"CuteYukiMix X",
-		"CuteYukiMix V4",
-		"CuteYukiMix Kemiaomiao",
-		"MeinaMix V11",
+		"CuteYukiMix Nai V3Style",
+		"CuteYukiMix MidChapter3",
+		"Counterfeit V3"
 	]
 	const [modelName, setModelName] = useState(localStorage.getItem("ai-draw.model-name") || modelList[0]);
+	const [samplerName, setSamplerName] = useState(localStorage.getItem("ai-draw.sampler-name") || "dpmpp_2m");
+	const [scheduler, setScheduler] = useState(localStorage.getItem("ai-draw.scheduler") || "karras");
 	
 	const [submitLoading, setSubmitLoading] = useState(false);
 	
@@ -125,6 +146,7 @@ const TextToImageUI = () => {
 			direction={isSmallScreen ? "column-reverse" : "row"}
 			justifyContent="flex-end"
 			flex={1}
+			height="100%"
 			onSubmit={(event) => {
 				event.preventDefault();
 				setSubmitLoading(true);
@@ -154,7 +176,10 @@ const TextToImageUI = () => {
 							min={128}
 							step={64}
 							max={1024}
-							onChange={(event, value) => setWidth(value)}
+							onChange={(event, value) => {
+								setWidth(value);
+								localStorage.setItem("ai-draw.width", value.toString());
+							}}
 						/>
 					</Box>
 					<Box>
@@ -167,10 +192,32 @@ const TextToImageUI = () => {
 							min={128}
 							step={64}
 							max={1024}
-							onChange={(event, value) => setHeight(value)}
+							onChange={(event, value) => {
+								setHeight(value);
+								localStorage.setItem("ai-draw.height", value.toString());
+							}}
 						/>
 					</Box>
-					<Divider sx={{mt: isSmallScreen ? -1 : -0.5}}/>
+					<Grid container alignItems="center">
+						图片数量：
+						<ToggleButtonGroup
+							sx={{flex: 1}}
+							color="primary"
+							value={batchSize}
+							exclusive
+							onChange={(event, value) => {
+								setBatchSize(value);
+								localStorage.setItem("ai-draw.batch-size", value.toString());
+							}}
+						>
+							<ToggleButton value={1} sx={{flex: 1}}>1</ToggleButton>
+							<ToggleButton value={2} sx={{flex: 1}}>2</ToggleButton>
+							<ToggleButton value={3} sx={{flex: 1}}>3</ToggleButton>
+							<ToggleButton value={4} sx={{flex: 1}}>4</ToggleButton>
+						</ToggleButtonGroup>
+						<TextField name="batchSize" value={batchSize} sx={{display: "none"}}/>
+					</Grid>
+					<Divider/>
 					<Grid container alignItems="center" sx={{mt: -0.5}}>
 						高级
 						<Switch checked={professionalMode} onChange={(event, value) => {
@@ -182,14 +229,17 @@ const TextToImageUI = () => {
 						<>
 							<Box>
 								<Typography gutterBottom={!isSmallScreen}>
-									推理步数：{steps}
+									迭代步数：{steps}
 								</Typography>
 								<Slider
 									name="step"
 									value={steps}
 									min={10}
 									max={40}
-									onChange={(event, value) => setSteps(value)}
+									onChange={(event, value) => {
+										setSteps(value);
+										localStorage.setItem("ai-draw.steps", value.toString());
+									}}
 								/>
 							</Box>
 							<Box>
@@ -200,30 +250,76 @@ const TextToImageUI = () => {
 									name="cfg"
 									value={cfg}
 									min={0}
-									step={0.5}
 									max={30}
-									onChange={(event, value) => setCfg(value)}
+									onChange={(event, value) => {
+										setCfg(value);
+										localStorage.setItem("ai-draw.cfg", value.toString());
+									}}
 								/>
 							</Box>
-							<FormControl margin="dense" fullWidth>
-								<InputLabel id="model-label">模型</InputLabel>
-								<Select
-									labelId="model-label"
-									label="模型"
-									name="modelName"
-									variant="outlined"
-									value={modelName}
-									onChange={(event) => {
-										setModelName(event.target.value);
-										localStorage.setItem("ai-draw.model-name", event.target.value.toString());
-									}}
-								>
-									{modelList.map((item, index) => (
-										<MenuItem key={item} value={item}>{modelDisplayNameList[index]}</MenuItem>
-									))}
-								</Select>
-							</FormControl>
-							<TextField label="种子" fullWidth name="seed"/>
+							<Grid container direction="column" spacing={2.5}>
+								<FormControl fullWidth>
+									<InputLabel id="model-label">模型</InputLabel>
+									<Select
+										labelId="model-label"
+										label="模型"
+										name="modelName"
+										variant="outlined"
+										value={modelName}
+										onChange={(event) => {
+											setModelName(event.target.value);
+											localStorage.setItem("ai-draw.model-name", event.target.value.toString());
+										}}
+									>
+										{modelList.map((item, index) => (
+											<MenuItem key={item} value={item}>{modelDisplayNameList[index]}</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+								<FormControl fullWidth>
+									<InputLabel id="sampler-label">采样器</InputLabel>
+									<Select
+										labelId="sampler-label"
+										label="采样器"
+										name="samplerName"
+										variant="outlined"
+										value={samplerName}
+										onChange={(event) => {
+											setSamplerName(event.target.value);
+											localStorage.setItem("ai-draw.sampler-name", event.target.value.toString());
+										}}
+									>
+										<MenuItem value="euler">Euler</MenuItem>
+										<MenuItem value="euler_ancestral">Euler Ancestral</MenuItem>
+										<MenuItem value="dpmpp_2m">DPM++ 2M</MenuItem>
+										<MenuItem value="dpmpp_sde">DPM++ SDE</MenuItem>
+										<MenuItem value="dpmpp_2m_sde">DPM++ 2M SDE</MenuItem>
+										<MenuItem value="dpmpp_3m_sde">DPM++ 3M SDE</MenuItem>
+										<MenuItem value="ddim">DDIM</MenuItem>
+										<MenuItem value="UniPC">UniPC</MenuItem>
+										<MenuItem value="dpm_adaptive">DPM Adaptive (Premium)</MenuItem>
+									</Select>
+								</FormControl>
+								<FormControl fullWidth>
+									<InputLabel id="scheduler-label">调度器</InputLabel>
+									<Select
+										labelId="scheduler-label"
+										label="调度器"
+										name="scheduler"
+										variant="outlined"
+										value={scheduler}
+										onChange={(event) => {
+											setScheduler(event.target.value);
+											localStorage.setItem("ai-draw.scheduler", event.target.value.toString());
+										}}
+									>
+										<MenuItem value="normal">Normal</MenuItem>
+										<MenuItem value="karras">Karras</MenuItem>
+										<MenuItem value="exponential">Exponential</MenuItem>
+									</Select>
+								</FormControl>
+								<TextField label="种子" fullWidth name="seed"/>
+							</Grid>
 						</>
 					)}
 				</Grid>
