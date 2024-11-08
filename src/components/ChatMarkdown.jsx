@@ -78,6 +78,10 @@ export const ChatMarkdown = ({children, ...props}) => {
 						</code>
 					);
 				},
+				
+				img: ({src, alt}) => (
+					<img src={src} alt={alt} style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain"}}/>
+				),
 			}}
 			{...props}
 		>

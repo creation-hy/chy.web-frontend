@@ -637,7 +637,7 @@ export default function Chat() {
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
 		flushSync(() => setMessages([...messagesVar]));
 		if (scrollTop + clientHeight + 50 >= scrollHeight)
-			setTimeout(() => messageCard.current.scrollTop = scrollHeight, 0);
+			messageCard.current.scrollTop = scrollHeight;
 	}, [updateUserItem]);
 	
 	let firstRebirth = useRef(false);
