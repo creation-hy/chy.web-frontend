@@ -43,13 +43,13 @@ import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
 import Picker from "@emoji-mart/react";
-import {useBinaryColorMode} from "src/components/ColorMode.jsx";
+import {useBinaryColorMode, useColorMode} from "src/components/ColorMode.jsx";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
-import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
+import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
 
@@ -60,6 +60,8 @@ let usersVar = [], messagesVar = [];
 let socket, stomp;
 
 function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, displayNameNode}) {
+	const [colorMode] = useColorMode();
+	
 	return (
 		<>
 			<ListItemAvatar>
@@ -96,7 +98,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 							{displayNameNode ? displayNameNode : displayName}
 						</Typography>
 						{lastMessageTime && <Typography variant="body2" color="textSecondary">
-							{convertDateToLocaleOffsetString(lastMessageTime)}
+							{convertDateToLocaleShortString(lastMessageTime)}
 						</Typography>}
 					</Grid>
 				}
@@ -510,7 +512,7 @@ export default function Chat() {
 			messagesVar = startId === -1 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
 			flushSync(() => {
 				setLastOnline(res.data.result.isOnline ? "在线" : (
-					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleOffsetString(res.data.result.lastOnline) : "从未上线"));
+					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
 				setMessages([...messagesVar]);
 			});
 			setTimeout(() => messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom, 0);
@@ -651,7 +653,7 @@ export default function Chat() {
 				setUsers([...usersVar]);
 			}
 			if (data.username === currentUserVar)
-				setLastOnline("上次上线：" + convertDateToLocaleOffsetString(data.lastOnline));
+				setLastOnline("上次上线：" + convertDateToLocaleShortString(data.lastOnline));
 		});
 		
 		stomp.subscribe(`/user/queue/chat.message`, (message) => {

@@ -49,7 +49,7 @@ export const convertDateToLocaleAbsoluteString = (inputDate) => {
 	}
 }
 
-export const convertDateToLocaleOffsetString = (inputDate) => {
+export const convertDateToLocaleShortString = (inputDate) => {
 	const date = new Date(inputDate);
 	const currentDate = new Date();
 	
@@ -61,7 +61,7 @@ export const convertDateToLocaleOffsetString = (inputDate) => {
 	const dayOfYearOffset = getDayOfYear(currentDate) - getDayOfYear(date);
 	
 	if (date.getFullYear() !== currentDate.getFullYear()) {
-		return `${currentDate.getFullYear() - date.getFullYear()}年前`;
+		return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 	} else if (dayOfYearOffset > 7) {
 		return `${date.getMonth() + 1}月${date.getDate()}日`;
 	} else if (dayOfYearOffset > 2) {
@@ -72,6 +72,42 @@ export const convertDateToLocaleOffsetString = (inputDate) => {
 		return `昨天`;
 	} else {
 		return localeTimeString;
+	}
+}
+
+export const convertDateToLocaleOffsetString = (inputDate) => {
+	const date = new Date(inputDate);
+	const currentDate = new Date();
+	
+	if (!date.getTime()) {
+		return "";
+	}
+	
+	const localeTimeString = date.toLocaleTimeString().substring(0, 5);
+	const dayOfYearOffset = getDayOfYear(currentDate) - getDayOfYear(date);
+	const monthOffset = (currentDate.getFullYear() - date.getFullYear()) * 12 + (currentDate.getMonth() - date.getMonth());
+	const hourOffset = (currentDate.getDate() !== date.getDate() ? 24 : 0) + (currentDate.getHours() - date.getHours());
+	const minuteOffset = hourOffset * 60 + (currentDate.getMinutes() - date.getMinutes());
+	const secondOffset = minuteOffset * 60 + (currentDate.getSeconds() - date.getSeconds());
+	
+	if (monthOffset >= 12) {
+		return `${currentDate.getFullYear() - date.getFullYear()}年前`;
+	} else if (monthOffset >= 1) {
+		return `${monthOffset}个月前`;
+	} else if (dayOfYearOffset > 2) {
+		return `${dayOfYearOffset}天前`;
+	} else if (dayOfYearOffset === 2) {
+		return `前天`;
+	} else if (hourOffset >= 24) {
+		return `昨天`;
+	} else if (minuteOffset >= 60) {
+		return `${hourOffset}小时前`;
+	} else if (secondOffset >= 60) {
+		return `${minuteOffset}分钟前`;
+	} else if (secondOffset >= 10) {
+		return `${secondOffset}秒前`;
+	} else {
+		return `刚刚`;
 	}
 }
 
