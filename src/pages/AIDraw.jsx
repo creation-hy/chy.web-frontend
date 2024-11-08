@@ -2,7 +2,7 @@ import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import {Close, Delete, DrawOutlined, ExpandMoreOutlined} from "@mui/icons-material";
+import {Close, DeleteOutlined, DrawOutlined, ExpandMoreOutlined, Info} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
 import {
@@ -15,6 +15,9 @@ import {
 	ImageListItem,
 	ImageListItemBar,
 	InputLabel,
+	List,
+	ListItem,
+	ListItemText,
 	Slider,
 	Switch,
 	Tab,
@@ -24,7 +27,7 @@ import {
 	useMediaQuery
 } from "@mui/material";
 import {useState} from "react";
-import {convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
+import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
 import {isMobile} from "react-device-detect";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
@@ -38,6 +41,7 @@ import {LoadingButton} from "@mui/lab";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import DialogContent from "@mui/material/DialogContent";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -88,7 +92,72 @@ const samplerDisplayNameList = [
 const optimizationPositiveTags = "masterpiece, best quality, best quality, Amazing, finely detail, Depth of field, extremely detailed CG unity 8k wallpaper, ";
 const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers:1.5 ), (long body :1.3), (mutation, poorly drawn :1.2) , black-white, bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated, anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers, lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body, fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts, heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand, missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs, fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears, fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears, heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers, one hand with more than 5 fingers, one hand with less than 5 fingers, one hand owith more than 5 digit, one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit, colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts, signature, 3D, 3D game, 3D game scene, 3D character, malformed feet, extra feet, bad feet, poorly drawn feet, fused feet, missing feet, extra shoes, bad shoes, fused shoes, more than two shoes, poorly drawn shoes, bad gloves, poorly drawn gloves, fused gloves, bad cum, poorly drawn cum, fused cum, bad hairs, poorly drawn hairs, fused hairs, big muscles, ugly, bad face, fused face, poorly drawn face, cloned face, big face, long face, bad eyes, fused eyes poorly drawn eyes, extra eyes, malformed limbs, "
 
-const GeneratedResult = () => {
+const MyRequests = () => {
+	const {data, isLoading, error} = useQuery({
+		queryKey: ["ai-draw-request"],
+		queryFn: () => axios.get("/api/ai-draw/request").then(res => res.data),
+	});
+	
+	const [showInfo, setShowInfo] = useState(false);
+	const [infoData, setInfoData] = useState(null);
+	
+	if (isLoading || error)
+		return null;
+	
+	if (data.status === 0)
+		return <Alert severity="error">{data.content}</Alert>;
+	
+	if (data.status !== 1)
+		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
+	
+	return (
+		<Card variant="outlined" sx={{width: "100%"}}>
+			<List sx={{p: 0}}>
+				{data.result.map((item, index) => (
+					<Box key={item.id}>
+						{index > 0 && <Divider/>}
+						<ListItem>
+							<ListItemText
+								primary={<Typography noWrap>{item.positive}</Typography>}
+								secondary={convertDateToLocaleAbsoluteString(item.time)}
+							/>
+							<IconButton onClick={() => {
+								setInfoData(item);
+								setShowInfo(true);
+							}}>
+								<Info/>
+							</IconButton>
+							<IconButton color="error">
+								<DeleteOutlined/>
+							</IconButton>
+						</ListItem>
+					</Box>
+				))}
+			</List>
+			<Dialog open={showInfo} onClose={() => setShowInfo(false)}>
+				<DialogTitle>详细信息</DialogTitle>
+				{Boolean(infoData) && <DialogContent>
+					模型：{modelDisplayNameList[modelList.indexOf(infoData.modelName)]}<br/>
+					尺寸：{infoData.width}*{infoData.height}<br/>
+					创建时间：{convertDateToLocaleOffsetString(infoData.time)}<br/>
+					迭代步数：{infoData.step}<br/>
+					CFG Scale：{infoData.cfg}<br/>
+					种子：{infoData.seed}<br/>
+					采样器：{`${samplerDisplayNameList[samplerList.indexOf(infoData.samplerName)]}
+								${infoData.scheduler[0].toUpperCase()}${infoData.scheduler.slice(1)}`}
+					<Divider sx={{my: 1}}/>
+					正面描述：{infoData.positive}<br/><br/>
+					负面描述：{infoData.negative}
+				</DialogContent>}
+				<DialogActions>
+					<Button onClick={() => setShowInfo(false)}>关闭</Button>
+				</DialogActions>
+			</Dialog>
+		</Card>
+	);
+}
+
+const GeneratedResults = () => {
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["ai-draw-result"],
 		queryFn: () => axios.get("/api/ai-draw/result").then(res => res.data),
@@ -107,7 +176,7 @@ const GeneratedResult = () => {
 		return <Alert severity="error">{data.content}</Alert>;
 	
 	if (data.status !== 1)
-		return <Alert severity="error">还没有已绘制的作品！</Alert>;
+		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
 	
 	return (
 		<Box>
@@ -179,10 +248,9 @@ const GeneratedResult = () => {
 								position: "absolute",
 								bottom: 10,
 								right: 10,
-								backgroundColor: "rgba(0, 0, 0, 0.5)",
 							}}
 						>
-							<Delete/>
+							<DeleteOutlined/>
 						</IconButton>
 					</Box>
 					<Accordion variant="outlined" sx={{border: 0}}>
@@ -490,6 +558,10 @@ const TextToImageUI = () => {
 	);
 }
 
+const Community = () => {
+
+}
+
 export default function AIDraw() {
 	document.title = "AI绘图 - chy.web";
 	
@@ -503,10 +575,12 @@ export default function AIDraw() {
 					localStorage.setItem("ai-draw.page-index", value.toString());
 				}} centered>
 					<Tab label="文生图"/>
+					<Tab label="我的请求"/>
 					<Tab label="我的作品"/>
+					<Tab label="创意工坊"/>
 				</Tabs>
 			</Box>
-			{menuValue === 0 ? <TextToImageUI/> : <GeneratedResult/>}
+			{menuValue === 0 ? <TextToImageUI/> : (menuValue === 1 ? <MyRequests/> : (menuValue === 2 ? <GeneratedResults/> : <Community/>))}
 		</Grid>
 	);
 }
