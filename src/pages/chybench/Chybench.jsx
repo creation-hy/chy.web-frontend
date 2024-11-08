@@ -34,7 +34,7 @@ LinearProgressWithLabel.propTypes = {
 };
 
 function MyProgressLabel({id, label}) {
-	const [checked, setChecked] = useState(localStorage.getItem("chybench-" + id) === "true");
+	const [checked, setChecked] = useState(localStorage.getItem("chybench-" + id) !== "false");
 	
 	return (
 		<Grid container justifyContent="space-between">
