@@ -82,6 +82,9 @@ const samplerDisplayNameList = [
 	"DPM Adaptive",
 ];
 
+const optimizationPositiveTags = "masterpiece, best quality, best quality, Amazing, finely detail, Depth of field, extremely detailed CG unity 8k wallpaper, ";
+const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers:1.5 ), (long body :1.3), (mutation, poorly drawn :1.2) , black-white, bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated, anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers, lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body, fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts, heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand, missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs, fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears, fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears, heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers, one hand with more than 5 fingers, one hand with less than 5 fingers, one hand owith more than 5 digit, one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit, colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts, signature, 3D, 3D game, 3D game scene, 3D character, malformed feet, extra feet, bad feet, poorly drawn feet, fused feet, missing feet, extra shoes, bad shoes, fused shoes, more than two shoes, poorly drawn shoes, bad gloves, poorly drawn gloves, fused gloves, bad cum, poorly drawn cum, fused cum, bad hairs, poorly drawn hairs, fused hairs, big muscles, ugly, bad face, fused face, poorly drawn face, cloned face, big face, long face, bad eyes, fused eyes poorly drawn eyes, extra eyes, malformed limbs, "
+
 const GeneratedResult = () => {
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["ai-draw-result"],
@@ -89,7 +92,6 @@ const GeneratedResult = () => {
 	});
 	
 	const [imagePreviewData, setImagePreviewData] = useState(null);
-	const [showInfo, setShowInfo] = useState(false);
 	
 	if (isLoading || error)
 		return null;
@@ -197,6 +199,7 @@ const TextToImageUI = () => {
 	const [modelName, setModelName] = useState(localStorage.getItem("ai-draw.model-name") || modelList[0]);
 	const [samplerName, setSamplerName] = useState(localStorage.getItem("ai-draw.sampler-name") || "dpmpp_2m");
 	const [scheduler, setScheduler] = useState(localStorage.getItem("ai-draw.scheduler") || "karras");
+	const [usePromptOptimization, setUsePromptOptimization] = useState(localStorage.getItem("ai-draw.prompt-optimization") === "true");
 	
 	const [submitLoading, setSubmitLoading] = useState(false);
 	
@@ -214,7 +217,12 @@ const TextToImageUI = () => {
 			onSubmit={(event) => {
 				event.preventDefault();
 				setSubmitLoading(true);
-				axios.post("/api/ai-draw/submit", new FormData(event.currentTarget), {
+				const formData = new FormData(event.currentTarget);
+				if (usePromptOptimization) {
+					formData.set("positive", optimizationPositiveTags + formData.get("positive"));
+					formData.set("negative", optimizationNegativeTags + formData.get("negative"));
+				}
+				axios.post("/api/ai-draw/submit", formData, {
 					headers: {
 						"Content-Type": "application/json",
 					},
@@ -225,15 +233,9 @@ const TextToImageUI = () => {
 			}}
 		>
 			<Card variant="outlined" sx={{width: isSmallScreen ? "100%" : 300, px: 3, py: 2.5}}>
-				<Grid
-					direction="column"
-					container
-					spacing={2}
-				>
-					<Box>
-						<Typography gutterBottom={!isSmallScreen}>
-							宽度：{width}px
-						</Typography>
+				<Grid container direction="column" spacing={2}>
+					<Grid container wrap="nowrap" alignItems="center" spacing={2}>
+						<Typography>宽度</Typography>
 						<Slider
 							name="width"
 							value={width}
@@ -244,12 +246,12 @@ const TextToImageUI = () => {
 								setWidth(value);
 								localStorage.setItem("ai-draw.width", value.toString());
 							}}
+							sx={{flex: 1}}
 						/>
-					</Box>
-					<Box>
-						<Typography gutterBottom={!isSmallScreen}>
-							高度：{height}px
-						</Typography>
+						<Typography>{width}px</Typography>
+					</Grid>
+					<Grid container wrap="nowrap" alignItems="center" spacing={2}>
+						<Typography>高度</Typography>
 						<Slider
 							name="height"
 							value={height}
@@ -260,12 +262,14 @@ const TextToImageUI = () => {
 								setHeight(value);
 								localStorage.setItem("ai-draw.height", value.toString());
 							}}
+							sx={{flex: 1}}
 						/>
-					</Box>
-					<Grid container alignItems="center">
+						<Typography>{height}px</Typography>
+					</Grid>
+					<Grid container alignItems="center" spacing={1}>
 						图片数量：
 						<ToggleButtonGroup
-							sx={{flex: 1}}
+							sx={{flex: 1, height: 40}}
 							color="primary"
 							value={batchSize}
 							exclusive
@@ -282,7 +286,7 @@ const TextToImageUI = () => {
 						<TextField name="batchSize" value={batchSize} sx={{display: "none"}}/>
 					</Grid>
 					<Divider/>
-					<Grid container alignItems="center" sx={{mt: -0.5}}>
+					<Grid container alignItems="center" sx={{mt: -0.5}} spacing={1}>
 						高级
 						<Switch checked={professionalMode} onChange={(event, value) => {
 							setProfessionalMode(value);
@@ -291,10 +295,8 @@ const TextToImageUI = () => {
 					</Grid>
 					{professionalMode && (
 						<>
-							<Box>
-								<Typography gutterBottom={!isSmallScreen}>
-									迭代步数：{steps}
-								</Typography>
+							<Grid container wrap="nowrap" alignItems="center" spacing={2}>
+								<Typography>步数</Typography>
 								<Slider
 									name="step"
 									value={steps}
@@ -304,12 +306,12 @@ const TextToImageUI = () => {
 										setSteps(value);
 										localStorage.setItem("ai-draw.steps", value.toString());
 									}}
+									sx={{flex: 1}}
 								/>
-							</Box>
-							<Box>
-								<Typography gutterBottom={!isSmallScreen}>
-									CFG Scale：{cfg}
-								</Typography>
+								<Typography>{steps}</Typography>
+							</Grid>
+							<Grid container wrap="nowrap" alignItems="center" spacing={2}>
+								<Typography>CFG</Typography>
 								<Slider
 									name="cfg"
 									value={cfg}
@@ -319,9 +321,11 @@ const TextToImageUI = () => {
 										setCfg(value);
 										localStorage.setItem("ai-draw.cfg", value.toString());
 									}}
+									sx={{flex: 1}}
 								/>
-							</Box>
-							<Grid container direction="column" spacing={2.5}>
+								<Typography>{cfg}</Typography>
+							</Grid>
+							<Grid container direction="column" spacing={2.5} sx={{mt: 1}}>
 								<FormControl fullWidth>
 									<InputLabel id="model-label">模型</InputLabel>
 									<Select
@@ -397,6 +401,7 @@ const TextToImageUI = () => {
 						maxRows={10}
 						minRows={3}
 						fullWidth
+						sx={{mb: 0.5}}
 					/>
 					<TextField
 						name="negative"
@@ -412,7 +417,14 @@ const TextToImageUI = () => {
 						minRows={2}
 						fullWidth
 					/>
-					<Grid container justifyContent="flex-end">
+					<Grid container justifyContent="space-between">
+						<Grid container alignItems="center" spacing={1}>
+							提示词增强
+							<Switch checked={usePromptOptimization} onChange={(event, value) => {
+								setUsePromptOptimization(value);
+								localStorage.setItem("ai-draw.prompt-optimization", value.toString());
+							}}/>
+						</Grid>
 						<LoadingButton
 							variant="contained"
 							type="submit"
