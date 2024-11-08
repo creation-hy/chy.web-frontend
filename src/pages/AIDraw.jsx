@@ -11,7 +11,6 @@ import {
 	AccordionSummary,
 	Alert,
 	ButtonBase,
-	ImageList,
 	ImageListItem,
 	ImageListItemBar,
 	InputLabel,
@@ -28,7 +27,6 @@ import {
 } from "@mui/material";
 import {useState} from "react";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
-import {isMobile} from "react-device-detect";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
@@ -38,6 +36,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import {LoadingButton} from "@mui/lab";
+import Masonry from "react-masonry-css";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
@@ -180,9 +179,14 @@ const GeneratedResults = () => {
 	
 	return (
 		<Box>
-			<ImageList cols={isMobile ? 2 : 3} sx={{m: 0}}>
+			<Masonry breakpointCols={{
+				default: 4,
+				1000: 3,
+				700: 2,
+				350: 1,
+			}} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
 				{data.result.map((item) => (
-					<ButtonBase key={item.imageId} sx={{borderRadius: "15px"}} onClick={() => {
+					<ButtonBase key={item.imageId} sx={{borderRadius: "15px", m: 0.5}} onClick={() => {
 						setImagePreviewData(item);
 						setShowImagePreview(true);
 					}}>
@@ -202,7 +206,7 @@ const GeneratedResults = () => {
 						</ImageListItem>
 					</ButtonBase>
 				))}
-			</ImageList>
+			</Masonry>
 			<Dialog
 				open={showImagePreview}
 				onClose={() => setShowImagePreview(false)}

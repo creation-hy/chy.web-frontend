@@ -39,3 +39,14 @@ html, body, #root {
 		color: #ffa000;
 	}
 }
+
+.my-masonry-grid {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	width: auto;
+}
+
+.my-masonry-grid_column {
+	background-clip: padding-box;
+}
