@@ -520,7 +520,6 @@ export default function Chat() {
 		}
 		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
 			const userItem = usersVar.find(item => item.username === username);
-			setCurrentUserDisplayName(res.data.result.displayName);
 			if (userItem) {
 				if (clientUserRef.current)
 					setClientUser({
@@ -533,11 +532,12 @@ export default function Chat() {
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
 			messagesVar = startId === -1 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
 			flushSync(() => {
+				setCurrentUserDisplayName(res.data.result.displayName);
 				setLastOnline(res.data.result.isOnline ? "在线" : (
 					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
 				setMessages([...messagesVar]);
 			});
-			setTimeout(() => messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom, 0);
+			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
 		});
 	}, [setClientUser]);
 	
