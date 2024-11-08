@@ -110,7 +110,7 @@ export default function SignIn() {
 			<Typography variant="h4" sx={{mb: -1}}>
 				登录
 			</Typography>
-			<Box sx={{borderBottom: 1, borderColor: "divider"}}>
+			<Box sx={{pb: 1}}>
 				<Tabs value={loginMethod} onChange={(event, value) => {
 					setLoginMethod(value);
 				}}>
