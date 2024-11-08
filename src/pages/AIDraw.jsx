@@ -2,7 +2,7 @@ import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import {Close, DrawOutlined, ExpandMoreOutlined} from "@mui/icons-material";
+import {Close, Delete, DrawOutlined, ExpandMoreOutlined} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
 import {
@@ -35,6 +35,9 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import {LoadingButton} from "@mui/lab";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -91,7 +94,11 @@ const GeneratedResult = () => {
 		queryFn: () => axios.get("/api/ai-draw/result").then(res => res.data),
 	});
 	
+	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
+	const [showDeletingDialog, setShowDeletingDialog] = useState(false);
+	const [deletingImageId, setDeletingImageId] = useState(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 	
 	if (isLoading || error)
 		return null;
@@ -106,12 +113,14 @@ const GeneratedResult = () => {
 		<Box>
 			<ImageList cols={isMobile ? 2 : 3} sx={{m: 0}}>
 				{data.result.map((item) => (
-					<ButtonBase key={item.imageId} sx={{borderRadius: "15px"}}
-					            onClick={() => setImagePreviewData(item)}>
+					<ButtonBase key={item.imageId} sx={{borderRadius: "15px"}} onClick={() => {
+						setImagePreviewData(item);
+						setShowImagePreview(true);
+					}}>
 						<ImageListItem sx={{width: "100% !important", height: "100% !important"}}>
 							<img
 								alt="Generated images"
-								src={"/api/ai-draw-result/" + item.imageId + ".png"}
+								src={`/api/ai-draw-result/${item.imageId}.png`}
 								style={{borderRadius: "15px"}}
 							/>
 							<ImageListItemBar
@@ -126,29 +135,18 @@ const GeneratedResult = () => {
 				))}
 			</ImageList>
 			<Dialog
-				open={imagePreviewData != null}
-				onClose={() => setImagePreviewData(null)}
+				open={showImagePreview}
+				onClose={() => setShowImagePreview(false)}
 				fullScreen
 			>
 				{imagePreviewData != null && <Grid container direction="column" sx={{width: "100%", height: "100%"}} wrap="nowrap">
-					<IconButton
-						onClick={() => setImagePreviewData(null)}
-						style={{
-							position: "absolute",
-							top: 10,
-							right: 10,
-							color: "white",
-							backgroundColor: "rgba(0, 0, 0, 0.5)",
-						}}
-					>
-						<Close/>
-					</IconButton>
 					<Box sx={{
 						flex: 1,
 						display: "flex",
 						justifyContent: "center",
 						alignItems: "center",
 						overflow: "hidden",
+						position: "relative",
 					}}>
 						<img
 							src={"/api/ai-draw-result/" + imagePreviewData.imageId + ".png"}
@@ -159,6 +157,33 @@ const GeneratedResult = () => {
 								objectFit: "contain",
 							}}
 						/>
+						<IconButton
+							onClick={() => setShowImagePreview(false)}
+							style={{
+								position: "absolute",
+								top: 10,
+								right: 10,
+								color: "white",
+								backgroundColor: "rgba(0, 0, 0, 0.5)",
+							}}
+						>
+							<Close/>
+						</IconButton>
+						<IconButton
+							onClick={() => {
+								setDeletingImageId(imagePreviewData.imageId);
+								setShowDeletingDialog(true);
+							}}
+							color="error"
+							style={{
+								position: "absolute",
+								bottom: 10,
+								right: 10,
+								backgroundColor: "rgba(0, 0, 0, 0.5)",
+							}}
+						>
+							<Delete/>
+						</IconButton>
 					</Box>
 					<Accordion variant="outlined" sx={{border: 0}}>
 						<AccordionSummary expandIcon={<ExpandMoreOutlined/>}>
@@ -179,6 +204,30 @@ const GeneratedResult = () => {
 						</AccordionDetails>
 					</Accordion>
 				</Grid>}
+			</Dialog>
+			<Dialog open={showDeletingDialog} onClose={() => setShowDeletingDialog(false)}>
+				<DialogTitle>
+					要删除这张图片吗？
+				</DialogTitle>
+				<img src={`/api/ai-draw-result/${deletingImageId}.png`} alt="Deleting Image"/>
+				<DialogActions>
+					<Button onClick={() => setShowDeletingDialog(false)}>取消</Button>
+					<LoadingButton color="error" loading={isDeleting} onClick={() => {
+						setIsDeleting(true);
+						axios.post("/api/ai-draw/delete", {id: deletingImageId}, {
+							headers: {
+								"Content-Type": "application/json",
+							},
+						}).then(res => {
+							enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+							setIsDeleting(false);
+							if (res.data.status === 1) {
+								setShowDeletingDialog(false);
+								window.location.reload();
+							}
+						});
+					}}>删除</LoadingButton>
+				</DialogActions>
 			</Dialog>
 		</Box>
 	);
