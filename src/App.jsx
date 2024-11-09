@@ -21,14 +21,37 @@ import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Start from "src/pages/Start.jsx";
+import {Fab, Fade, useScrollTrigger} from "@mui/material";
+import {KeyboardArrowUpOutlined} from "@mui/icons-material";
 
 export default function App() {
 	const [binaryColorMode] = useBinaryColorMode();
+	
+	const trigger = useScrollTrigger({
+		target: window ? window : undefined,
+		disableHysteresis: true,
+		threshold: 100,
+	});
+	
+	const handleClick = () => {
+		window.scrollTo({top: 0, behavior: "smooth"});
+	};
 	
 	return (
 		<ThemeProvider theme={createTheme(getDefaultTheme(binaryColorMode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
+			<Fade in={trigger}>
+				<Box
+					onClick={handleClick}
+					role="presentation"
+					sx={{position: 'fixed', bottom: 25, right: 25, zIndex: 1}}
+				>
+					<Fab size="small" aria-label="scroll back to top">
+						<KeyboardArrowUpOutlined/>
+					</Fab>
+				</Box>
+			</Fade>
 			<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
 				<AppAppBar/>
 				<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>

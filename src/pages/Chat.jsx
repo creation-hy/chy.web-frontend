@@ -481,7 +481,7 @@ const ScrollTop = ({children, messageCard}) => {
 	return (
 		<Fade in={trigger}>
 			<Box
-				onClick={() => messageCard.current.scrollTop = messageCard.current.scrollHeight}
+				onClick={() => messageCard.current.scrollTo({top: messageCard.current.scrollHeight, behavior: "smooth"})}
 				role="presentation"
 				sx={{
 					position: "absolute",
@@ -530,13 +530,13 @@ export default function Chat() {
 	if (!clientUserLoading)
 		clientUserRef.current = clientUser;
 	
-	const messageCardScrollTo = useCallback((bottom) => {
-		messageCard.current.scrollTop = messageCard.current.scrollHeight - bottom;
+	const messageCardScrollTo = useCallback((bottom, behavior) => {
+		messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
 		Promise.all(Array.prototype.slice.call(messageCard.current.getElementsByTagName("img")).map(img => new Promise(resolve => {
 			img.addEventListener("load", () => resolve(img));
 			img.addEventListener("error", () => resolve(img));
 		}))).then(() => {
-			messageCard.current.scrollTop = messageCard.current.scrollHeight - bottom;
+			messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
 		});
 	}, []);
 	
@@ -544,8 +544,8 @@ export default function Chat() {
 		if (!username || currentUserVar === username && startId === -1 && !doRefresh)
 			return;
 		const isCurrentUser = currentUserVar === username;
-		setShowScrollTop(false);
 		if (!isCurrentUser) {
+			setShowScrollTop(false);
 			currentUserVar = username;
 			setCurrentUser(username);
 			navigate.current("/chat/" + username);
@@ -585,7 +585,7 @@ export default function Chat() {
 				setMessages([...messagesVar]);
 			});
 			setShowScrollTop(true);
-			messageCardScrollTo(currentScrollBottom);
+			messageCardScrollTo(currentScrollBottom, "instant");
 		});
 	}, [setClientUser]);
 	
@@ -685,7 +685,7 @@ export default function Chat() {
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
 		flushSync(() => setMessages([...messagesVar]));
 		if (scrollTop + clientHeight + 50 >= scrollHeight) {
-			messageCardScrollTo(0);
+			messageCardScrollTo(0, "smooth");
 		}
 	}, [updateUserItem]);
 	
