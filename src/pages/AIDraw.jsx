@@ -11,6 +11,8 @@ import {
 	AccordionSummary,
 	Alert,
 	ButtonBase,
+	CircularProgress,
+	Collapse,
 	ImageListItem,
 	ImageListItemBar,
 	InputLabel,
@@ -41,6 +43,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import DialogContent from "@mui/material/DialogContent";
+import {TransitionGroup} from "react-transition-group";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -97,8 +100,15 @@ const MyRequests = () => {
 		queryFn: () => axios.get("/api/ai-draw/request").then(res => res.data),
 	});
 	
+	const [requestList, setRequestList] = useState([]);
 	const [showInfo, setShowInfo] = useState(false);
 	const [infoData, setInfoData] = useState(null);
+	const [deletingId, setDeletingId] = useState(null);
+	
+	useEffect(() => {
+		if (data)
+			setRequestList(data.result);
+	}, [data]);
 	
 	if (isLoading || error)
 		return null;
@@ -106,32 +116,47 @@ const MyRequests = () => {
 	if (data.status === 0)
 		return <Alert severity="error">{data.content}</Alert>;
 	
-	if (data.status !== 1)
+	if (data.status !== 1 || requestList.length === 0)
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
 	
 	return (
 		<Card variant="outlined" sx={{width: "100%"}}>
 			<List sx={{p: 0}}>
-				{data.result.map((item, index) => (
-					<Box key={item.id}>
-						{index > 0 && <Divider/>}
-						<ListItem>
-							<ListItemText
-								primary={<Typography noWrap>{item.positive}</Typography>}
-								secondary={convertDateToLocaleAbsoluteString(item.time)}
-							/>
-							<IconButton onClick={() => {
-								setInfoData(item);
-								setShowInfo(true);
-							}}>
-								<Info/>
-							</IconButton>
-							<IconButton color="error">
-								<DeleteOutlined/>
-							</IconButton>
-						</ListItem>
-					</Box>
-				))}
+				<TransitionGroup>
+					{requestList.map((item, index) => (
+						<Collapse key={item.id}>
+							{index > 0 && <Divider/>}
+							<ListItem>
+								<ListItemText
+									primary={<Typography noWrap>{item.positive}</Typography>}
+									secondary={convertDateToLocaleAbsoluteString(item.time)}
+								/>
+								<IconButton onClick={() => {
+									setInfoData(item);
+									setShowInfo(true);
+								}}>
+									<Info/>
+								</IconButton>
+								<IconButton color="error" onClick={() => {
+									setDeletingId(item.id);
+									axios.post("/api/ai-draw/request/delete", {id: item.id}, {
+										headers: {
+											"Content-Type": "application/json",
+										},
+									}).then(res => {
+										enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+										setDeletingId(null);
+										if (res.data.status === 1) {
+											setRequestList([...requestList].filter(current => current.id !== item.id));
+										}
+									});
+								}}>
+									{deletingId === item.id ? <CircularProgress size={24} color="error"/> : <DeleteOutlined/>}
+								</IconButton>
+							</ListItem>
+						</Collapse>
+					))}
+				</TransitionGroup>
 			</List>
 			<Dialog open={showInfo} onClose={() => setShowInfo(false)}>
 				<DialogTitle>详细信息</DialogTitle>
@@ -143,7 +168,8 @@ const MyRequests = () => {
 					CFG Scale：{infoData.cfg}<br/>
 					种子：{infoData.seed}<br/>
 					采样器：{`${samplerDisplayNameList[samplerList.indexOf(infoData.samplerName)]}
-								${infoData.scheduler[0].toUpperCase()}${infoData.scheduler.slice(1)}`}
+								${infoData.scheduler[0].toUpperCase()}${infoData.scheduler.slice(1)}`}<br/>
+					图片数量：{infoData.batchSize}
 					<Divider sx={{my: 1}}/>
 					正面描述：{infoData.positive}<br/><br/>
 					负面描述：{infoData.negative}
@@ -180,7 +206,7 @@ const GeneratedResults = () => {
 	if (data.status === 0)
 		return <Alert severity="error">{data.content}</Alert>;
 	
-	if (data.status !== 1)
+	if (data.status !== 1 || imageList.length === 0)
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
 	
 	return (
@@ -292,7 +318,7 @@ const GeneratedResults = () => {
 					<Button onClick={() => setShowDeletingDialog(false)}>取消</Button>
 					<LoadingButton color="error" loading={isDeleting} onClick={() => {
 						setIsDeleting(true);
-						axios.post("/api/ai-draw/delete", {id: deletingImageId}, {
+						axios.post("/api/ai-draw/result/delete", {id: deletingImageId}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
