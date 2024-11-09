@@ -194,7 +194,7 @@ export default function User() {
 	
 	return (
 		<Box maxWidth="md" alignSelf="center" width="100%">
-			<Card sx={{p: 2}}>
+			<Card variant="outlined" sx={{p: 2}}>
 				<Grid container direction="column" gap={1.5}>
 					<Grid container alignItems="center" gap={1.5} wrap="nowrap" width="100%">
 						{data.username === myname ? (

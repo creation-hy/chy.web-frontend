@@ -1,5 +1,4 @@
 import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -19,14 +18,13 @@ function Copyright() {
 
 export default function Footer() {
 	return (
-		<Container
-			id="footer"
+		<Box
 			sx={{
 				display: 'flex',
 				flexDirection: 'column',
 				alignItems: 'center',
 				gap: isMobile ? 2 : 4,
-				pb: isMobile ? 2 : 4,
+				pb: isMobile ? 0 : 1,
 				pt: 3,
 				textAlign: {sm: 'center', md: 'left'},
 			}}
@@ -105,6 +103,6 @@ export default function Footer() {
 					</IconButton>
 				</Stack>
 			</Box>
-		</Container>
+		</Box>
 	);
 }

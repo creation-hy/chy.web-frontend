@@ -53,7 +53,6 @@ import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
-import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -62,9 +61,6 @@ let usersVar = [], messagesVar = [];
 let socket, stomp;
 
 function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, displayNameNode}) {
-	const [binaryColorMode] = useBinaryColorMode();
-	const paperBackground = getDefaultTheme(binaryColorMode).palette.background.paper;
-	
 	return (
 		<>
 			<ListItemAvatar>
@@ -76,7 +72,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 							'& .MuiBadge-badge': {
 								backgroundColor: '#44b700',
 								color: '#44b700',
-								boxShadow: `0 0 0 2px ${paperBackground}`,
+								boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
 								'&::after': {
 									position: 'absolute',
 									top: 0,
@@ -604,11 +600,6 @@ export default function Chat() {
 			setLogged(true);
 			document.getElementById("page-container").style.height = "0";
 			document.getElementById("page-main").style.height = "0";
-			document.getElementById("footer").style.display = "none";
-			if (isMobile) {
-				document.getElementById("page-main").style.paddingBottom = "12px";
-			} else
-				document.getElementById("page-main").style.paddingBottom = "24px";
 			usersVar = data.result;
 			setUsers(usersVar);
 			if (!userJumped.current && urlParams.current["username"]) {
@@ -834,7 +825,7 @@ export default function Chat() {
 	
 	return (
 		<Grid container sx={{flex: 1, height: 0, display: !users ? "none" : "flex"}} gap={2}>
-			<Card ref={contactsComponent} sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
+			<Card variant="outlined" ref={contactsComponent} sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
 					inputRef={userSearchField}
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
@@ -932,7 +923,7 @@ export default function Chat() {
 			</Card>
 			<Grid container ref={chatMainComponent} direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex", pt: isMobile ? 2 : 0}}
 			      gap={1.5}>
-				{Boolean(currentUser) && <Card sx={{width: "100%"}}>
+				{Boolean(currentUser) && <Card variant="outlined" sx={{width: "100%"}}>
 					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 1.5} gap={1.5}>
 						{isMobile && <IconButton onClick={() => {
 							if (contactsComponent.current) {
@@ -985,7 +976,7 @@ export default function Chat() {
 						</Box>
 					</Grid>
 				</Card>}
-				<Card ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}} onScroll={(event) => {
+				<Card variant="outlined" ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}} onScroll={(event) => {
 					if (event.target.scrollTop <= 50 && messagesVar.length > 0 && lastScrollStartId.current !== messagesVar[0].id - 1 && messagesVar.length >= 30) {
 						lastScrollStartId.current = messagesVar[0].id - 1;
 						getMessages(currentUserVar, lastScrollStartId.current);
@@ -1016,7 +1007,7 @@ export default function Chat() {
 						</Fab>
 					</ScrollTop>}
 				</Card>
-				{currentUser != null && <Card sx={{maxWidth: "100%"}}>
+				{currentUser != null && <Card variant="outlined" sx={{maxWidth: "100%"}}>
 					{quote != null &&
 						<Chip
 							variant="outlined"

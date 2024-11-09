@@ -11,7 +11,6 @@ import {AppAppBar} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
-import Footer from "src/components/Footer.jsx";
 import Ranking from "src/pages/Ranking.jsx";
 import Chybench from "src/pages/chybench/Chybench.jsx";
 import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
@@ -23,6 +22,7 @@ import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Start from "src/pages/Start.jsx";
 import {Fab, Fade, useScrollTrigger} from "@mui/material";
 import {KeyboardArrowUpOutlined} from "@mui/icons-material";
+import {isMobile} from "react-device-detect";
 
 export default function App() {
 	const [binaryColorMode] = useBinaryColorMode();
@@ -52,7 +52,7 @@ export default function App() {
 					</Fab>
 				</Box>
 			</Fade>
-			<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%"}}>
+			<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%", pb: isMobile ? 2 : 3}}>
 				<AppAppBar/>
 				<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
 					<BrowserRouter>
@@ -74,7 +74,6 @@ export default function App() {
 						</Routes>
 					</BrowserRouter>
 				</Container>
-				<Footer/>
 			</Box>
 		</ThemeProvider>
 	);
