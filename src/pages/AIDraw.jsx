@@ -2,20 +2,31 @@ import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import {Close, DeleteOutlined, DrawOutlined, ExpandMoreOutlined, HourglassBottomOutlined, Info} from "@mui/icons-material";
+import {
+	CheckCircle,
+	Close,
+	DeleteOutlined,
+	DrawOutlined,
+	ExpandMoreOutlined,
+	HourglassBottomOutlined,
+	Info,
+	SelectAllOutlined,
+	ShareOutlined
+} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
 import {
 	Accordion,
 	AccordionDetails,
 	AccordionSummary,
-	Alert,
 	ButtonBase,
 	CircularProgress,
 	Collapse,
+	Drawer,
 	ImageListItem,
 	ImageListItemBar,
 	InputLabel,
+	LinearProgress,
 	List,
 	ListItem,
 	ListItemText,
@@ -115,8 +126,9 @@ const MyRequests = () => {
 	if (isLoading || error)
 		return null;
 	
-	if (data.status === 0)
-		return <Alert severity="error">{data.content}</Alert>;
+	if (data.status === 0) {
+		window.location.href = "/register";
+	}
 	
 	if (data.status !== 1 || requestList.length === 0)
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
@@ -203,16 +215,41 @@ const GeneratedResults = () => {
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [imageList, setImageList] = useState([]);
 	
+	const [selectedImages, setSelectedImages] = useState(new Set());
+	const [showMultipleDeletingDialog, setShowMultipleDeletingDialog] = useState(false);
+	const [isMultipleDeleting, setIsMultipleDeleting] = useState(false);
+	const [deletionProgress, setDeletionProgress] = useState(0);
+	
+	const toggleSelectImage = (id) => {
+		setSelectedImages(prevSelected => {
+			const newSelected = new Set(prevSelected);
+			if (newSelected.has(id)) {
+				newSelected.delete(id);
+			} else {
+				newSelected.add(id);
+			}
+			return newSelected;
+		});
+	};
+	
 	useEffect(() => {
 		if (data && data.result)
 			setImageList(data.result);
 	}, [data]);
 	
+	useEffect(() => {
+		window.addEventListener("keydown", (event) => {
+			if (event.key === "Escape")
+				setSelectedImages(new Set());
+		});
+	}, []);
+	
 	if (isLoading || error)
 		return null;
 	
-	if (data.status === 0)
-		return <Alert severity="error">{data.content}</Alert>;
+	if (data.status === 0) {
+		window.location.href = "/register";
+	}
 	
 	if (data.status !== 1 || imageList.length === 0)
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
@@ -226,11 +263,39 @@ const GeneratedResults = () => {
 				350: 1,
 			}} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
 				{imageList.map((item) => (
-					<ButtonBase key={item.imageId} sx={{borderRadius: "15px", m: 0.5}} onClick={() => {
-						setImagePreviewData(item);
-						setShowImagePreview(true);
-					}}>
-						<ImageListItem sx={{width: "100% !important", height: "100% !important"}}>
+					<ButtonBase
+						key={item.imageId}
+						sx={{borderRadius: "15px", m: 0.5}}
+						onClick={() => {
+							if (selectedImages.size > 0) {
+								toggleSelectImage(item.imageId);
+							} else {
+								setImagePreviewData(item);
+								setShowImagePreview(true);
+							}
+						}}
+						onContextMenu={(event) => {
+							event.preventDefault();
+							toggleSelectImage(item.imageId);
+						}}
+					>
+						<ImageListItem sx={{
+							width: "100% !important",
+							height: "100% !important",
+							transform: selectedImages.has(item.imageId) ? "scale(0.9)" : "scale(1)",
+							transition: "transform 150ms ease-in-out",
+						}}>
+							{selectedImages.has(item.imageId) &&
+								<CheckCircle color="primary" sx={{
+									position: "absolute",
+									right: -8,
+									top: -8,
+									width: 32,
+									height: 32,
+									backgroundColor: (theme) => theme.palette.background.default,
+									borderRadius: "50%",
+								}}/>
+							}
 							<img
 								alt="Generated images"
 								src={`/api/ai-draw-result/${item.imageId}.png`}
@@ -247,6 +312,80 @@ const GeneratedResults = () => {
 					</ButtonBase>
 				))}
 			</Masonry>
+			<Drawer
+				anchor="top"
+				variant="persistent"
+				open={selectedImages.size > 0}
+				PaperProps={{
+					sx: {
+						borderBottomLeftRadius: "15px",
+						borderBottomRightRadius: "15px",
+						maxWidth: 1152,
+						mx: "auto",
+						p: 1,
+					},
+				}}
+			>
+				<Grid container wrap="nowrap">
+					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
+						setSelectedImages(new Set());
+					}}>
+						<Close fontSize="large"/>
+						<Typography fontSize={14}>取消</Typography>
+					</IconButton>
+					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
+						setShowMultipleDeletingDialog(true);
+					}}>
+						<DeleteOutlined fontSize="large"/>
+						<Typography fontSize={14}>删除</Typography>
+					</IconButton>
+					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}>
+						<ShareOutlined fontSize="large"/>
+						<Typography fontSize={14}>分享</Typography>
+					</IconButton>
+					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
+						if (selectedImages.size !== imageList.length) {
+							setSelectedImages(new Set(imageList.map((item) => item.imageId)));
+						} else {
+							setSelectedImages(new Set());
+						}
+					}}>
+						<SelectAllOutlined fontSize="large"/>
+						<Typography fontSize={14}>{selectedImages.size === imageList.length && "取消"}全选</Typography>
+					</IconButton>
+				</Grid>
+			</Drawer>
+			<Dialog open={showMultipleDeletingDialog} onClose={() => setShowMultipleDeletingDialog(false)} disableScrollLock fullWidth>
+				<DialogTitle>要删除这 {selectedImages.size} 张图片吗？</DialogTitle>
+				<DialogContent>
+					<Grid container alignItems="center" spacing={2}>
+						删除进度：<LinearProgress variant="determinate" value={deletionProgress / selectedImages.size} sx={{flex: 1}}/>
+						{deletionProgress} / {selectedImages.size}
+					</Grid>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setShowMultipleDeletingDialog(false)}>取消</Button>
+					<LoadingButton color="error" loading={isMultipleDeleting} onClick={() => {
+						setIsMultipleDeleting(true);
+						for (const id of selectedImages) {
+							axios.post("/api/ai-draw/result/delete", {id: id}, {
+								headers: {
+									"Content-Type": "application/json",
+								},
+							}).then(res => {
+								if (res.data.status === 1) {
+									setImageList(imageList => [...imageList].filter((item) => item.imageId !== id));
+								}
+							});
+							setDeletionProgress(deletionProgress => deletionProgress + 1);
+						}
+						setSelectedImages(new Set());
+						setIsMultipleDeleting(false);
+						setShowMultipleDeletingDialog(false);
+						setDeletionProgress(0);
+					}}>删除</LoadingButton>
+				</DialogActions>
+			</Dialog>
 			<Dialog
 				open={showImagePreview}
 				onClose={() => setShowImagePreview(false)}
