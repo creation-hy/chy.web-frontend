@@ -1,7 +1,7 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
-import {Badge, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
+import {Badge, Fab, Fade, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
@@ -12,6 +12,7 @@ import {
 	AddPhotoAlternateOutlined,
 	AddReactionOutlined,
 	ArrowBack,
+	ArrowDownward,
 	CloudDownload,
 	ContentCopyOutlined,
 	DeleteOutline,
@@ -460,6 +461,49 @@ ChatToolBar.propTypes = {
 	inputField: PropTypes.object.isRequired,
 }
 
+const ScrollTop = ({children, messageCard}) => {
+	const [trigger, setTrigger] = useState(false);
+	const top = useRef(0);
+	const left = useRef(0);
+	
+	useEffect(() => {
+		console.log(messageCard.current.clientWidth);
+		messageCard.current.addEventListener("scroll", () => {
+			if (messageCard.current.scrollTop + messageCard.current.clientHeight + 100 <= messageCard.current.scrollHeight)
+				setTrigger(true);
+			else
+				setTrigger(false);
+		});
+	}, [messageCard.current]);
+	
+	if (!messageCard.current || messageCard.current.display === "none")
+		return null;
+	
+	if (top.current === 0) {
+		top.current = messageCard.current.clientHeight + messageCard.current.offsetTop;
+	}
+	
+	if (left.current === 0) {
+		left.current = messageCard.current.clientWidth / 2 + messageCard.current.offsetLeft;
+	}
+	
+	return (
+		<Fade in={trigger}>
+			<Box
+				onClick={() => messageCard.current.scrollTop = messageCard.current.scrollHeight}
+				role="presentation"
+				sx={{
+					position: "absolute",
+					top: top.current - 50 + "px",
+					left: left.current - 25 + "px",
+				}}
+			>
+				{children}
+			</Box>
+		</Fade>
+	);
+}
+
 export default function Chat() {
 	document.title = "Chat - chy.web";
 	
@@ -883,7 +927,7 @@ export default function Chat() {
 			</Card>
 			<Grid container ref={chatMainComponent} direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex", pt: isMobile ? 2 : 0}}
 			      gap={1.5}>
-				{currentUser != null && <Card sx={{width: "100%"}}>
+				{Boolean(currentUser) && <Card sx={{width: "100%"}}>
 					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 1.5} gap={1.5}>
 						{isMobile && <IconButton onClick={() => {
 							if (contactsComponent.current) {
@@ -961,6 +1005,11 @@ export default function Chat() {
 							</Fragment>
 						);
 					})}
+					<ScrollTop messageCard={messageCard}>
+						<Fab size="small">
+							<ArrowDownward/>
+						</Fab>
+					</ScrollTop>
 				</Card>
 				{currentUser != null && <Card sx={{maxWidth: "100%"}}>
 					{quote != null &&
