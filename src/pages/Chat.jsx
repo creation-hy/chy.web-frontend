@@ -44,7 +44,7 @@ import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
 import Picker from "@emoji-mart/react";
-import {useBinaryColorMode, useColorMode} from "src/components/ColorMode.jsx";
+import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
@@ -62,7 +62,8 @@ let usersVar = [], messagesVar = [];
 let socket, stomp;
 
 function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, displayNameNode}) {
-	const [colorMode] = useColorMode();
+	const [binaryColorMode] = useBinaryColorMode();
+	const paperBackground = getDefaultTheme(binaryColorMode).palette.background.paper;
 	
 	return (
 		<>
@@ -75,7 +76,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 							'& .MuiBadge-badge': {
 								backgroundColor: '#44b700',
 								color: '#44b700',
-								boxShadow: `0 0 0 2px ${getDefaultTheme(colorMode).palette.background.paper}`,
+								boxShadow: `0 0 0 2px ${paperBackground}`,
 								'&::after': {
 									position: 'absolute',
 									top: 0,
