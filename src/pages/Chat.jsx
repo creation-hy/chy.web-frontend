@@ -577,7 +577,7 @@ export default function Chat() {
 			messagesVar = startId === -1 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
 			flushSync(() => {
 				setCurrentUserDisplayName(res.data.result.displayName);
-				setLastOnline(res.data.result.isOnline ? "在线" : (
+				setLastOnline(res.data.result.isOnline || username === myname ? "在线" : (
 					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
 				setMessages([...messagesVar]);
 			});
