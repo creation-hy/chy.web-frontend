@@ -223,6 +223,8 @@ const GeneratedResults = () => {
 	const [isMultipleDeleting, setIsMultipleDeleting] = useState(false);
 	const [deletionProgress, setDeletionProgress] = useState(0);
 	
+	const [hoveredImage, setHoveredImage] = useState(null);
+	
 	const toggleSelectImage = (id) => {
 		setSelectedImages(prevSelected => {
 			const newSelected = new Set(prevSelected);
@@ -282,28 +284,48 @@ const GeneratedResults = () => {
 							toggleSelectImage(item.imageId);
 						}}
 					>
-						<ImageListItem sx={{
-							width: "100% !important",
-							height: "100% !important",
-							transform: selectedImages.has(item.imageId) ? "scale(0.9)" : "scale(1)",
-							transition: "transform 150ms ease-in-out",
-						}}>
+						<ImageListItem
+							sx={{
+								width: "100% !important",
+								height: "100% !important",
+								transform: selectedImages.has(item.imageId) ? "scale(0.9)" : "scale(1)",
+								transition: "transform 150ms ease-in-out",
+							}}
+							onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
+							onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
+						>
 							{selectedImages.has(item.imageId) &&
-								<CheckCircle color="primary" sx={{
-									position: "absolute",
-									right: -8,
-									top: -8,
-									width: 32,
-									height: 32,
-									backgroundColor: (theme) => theme.palette.background.default,
-									borderRadius: "50%",
-								}}/>
+								<CheckCircle
+									color="primary"
+									sx={{
+										position: "absolute",
+										right: -8,
+										top: -8,
+										width: 32,
+										height: 32,
+										backgroundColor: (theme) => theme.palette.background.default,
+										borderRadius: "50%",
+									}}
+								/>
 							}
 							<img
 								alt="Generated images"
 								src={`/api/ai-draw-result/${item.imageId}.png`}
-								style={{borderRadius: "15px"}}
+								style={{borderRadius: "15px",}}
 							/>
+							{hoveredImage === item.imageId &&
+								<Box
+									sx={{
+										position: "absolute",
+										top: 0,
+										left: 0,
+										right: 0,
+										height: "100%",
+										background: `linear-gradient(to ${selectedImages.size === 0 ? "bottom" : "top"}, rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0) 30%)`,
+										borderRadius: "15px",
+									}}
+								/>
+							}
 							<ImageListItemBar
 								title={`${convertDateToLocaleOffsetString(item.time)}`}
 								sx={{
