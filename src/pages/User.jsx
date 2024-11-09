@@ -83,6 +83,7 @@ function InfoContainer({value, info}) {
 									padding: '8px 11px',
 									borderRadius: '10px',
 									wordBreak: 'break-word',
+									width: "100%",
 								}}
 							>
 								<Box sx={{fontSize: 15}}>
@@ -245,7 +246,7 @@ export default function User() {
 							)}
 						</Grid>
 					</Grid>
-					<Box id="introduction" sx={{fontSize: 15}}>
+					<Box id="introduction" sx={{fontSize: 15, width: "100%"}}>
 						<ChatMarkdown>{data["introduction"]}</ChatMarkdown>
 					</Box>
 				</Grid>

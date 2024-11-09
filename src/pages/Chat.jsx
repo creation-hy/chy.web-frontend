@@ -170,6 +170,7 @@ const Message = ({messageId, username, displayName, content, quote, setQuote}) =
 						color: isMe ? 'white' : 'normal',
 						wordBreak: 'break-word',
 						userSelect: isMobile ? "none" : "auto",
+						width: "100%",
 					}}
 					onContextMenu={(event) => {
 						event.preventDefault();
