@@ -463,8 +463,6 @@ ChatToolBar.propTypes = {
 
 const ScrollTop = ({children, messageCard}) => {
 	const [trigger, setTrigger] = useState(false);
-	const top = useRef(0);
-	const left = useRef(0);
 	
 	useEffect(() => {
 		messageCard.current.addEventListener("scroll", () => {
@@ -473,18 +471,10 @@ const ScrollTop = ({children, messageCard}) => {
 			else
 				setTrigger(false);
 		});
-	}, [messageCard.current]);
+	}, []);
 	
 	if (!messageCard.current || messageCard.current.display === "none")
 		return null;
-	
-	if (top.current === 0) {
-		top.current = messageCard.current.clientHeight + messageCard.current.offsetTop;
-	}
-	
-	if (left.current === 0) {
-		left.current = messageCard.current.clientWidth / 2 + messageCard.current.offsetLeft;
-	}
 	
 	return (
 		<Fade in={trigger}>
@@ -493,8 +483,8 @@ const ScrollTop = ({children, messageCard}) => {
 				role="presentation"
 				sx={{
 					position: "absolute",
-					top: top.current - 50 + "px",
-					left: left.current - 25 + "px",
+					top: messageCard.current.clientHeight + messageCard.current.offsetTop - 50 + "px",
+					left: messageCard.current.clientWidth / 2 + messageCard.current.offsetLeft - 25 + "px",
 				}}
 			>
 				{children}
@@ -519,6 +509,7 @@ export default function Chat() {
 	const [quote, setQuote] = useState(null);
 	const [matchList, setMatchList] = useState(null);
 	const [abortController, setAbortController] = useState(null);
+	const [showScrollTop, setShowScrollTop] = useState(false);
 	
 	const messageCard = useRef(null);
 	const messageInput = useRef(null);
@@ -551,6 +542,7 @@ export default function Chat() {
 		if (!username || currentUserVar === username && startId === -1 && !doRefresh)
 			return;
 		const isCurrentUser = currentUserVar === username;
+		setShowScrollTop(false);
 		if (!isCurrentUser) {
 			currentUserVar = username;
 			setCurrentUser(username);
@@ -590,6 +582,7 @@ export default function Chat() {
 					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
 				setMessages([...messagesVar]);
 			});
+			setShowScrollTop(true);
 			messageCardScrollTo(currentScrollBottom);
 		});
 	}, [setClientUser]);
@@ -1015,11 +1008,11 @@ export default function Chat() {
 							</Fragment>
 						);
 					})}
-					<ScrollTop messageCard={messageCard}>
+					{showScrollTop && <ScrollTop messageCard={messageCard}>
 						<Fab size="small">
 							<ArrowDownward/>
 						</Fab>
-					</ScrollTop>
+					</ScrollTop>}
 				</Card>
 				{currentUser != null && <Card sx={{maxWidth: "100%"}}>
 					{quote != null &&
