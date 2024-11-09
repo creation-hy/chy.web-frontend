@@ -10,6 +10,8 @@ import {
 	ExpandMoreOutlined,
 	HourglassBottomOutlined,
 	Info,
+	NavigateBefore,
+	NavigateNext,
 	SelectAllOutlined,
 	ShareOutlined
 } from "@mui/icons-material";
@@ -23,6 +25,7 @@ import {
 	CircularProgress,
 	Collapse,
 	Drawer,
+	Grow,
 	ImageListItem,
 	ImageListItemBar,
 	InputLabel,
@@ -390,6 +393,13 @@ const GeneratedResults = () => {
 				open={showImagePreview}
 				onClose={() => setShowImagePreview(false)}
 				fullScreen
+				onKeyDown={(event) => {
+					if (event.key === "ArrowLeft" && imageList.indexOf(imagePreviewData) !== 0) {
+						setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) - 1]);
+					} else if (event.key === "ArrowRight" && imageList.indexOf(imagePreviewData) !== imageList.length - 1) {
+						setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) + 1]);
+					}
+				}}
 			>
 				{imagePreviewData != null && <Grid container direction="column" sx={{width: "100%", height: "100%"}} wrap="nowrap">
 					<Box sx={{
@@ -400,15 +410,17 @@ const GeneratedResults = () => {
 						overflow: "hidden",
 						position: "relative",
 					}}>
-						<img
-							src={"/api/ai-draw-result/" + imagePreviewData.imageId + ".png"}
-							alt="Image preview"
-							style={{
-								width: "100%",
-								height: "100%",
-								objectFit: "contain",
-							}}
-						/>
+						<Grow in={true}>
+							<img
+								src={"/api/ai-draw-result/" + imagePreviewData.imageId + ".png"}
+								alt="Image preview"
+								style={{
+									width: "100%",
+									height: "100%",
+									objectFit: "contain",
+								}}
+							/>
+						</Grow>
 						<IconButton
 							onClick={() => setShowImagePreview(false)}
 							style={{
@@ -421,6 +433,28 @@ const GeneratedResults = () => {
 						>
 							<Close/>
 						</IconButton>
+						{imageList.indexOf(imagePreviewData) !== 0 && <IconButton
+							onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) - 1])}
+							style={{
+								position: "absolute",
+								left: 10,
+								color: "white",
+								backgroundColor: "rgba(0, 0, 0, 0.5)",
+							}}
+						>
+							<NavigateBefore/>
+						</IconButton>}
+						{imageList.indexOf(imagePreviewData) !== imageList.length - 1 && <IconButton
+							onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) + 1])}
+							style={{
+								position: "absolute",
+								right: 10,
+								color: "white",
+								backgroundColor: "rgba(0, 0, 0, 0.5)",
+							}}
+						>
+							<NavigateNext/>
+						</IconButton>}
 						<IconButton
 							onClick={() => {
 								setDeletingImageId(imagePreviewData.imageId);
@@ -431,12 +465,13 @@ const GeneratedResults = () => {
 								position: "absolute",
 								bottom: 10,
 								right: 10,
+								backgroundColor: "rgba(0, 0, 0, 0.5)",
 							}}
 						>
 							<DeleteOutlined/>
 						</IconButton>
 					</Box>
-					<Accordion variant="outlined" sx={{border: 0}}>
+					<Accordion variant="outlined" sx={{border: 0}} disableGutters>
 						<AccordionSummary expandIcon={<ExpandMoreOutlined/>}>
 							详细信息
 						</AccordionSummary>
