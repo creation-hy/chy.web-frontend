@@ -372,6 +372,7 @@ const TextToImageUI = () => {
 				event.preventDefault();
 				setSubmitLoading(true);
 				const formData = new FormData(event.currentTarget);
+				console.log(formData);
 				if (usePromptOptimization) {
 					formData.set("positive", optimizationPositiveTags + formData.get("positive"));
 					formData.set("negative", optimizationNegativeTags + formData.get("negative"));
@@ -447,97 +448,95 @@ const TextToImageUI = () => {
 							localStorage.setItem("ai-draw.professional-mode", value.toString());
 						}}/>
 					</Grid>
-					{professionalMode && (
-						<>
-							<Grid container wrap="nowrap" alignItems="center" spacing={2}>
-								<Typography>步数</Typography>
-								<Slider
-									name="step"
-									value={steps}
-									min={10}
-									max={40}
-									onChange={(event, value) => {
-										setSteps(value);
-										localStorage.setItem("ai-draw.steps", value.toString());
+					<Grid container direction="column" spacing={2} display={professionalMode ? "flex" : "none"}>
+						<Grid container wrap="nowrap" alignItems="center" spacing={2}>
+							<Typography>步数</Typography>
+							<Slider
+								name="step"
+								value={steps}
+								min={10}
+								max={40}
+								onChange={(event, value) => {
+									setSteps(value);
+									localStorage.setItem("ai-draw.steps", value.toString());
+								}}
+								sx={{flex: 1}}
+							/>
+							<Typography>{steps}</Typography>
+						</Grid>
+						<Grid container wrap="nowrap" alignItems="center" spacing={2}>
+							<Typography>CFG</Typography>
+							<Slider
+								name="cfg"
+								value={cfg}
+								min={0}
+								max={30}
+								onChange={(event, value) => {
+									setCfg(value);
+									localStorage.setItem("ai-draw.cfg", value.toString());
+								}}
+								sx={{flex: 1}}
+							/>
+							<Typography>{cfg}</Typography>
+						</Grid>
+						<Grid container direction="column" spacing={2.5} sx={{mt: 1}}>
+							<FormControl fullWidth>
+								<InputLabel id="model-label">模型</InputLabel>
+								<Select
+									labelId="model-label"
+									label="模型"
+									name="modelName"
+									variant="outlined"
+									value={modelName}
+									onChange={(event) => {
+										setModelName(event.target.value);
+										localStorage.setItem("ai-draw.model-name", event.target.value.toString());
 									}}
-									sx={{flex: 1}}
-								/>
-								<Typography>{steps}</Typography>
-							</Grid>
-							<Grid container wrap="nowrap" alignItems="center" spacing={2}>
-								<Typography>CFG</Typography>
-								<Slider
-									name="cfg"
-									value={cfg}
-									min={0}
-									max={30}
-									onChange={(event, value) => {
-										setCfg(value);
-										localStorage.setItem("ai-draw.cfg", value.toString());
+								>
+									{modelList.map((item, index) => (
+										<MenuItem key={item} value={item}>{modelDisplayNameList[index]}</MenuItem>
+									))}
+								</Select>
+							</FormControl>
+							<FormControl fullWidth>
+								<InputLabel id="sampler-label">采样器</InputLabel>
+								<Select
+									labelId="sampler-label"
+									label="采样器"
+									name="samplerName"
+									variant="outlined"
+									value={samplerName}
+									onChange={(event) => {
+										setSamplerName(event.target.value);
+										localStorage.setItem("ai-draw.sampler-name", event.target.value.toString());
 									}}
-									sx={{flex: 1}}
-								/>
-								<Typography>{cfg}</Typography>
-							</Grid>
-							<Grid container direction="column" spacing={2.5} sx={{mt: 1}}>
-								<FormControl fullWidth>
-									<InputLabel id="model-label">模型</InputLabel>
-									<Select
-										labelId="model-label"
-										label="模型"
-										name="modelName"
-										variant="outlined"
-										value={modelName}
-										onChange={(event) => {
-											setModelName(event.target.value);
-											localStorage.setItem("ai-draw.model-name", event.target.value.toString());
-										}}
-									>
-										{modelList.map((item, index) => (
-											<MenuItem key={item} value={item}>{modelDisplayNameList[index]}</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-								<FormControl fullWidth>
-									<InputLabel id="sampler-label">采样器</InputLabel>
-									<Select
-										labelId="sampler-label"
-										label="采样器"
-										name="samplerName"
-										variant="outlined"
-										value={samplerName}
-										onChange={(event) => {
-											setSamplerName(event.target.value);
-											localStorage.setItem("ai-draw.sampler-name", event.target.value.toString());
-										}}
-									>
-										{samplerList.map((item, index) => (
-											<MenuItem key={item} value={item}>{samplerDisplayNameList[index]}</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-								<FormControl fullWidth>
-									<InputLabel id="scheduler-label">调度器</InputLabel>
-									<Select
-										labelId="scheduler-label"
-										label="调度器"
-										name="scheduler"
-										variant="outlined"
-										value={scheduler}
-										onChange={(event) => {
-											setScheduler(event.target.value);
-											localStorage.setItem("ai-draw.scheduler", event.target.value.toString());
-										}}
-									>
-										<MenuItem value="normal">Normal</MenuItem>
-										<MenuItem value="karras">Karras</MenuItem>
-										<MenuItem value="exponential">Exponential</MenuItem>
-									</Select>
-								</FormControl>
-								<TextField label="种子" fullWidth name="seed"/>
-							</Grid>
-						</>
-					)}
+								>
+									{samplerList.map((item, index) => (
+										<MenuItem key={item} value={item}>{samplerDisplayNameList[index]}</MenuItem>
+									))}
+								</Select>
+							</FormControl>
+							<FormControl fullWidth>
+								<InputLabel id="scheduler-label">调度器</InputLabel>
+								<Select
+									labelId="scheduler-label"
+									label="调度器"
+									name="scheduler"
+									variant="outlined"
+									value={scheduler}
+									onChange={(event) => {
+										setScheduler(event.target.value);
+										localStorage.setItem("ai-draw.scheduler", event.target.value.toString());
+									}}
+								>
+									<MenuItem value="normal">Normal</MenuItem>
+									<MenuItem value="karras">Karras</MenuItem>
+									<MenuItem value="exponential">Exponential</MenuItem>
+								</Select>
+							</FormControl>
+							<TextField label="种子" fullWidth name="seed"/>
+						</Grid>
+					</Grid>
 				</Grid>
 			</Card>
 			<Card variant="outlined" sx={{padding: 2.5, flex: isSmallScreen ? 0 : 1}}>
