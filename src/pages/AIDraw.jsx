@@ -25,7 +25,7 @@ import {
 	ToggleButtonGroup,
 	useMediaQuery
 } from "@mui/material";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
@@ -167,6 +167,12 @@ const GeneratedResults = () => {
 	const [showDeletingDialog, setShowDeletingDialog] = useState(false);
 	const [deletingImageId, setDeletingImageId] = useState(null);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [imageList, setImageList] = useState([]);
+	
+	useEffect(() => {
+		if (data)
+			setImageList(data.result);
+	}, [data]);
 	
 	if (isLoading || error)
 		return null;
@@ -185,7 +191,7 @@ const GeneratedResults = () => {
 				700: 2,
 				350: 1,
 			}} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
-				{data.result.map((item) => (
+				{imageList.map((item) => (
 					<ButtonBase key={item.imageId} sx={{borderRadius: "15px", m: 0.5}} onClick={() => {
 						setImagePreviewData(item);
 						setShowImagePreview(true);
@@ -294,8 +300,9 @@ const GeneratedResults = () => {
 							enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 							setIsDeleting(false);
 							if (res.data.status === 1) {
+								setImageList([...imageList].filter((item) => item.imageId !== deletingImageId));
 								setShowDeletingDialog(false);
-								window.location.reload();
+								setShowImagePreview(false);
 							}
 						});
 					}}>删除</LoadingButton>
