@@ -2,7 +2,7 @@ import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import {Close, DeleteOutlined, DrawOutlined, ExpandMoreOutlined, Info} from "@mui/icons-material";
+import {Close, DeleteOutlined, DrawOutlined, ExpandMoreOutlined, HourglassBottomOutlined, Info} from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
 import {
@@ -25,6 +25,7 @@ import {
 	Tabs,
 	ToggleButton,
 	ToggleButtonGroup,
+	Tooltip,
 	useMediaQuery
 } from "@mui/material";
 import {useEffect, useState} from "react";
@@ -98,6 +99,7 @@ const MyRequests = () => {
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["ai-draw-request"],
 		queryFn: () => axios.get("/api/ai-draw/request").then(res => res.data),
+		staleTime: 5,
 	});
 	
 	const [requestList, setRequestList] = useState([]);
@@ -106,7 +108,7 @@ const MyRequests = () => {
 	const [deletingId, setDeletingId] = useState(null);
 	
 	useEffect(() => {
-		if (data)
+		if (data && data.result)
 			setRequestList(data.result);
 	}, [data]);
 	
@@ -131,13 +133,18 @@ const MyRequests = () => {
 									primary={<Typography noWrap>{item.positive}</Typography>}
 									secondary={convertDateToLocaleAbsoluteString(item.time)}
 								/>
+								<Tooltip title={item.status === 1 ? "正在生成中..." : "正在排队中..."}>
+									<IconButton disableTouchRipple>
+										{item.status === 1 ? <CircularProgress size={24}/> : <HourglassBottomOutlined/>}
+									</IconButton>
+								</Tooltip>
 								<IconButton onClick={() => {
 									setInfoData(item);
 									setShowInfo(true);
 								}}>
 									<Info/>
 								</IconButton>
-								<IconButton color="error" onClick={() => {
+								<IconButton color="error" disabled={item.status === 1} onClick={() => {
 									setDeletingId(item.id);
 									axios.post("/api/ai-draw/request/delete", {id: item.id}, {
 										headers: {
@@ -186,6 +193,7 @@ const GeneratedResults = () => {
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["ai-draw-result"],
 		queryFn: () => axios.get("/api/ai-draw/result").then(res => res.data),
+		staleTime: 10,
 	});
 	
 	const [showImagePreview, setShowImagePreview] = useState(false);
@@ -196,7 +204,7 @@ const GeneratedResults = () => {
 	const [imageList, setImageList] = useState([]);
 	
 	useEffect(() => {
-		if (data)
+		if (data && data.result)
 			setImageList(data.result);
 	}, [data]);
 	
@@ -372,7 +380,6 @@ const TextToImageUI = () => {
 				event.preventDefault();
 				setSubmitLoading(true);
 				const formData = new FormData(event.currentTarget);
-				console.log(formData);
 				if (usePromptOptimization) {
 					formData.set("positive", optimizationPositiveTags + formData.get("positive"));
 					formData.set("negative", optimizationNegativeTags + formData.get("negative"));
