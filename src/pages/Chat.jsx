@@ -467,7 +467,6 @@ const ScrollTop = ({children, messageCard}) => {
 	const left = useRef(0);
 	
 	useEffect(() => {
-		console.log(messageCard.current.clientWidth);
 		messageCard.current.addEventListener("scroll", () => {
 			if (messageCard.current.scrollTop + messageCard.current.clientHeight + 100 <= messageCard.current.scrollHeight)
 				setTrigger(true);
@@ -538,6 +537,16 @@ export default function Chat() {
 	if (!clientUserLoading)
 		clientUserRef.current = clientUser;
 	
+	const messageCardScrollTo = useCallback((bottom) => {
+		messageCard.current.scrollTop = messageCard.current.scrollHeight - bottom;
+		Promise.all(Array.prototype.slice.call(messageCard.current.getElementsByTagName("img")).map(img => new Promise(resolve => {
+			img.addEventListener("load", () => resolve(img));
+			img.addEventListener("error", () => resolve(img));
+		}))).then(() => {
+			messageCard.current.scrollTop = messageCard.current.scrollHeight - bottom;
+		});
+	}, []);
+	
 	const getMessages = useCallback((username, startId = -1, doRefresh = false) => {
 		if (!username || currentUserVar === username && startId === -1 && !doRefresh)
 			return;
@@ -581,7 +590,7 @@ export default function Chat() {
 					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
 				setMessages([...messagesVar]);
 			});
-			messageCard.current.scrollTop = messageCard.current.scrollHeight - currentScrollBottom;
+			messageCardScrollTo(currentScrollBottom);
 		});
 	}, [setClientUser]);
 	
@@ -680,8 +689,9 @@ export default function Chat() {
 		
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
 		flushSync(() => setMessages([...messagesVar]));
-		if (scrollTop + clientHeight + 50 >= scrollHeight)
-			messageCard.current.scrollTop = scrollHeight;
+		if (scrollTop + clientHeight + 50 >= scrollHeight) {
+			messageCardScrollTo(0);
+		}
 	}, [updateUserItem]);
 	
 	let firstRebirth = useRef(false);
