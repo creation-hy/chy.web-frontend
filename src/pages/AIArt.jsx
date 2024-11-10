@@ -31,7 +31,6 @@ import {
 	ImageListItem,
 	ImageListItemBar,
 	InputLabel,
-	LinearProgress,
 	List,
 	ListItem,
 	ListItemText,
@@ -223,7 +222,6 @@ const GeneratedResults = () => {
 	const [selectedImages, setSelectedImages] = useState(new Set());
 	const [showMultipleDeletingDialog, setShowMultipleDeletingDialog] = useState(false);
 	const [isMultipleDeleting, setIsMultipleDeleting] = useState(false);
-	const [operationProgress, setOperationProgress] = useState(0);
 	const [makingPublic, setMakingPublic] = useState(false);
 	const [makingPrivate, setMakingPrivate] = useState(false);
 	
@@ -435,24 +433,17 @@ const GeneratedResults = () => {
 			</Drawer>
 			<Dialog open={showMultipleDeletingDialog} onClose={() => setShowMultipleDeletingDialog(false)} disableScrollLock fullWidth>
 				<DialogTitle>要删除这 {selectedImages.size} 张图片吗？</DialogTitle>
-				<DialogContent>
-					<Grid container alignItems="center" spacing={2}>
-						删除进度：<LinearProgress variant="determinate" value={operationProgress / selectedImages.size} sx={{flex: 1}}/>
-						{operationProgress} / {selectedImages.size}
-					</Grid>
-				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setShowMultipleDeletingDialog(false)}>取消</Button>
-					<LoadingButton color="error" loading={isMultipleDeleting} onClick={() => {
+					<LoadingButton color="error" loading={isMultipleDeleting} onClick={async () => {
 						setIsMultipleDeleting(true);
 						for (const id of selectedImages) {
-							axios.post("/api/ai-art/result/delete", {id: id}, {
+							await axios.post("/api/ai-art/result/delete", {id: id}, {
 								headers: {
 									"Content-Type": "application/json",
 								},
 							}).then(res => {
 								if (res.data.status === 1) {
-									setOperationProgress(operationProgress => operationProgress + 1);
 									setImageList(imageList => [...imageList].filter((item) => item.imageId !== id));
 								}
 							});
@@ -460,7 +451,6 @@ const GeneratedResults = () => {
 						setSelectedImages(new Set());
 						setIsMultipleDeleting(false);
 						setShowMultipleDeletingDialog(false);
-						setOperationProgress(0);
 					}}>删除</LoadingButton>
 				</DialogActions>
 			</Dialog>
