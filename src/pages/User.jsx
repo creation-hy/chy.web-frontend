@@ -5,7 +5,6 @@ import {Alert, InputLabel, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
-import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid2";
 import Cookies from "js-cookie";
@@ -104,7 +103,7 @@ function InfoContainer({value, info}) {
 		<Grid container direction="column" spacing={3}>
 			{data.result.map((item, index) => (
 				<Grid container key={index} alignItems="center" spacing={1.5} wrap="nowrap" maxWidth="100%">
-					<Avatar src={`/avatars/${item.username}.webp`} alt={item.displayName}/>
+					<UserAvatar username={item.username} displayName={item.displayName}/>
 					<Grid container gap={0.5} alignItems="center" wrap="nowrap" maxWidth="100%">
 						<Typography variant="h6" sx={{cursor: "pointer"}} onClick={() => {
 							window.location.href = item.username;
@@ -194,7 +193,7 @@ export default function User() {
 	
 	return (
 		<Box maxWidth="md" alignSelf="center" width="100%">
-			<Card variant="outlined" sx={{p: 2}}>
+			<Card sx={{p: 2}}>
 				<Grid container direction="column" gap={1.5}>
 					<Grid container alignItems="center" gap={1.5} wrap="nowrap" width="100%">
 						{data.username === myname ? (

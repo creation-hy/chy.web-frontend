@@ -7,7 +7,7 @@ import {useState} from "react";
 import axios from "axios";
 import {useQuery} from "@tanstack/react-query";
 import FormControl from "@mui/material/FormControl";
-import {UserSimpleItem} from "src/pages/Ranking.jsx";
+import {UserSimpleItem} from "src/components/UserItem.jsx";
 import Cookies from "js-cookie";
 import Typography from "@mui/material/Typography";
 import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";

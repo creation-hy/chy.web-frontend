@@ -4,26 +4,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import Link from "@mui/material/Link";
-import PropTypes from "prop-types";
 import Cookies from "js-cookie";
-import {UserAvatar} from "src/components/UserAvatar.jsx";
-
-export const UserSimpleItem = ({username, displayName}) => {
-	return (
-		<Link href={"/user/" + username} underline="none" display="flex" alignItems="center" gap={1}>
-			<UserAvatar username={username} displayName={displayName}/>
-			<Typography fontWeight="bold" maxWidth={150} noWrap textOverflow="ellipsis">
-				{displayName}
-			</Typography>
-		</Link>
-	);
-}
-
-UserSimpleItem.propTypes = {
-	username: PropTypes.string,
-	displayName: PropTypes.string,
-}
+import {UserSimpleItem} from "src/components/UserItem.jsx";
 
 const myname = Cookies.get("username");
 
