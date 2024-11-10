@@ -329,7 +329,7 @@ const GeneratedResults = () => {
 								/>
 							}
 							<ImageListItemBar
-								title={`${convertDateToLocaleOffsetString(item.time)}`}
+								title={`${convertDateToLocaleOffsetString(item.creationDate)}`}
 								sx={{
 									borderBottomLeftRadius: "15px",
 									borderBottomRightRadius: "15px",
@@ -546,7 +546,7 @@ const GeneratedResults = () => {
 						<AccordionDetails sx={{maxHeight: "calc(40vh - 48px)", overflowY: "auto"}}>
 							模型：{modelDisplayNameList[modelList.indexOf(imagePreviewData.modelName)]}<br/>
 							尺寸：{imagePreviewData.width}*{imagePreviewData.height}<br/>
-							生成时间：{convertDateToLocaleOffsetString(imagePreviewData.time)}<br/>
+							生成时间：{convertDateToLocaleOffsetString(imagePreviewData.creationDate)}<br/>
 							迭代步数：{imagePreviewData.step}<br/>
 							CFG Scale：{imagePreviewData.cfg}<br/>
 							种子：{imagePreviewData.seed}<br/>
@@ -911,7 +911,7 @@ const Community = () => {
 							}
 							<ImageListItemBar
 								title={<Typography fontWeight="bold" fontSize={18}>{item.displayName}</Typography>}
-								subtitle={<Typography fontSize={13} mt="-2px">{convertDateToLocaleOffsetString(item.time)}</Typography>}
+								subtitle={<Typography fontSize={13} mt="-2px">{convertDateToLocaleOffsetString(item.firstPublicationDate)}</Typography>}
 								sx={{
 									borderBottomLeftRadius: "15px",
 									borderBottomRightRadius: "15px",
@@ -995,12 +995,14 @@ const Community = () => {
 					</Box>
 					<Accordion variant="outlined" sx={{border: 0}} disableGutters>
 						<AccordionSummary expandIcon={<ExpandMoreOutlined/>}>
-							<UserSimpleItem username={imagePreviewData.username} displayName={imagePreviewData.displayName}/>
+							查看详情
 						</AccordionSummary>
 						<AccordionDetails sx={{maxHeight: "calc(40vh - 48px)", overflowY: "auto"}}>
+							<UserSimpleItem username={imagePreviewData.username} displayName={imagePreviewData.displayName} sx={{mb: 0.5}}/>
 							模型：{modelDisplayNameList[modelList.indexOf(imagePreviewData.modelName)]}<br/>
 							尺寸：{imagePreviewData.width}*{imagePreviewData.height}<br/>
-							生成时间：{convertDateToLocaleOffsetString(imagePreviewData.time)}<br/>
+							生成时间：{convertDateToLocaleOffsetString(imagePreviewData.creationDate)}<br/>
+							首次公开时间：{convertDateToLocaleOffsetString(imagePreviewData.firstPublicationDate)}<br/>
 							迭代步数：{imagePreviewData.step}<br/>
 							CFG Scale：{imagePreviewData.cfg}<br/>
 							种子：{imagePreviewData.seed}<br/>
