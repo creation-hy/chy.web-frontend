@@ -13,7 +13,9 @@ import {
 	NavigateBefore,
 	NavigateNext,
 	SelectAllOutlined,
-	ShareOutlined
+	ShareOutlined,
+	VisibilityOffOutlined,
+	VisibilityOutlined
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
 import {useQuery} from "@tanstack/react-query";
@@ -221,7 +223,9 @@ const GeneratedResults = () => {
 	const [selectedImages, setSelectedImages] = useState(new Set());
 	const [showMultipleDeletingDialog, setShowMultipleDeletingDialog] = useState(false);
 	const [isMultipleDeleting, setIsMultipleDeleting] = useState(false);
-	const [deletionProgress, setDeletionProgress] = useState(0);
+	const [operationProgress, setOperationProgress] = useState(0);
+	const [makingPublic, setMakingPublic] = useState(false);
+	const [makingPrivate, setMakingPrivate] = useState(false);
 	
 	const [hoveredImage, setHoveredImage] = useState(null);
 	
@@ -347,11 +351,10 @@ const GeneratedResults = () => {
 						borderBottomRightRadius: "15px",
 						maxWidth: 1152,
 						mx: "auto",
-						p: 1,
 					},
 				}}
 			>
-				<Grid container wrap="nowrap">
+				<Grid container padding={1} width="max-content">
 					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
 						setSelectedImages(new Set());
 					}}>
@@ -378,14 +381,64 @@ const GeneratedResults = () => {
 						<SelectAllOutlined fontSize="large"/>
 						<Typography fontSize={14}>{selectedImages.size === imageList.length && "取消"}全选</Typography>
 					</IconButton>
+					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
+						setMakingPublic(true);
+						axios.post("/api/ai-draw/toggle-visibility", {idList: [...selectedImages], visibility: 1}, {
+							headers: {
+								"Content-Type": "application/json",
+							},
+						}).then(res => {
+							setMakingPublic(false);
+							if (res.data.status === 0) {
+								enqueueSnackbar(res.data.content, {variant: "error"});
+							} else if (res.data.status === 1) {
+								const succeededList = res.data.succeededList;
+								enqueueSnackbar(`成功公开了 ${succeededList.length} 张图片，失败了 ${selectedImages.size - succeededList.length} 张`, {variant: "info"});
+								for (const id of succeededList) {
+									setSelectedImages(selectedImages => {
+										selectedImages.delete(id);
+										return selectedImages;
+									});
+								}
+							}
+						});
+					}}>
+						{makingPublic ? <CircularProgress size={35}/> : <VisibilityOutlined fontSize="large"/>}
+						<Typography fontSize={14}>公开</Typography>
+					</IconButton>
+					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
+						setMakingPrivate(true);
+						axios.post("/api/ai-draw/toggle-visibility", {idList: [...selectedImages], visibility: 0}, {
+							headers: {
+								"Content-Type": "application/json",
+							},
+						}).then(res => {
+							setMakingPrivate(false);
+							if (res.data.status === 0) {
+								enqueueSnackbar(res.data.content, {variant: "error"});
+							} else if (res.data.status === 1) {
+								const succeededList = res.data.succeededList;
+								enqueueSnackbar(`成功隐藏了 ${succeededList.length} 张图片，失败了 ${selectedImages.size - succeededList.length} 张`, {variant: "info"});
+								for (const id of succeededList) {
+									setSelectedImages(selectedImages => {
+										selectedImages.delete(id);
+										return selectedImages;
+									});
+								}
+							}
+						});
+					}}>
+						{makingPrivate ? <CircularProgress size={35}/> : <VisibilityOffOutlined fontSize="large"/>}
+						<Typography fontSize={14}>隐藏</Typography>
+					</IconButton>
 				</Grid>
 			</Drawer>
 			<Dialog open={showMultipleDeletingDialog} onClose={() => setShowMultipleDeletingDialog(false)} disableScrollLock fullWidth>
 				<DialogTitle>要删除这 {selectedImages.size} 张图片吗？</DialogTitle>
 				<DialogContent>
 					<Grid container alignItems="center" spacing={2}>
-						删除进度：<LinearProgress variant="determinate" value={deletionProgress / selectedImages.size} sx={{flex: 1}}/>
-						{deletionProgress} / {selectedImages.size}
+						删除进度：<LinearProgress variant="determinate" value={operationProgress / selectedImages.size} sx={{flex: 1}}/>
+						{operationProgress} / {selectedImages.size}
 					</Grid>
 				</DialogContent>
 				<DialogActions>
@@ -399,15 +452,15 @@ const GeneratedResults = () => {
 								},
 							}).then(res => {
 								if (res.data.status === 1) {
+									setOperationProgress(operationProgress => operationProgress + 1);
 									setImageList(imageList => [...imageList].filter((item) => item.imageId !== id));
 								}
 							});
-							setDeletionProgress(deletionProgress => deletionProgress + 1);
 						}
 						setSelectedImages(new Set());
 						setIsMultipleDeleting(false);
 						setShowMultipleDeletingDialog(false);
-						setDeletionProgress(0);
+						setOperationProgress(0);
 					}}>删除</LoadingButton>
 				</DialogActions>
 			</Dialog>
