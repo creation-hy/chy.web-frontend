@@ -5,7 +5,7 @@ import SignIn from "src/pages/sign-in/SignIn.jsx";
 import SignUp from "src/pages/SignUp.jsx";
 import Chat from "src/pages/Chat.jsx";
 import User from "src/pages/User.jsx";
-import AIDraw from "src/pages/AIDraw.jsx";
+import AIArt from "src/pages/AIArt.jsx";
 import Container from "@mui/material/Container";
 import {AppAppBar} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
@@ -64,7 +64,7 @@ export default function App() {
 							<Route path="/register" element={<SignUp/>}/>
 							<Route path="/user/:username" element={<User/>}/>
 							<Route path="/ranking" element={<Ranking/>}/>
-							<Route path="/ai-draw" element={<AIDraw/>}/>
+							<Route path="/ai-art" element={<AIArt/>}/>
 							<Route path="/chybench" element={<Chybench/>}/>
 							<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
 							<Route path="/minesweeper" element={<Minesweeper/>}/>

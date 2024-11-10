@@ -67,7 +67,7 @@ export const AppAppBar = () => {
 									<ChatBubbleOutline/>
 								</Badge>
 							</Button>
-							<Button variant="text" href="/ai-draw">
+							<Button variant="text" href="/ai-art">
 								<DrawOutlined/>
 							</Button>
 							<Button variant="text" href="https://creation-hy.top:8080/greedy-snake">
@@ -163,7 +163,7 @@ export const AppAppBar = () => {
 										</ListItemIcon>
 										<ListItemText primary="Chat"/>
 									</ListItemButton>
-									<ListItemButton href="/ai-draw">
+									<ListItemButton href="/ai-art">
 										<ListItemIcon>
 											<DrawOutlined/>
 										</ListItemIcon>

@@ -113,8 +113,8 @@ const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers:1
 
 const MyRequests = () => {
 	const {data, isLoading, error} = useQuery({
-		queryKey: ["ai-draw-request"],
-		queryFn: () => axios.get("/api/ai-draw/request").then(res => res.data),
+		queryKey: ["ai-art-request"],
+		queryFn: () => axios.get("/api/ai-art/request").then(res => res.data),
 		staleTime: 5,
 	});
 	
@@ -163,7 +163,7 @@ const MyRequests = () => {
 								</IconButton>
 								<IconButton color="error" disabled={item.status === 1} onClick={() => {
 									setDeletingId(item.id);
-									axios.post("/api/ai-draw/request/delete", {id: item.id}, {
+									axios.post("/api/ai-art/request/delete", {id: item.id}, {
 										headers: {
 											"Content-Type": "application/json",
 										},
@@ -208,8 +208,8 @@ const MyRequests = () => {
 
 const GeneratedResults = () => {
 	const {data, isLoading, error} = useQuery({
-		queryKey: ["ai-draw-result"],
-		queryFn: () => axios.get("/api/ai-draw/result").then(res => res.data),
+		queryKey: ["ai-art-results"],
+		queryFn: () => axios.get("/api/ai-art/result").then(res => res.data),
 		staleTime: 10,
 	});
 	
@@ -314,7 +314,7 @@ const GeneratedResults = () => {
 							}
 							<img
 								alt="Generated images"
-								src={`/api/ai-draw-result/${item.imageId}.webp`}
+								src={`/api/ai-art-results/${item.imageId}.webp`}
 								style={{borderRadius: "15px",}}
 							/>
 							{hoveredImage === item.imageId &&
@@ -383,7 +383,7 @@ const GeneratedResults = () => {
 					</IconButton>
 					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
 						setMakingPublic(true);
-						axios.post("/api/ai-draw/toggle-visibility", {idList: [...selectedImages], visibility: 1}, {
+						axios.post("/api/ai-art/toggle-visibility", {idList: [...selectedImages], visibility: 1}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
@@ -408,7 +408,7 @@ const GeneratedResults = () => {
 					</IconButton>
 					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
 						setMakingPrivate(true);
-						axios.post("/api/ai-draw/toggle-visibility", {idList: [...selectedImages], visibility: 0}, {
+						axios.post("/api/ai-art/toggle-visibility", {idList: [...selectedImages], visibility: 0}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
@@ -446,7 +446,7 @@ const GeneratedResults = () => {
 					<LoadingButton color="error" loading={isMultipleDeleting} onClick={() => {
 						setIsMultipleDeleting(true);
 						for (const id of selectedImages) {
-							axios.post("/api/ai-draw/result/delete", {id: id}, {
+							axios.post("/api/ai-art/result/delete", {id: id}, {
 								headers: {
 									"Content-Type": "application/json",
 								},
@@ -487,7 +487,7 @@ const GeneratedResults = () => {
 					}}>
 						<Grow in={true}>
 							<img
-								src={`/api/ai-draw-result/${imagePreviewData.imageId}.webp`}
+								src={`/api/ai-art-results/${imagePreviewData.imageId}.webp`}
 								alt="Image preview"
 								style={{
 									width: "100%",
@@ -570,12 +570,12 @@ const GeneratedResults = () => {
 				<DialogTitle>
 					要删除这张图片吗？
 				</DialogTitle>
-				<img src={`/api/ai-draw-result/${deletingImageId}.webp`} alt="Deleting Image"/>
+				<img src={`/api/ai-art-results/${deletingImageId}.webp`} alt="Deleting Image"/>
 				<DialogActions>
 					<Button onClick={() => setShowDeletingDialog(false)}>取消</Button>
 					<LoadingButton color="error" loading={isDeleting} onClick={() => {
 						setIsDeleting(true);
-						axios.post("/api/ai-draw/result/delete", {id: deletingImageId}, {
+						axios.post("/api/ai-art/result/delete", {id: deletingImageId}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
@@ -596,21 +596,21 @@ const GeneratedResults = () => {
 }
 
 const TextToImageUI = () => {
-	const [positivePrompt, setPositivePrompt] = useState(localStorage.getItem("ai-draw.positive") || "");
-	const [negativePrompt, setNegativePrompt] = useState(localStorage.getItem("ai-draw.negative") || "");
+	const [positivePrompt, setPositivePrompt] = useState(localStorage.getItem("ai-art.positive") || "");
+	const [negativePrompt, setNegativePrompt] = useState(localStorage.getItem("ai-art.negative") || "");
 	
-	const [width, setWidth] = useState(Number(localStorage.getItem("ai-draw.width")) || 512);
-	const [height, setHeight] = useState(Number(localStorage.getItem("ai-draw.height")) || 512);
-	const [batchSize, setBatchSize] = useState(Number(localStorage.getItem("ai-draw.batch-size")) || 1)
+	const [width, setWidth] = useState(Number(localStorage.getItem("ai-art.width")) || 512);
+	const [height, setHeight] = useState(Number(localStorage.getItem("ai-art.height")) || 512);
+	const [batchSize, setBatchSize] = useState(Number(localStorage.getItem("ai-art.batch-size")) || 1)
 	
-	const [professionalMode, setProfessionalMode] = useState(localStorage.getItem("ai-draw.professional-mode") === "true");
-	const [steps, setSteps] = useState(Number(localStorage.getItem("ai-draw.steps")) || 30);
-	const [cfg, setCfg] = useState(Number(localStorage.getItem("ai-draw.cfg")) || 7);
+	const [professionalMode, setProfessionalMode] = useState(localStorage.getItem("ai-art.professional-mode") === "true");
+	const [steps, setSteps] = useState(Number(localStorage.getItem("ai-art.steps")) || 30);
+	const [cfg, setCfg] = useState(Number(localStorage.getItem("ai-art.cfg")) || 7);
 	
-	const [modelName, setModelName] = useState(localStorage.getItem("ai-draw.model-name") || modelList[0]);
-	const [samplerName, setSamplerName] = useState(localStorage.getItem("ai-draw.sampler-name") || "dpmpp_2m");
-	const [scheduler, setScheduler] = useState(localStorage.getItem("ai-draw.scheduler") || "karras");
-	const [usePromptOptimization, setUsePromptOptimization] = useState(localStorage.getItem("ai-draw.prompt-optimization") === "true");
+	const [modelName, setModelName] = useState(localStorage.getItem("ai-art.model-name") || modelList[0]);
+	const [samplerName, setSamplerName] = useState(localStorage.getItem("ai-art.sampler-name") || "dpmpp_2m");
+	const [scheduler, setScheduler] = useState(localStorage.getItem("ai-art.scheduler") || "karras");
+	const [usePromptOptimization, setUsePromptOptimization] = useState(localStorage.getItem("ai-art.prompt-optimization") === "true");
 	
 	const [submitLoading, setSubmitLoading] = useState(false);
 	
@@ -633,7 +633,7 @@ const TextToImageUI = () => {
 					formData.set("positive", optimizationPositiveTags + formData.get("positive"));
 					formData.set("negative", optimizationNegativeTags + formData.get("negative"));
 				}
-				axios.post("/api/ai-draw/submit", formData, {
+				axios.post("/api/ai-art/submit", formData, {
 					headers: {
 						"Content-Type": "application/json",
 					},
@@ -655,7 +655,7 @@ const TextToImageUI = () => {
 							max={1024}
 							onChange={(event, value) => {
 								setWidth(value);
-								localStorage.setItem("ai-draw.width", value.toString());
+								localStorage.setItem("ai-art.width", value.toString());
 							}}
 							sx={{flex: 1}}
 						/>
@@ -671,7 +671,7 @@ const TextToImageUI = () => {
 							max={1024}
 							onChange={(event, value) => {
 								setHeight(value);
-								localStorage.setItem("ai-draw.height", value.toString());
+								localStorage.setItem("ai-art.height", value.toString());
 							}}
 							sx={{flex: 1}}
 						/>
@@ -686,7 +686,7 @@ const TextToImageUI = () => {
 							exclusive
 							onChange={(event, value) => {
 								setBatchSize(value);
-								localStorage.setItem("ai-draw.batch-size", value.toString());
+								localStorage.setItem("ai-art.batch-size", value.toString());
 							}}
 						>
 							<ToggleButton value={1} sx={{flex: 1}}>1</ToggleButton>
@@ -701,7 +701,7 @@ const TextToImageUI = () => {
 						高级
 						<Switch checked={professionalMode} onChange={(event, value) => {
 							setProfessionalMode(value);
-							localStorage.setItem("ai-draw.professional-mode", value.toString());
+							localStorage.setItem("ai-art.professional-mode", value.toString());
 						}}/>
 					</Grid>
 					<Grid container direction="column" spacing={2} display={professionalMode ? "flex" : "none"}>
@@ -714,7 +714,7 @@ const TextToImageUI = () => {
 								max={40}
 								onChange={(event, value) => {
 									setSteps(value);
-									localStorage.setItem("ai-draw.steps", value.toString());
+									localStorage.setItem("ai-art.steps", value.toString());
 								}}
 								sx={{flex: 1}}
 							/>
@@ -729,7 +729,7 @@ const TextToImageUI = () => {
 								max={30}
 								onChange={(event, value) => {
 									setCfg(value);
-									localStorage.setItem("ai-draw.cfg", value.toString());
+									localStorage.setItem("ai-art.cfg", value.toString());
 								}}
 								sx={{flex: 1}}
 							/>
@@ -746,7 +746,7 @@ const TextToImageUI = () => {
 									value={modelName}
 									onChange={(event) => {
 										setModelName(event.target.value);
-										localStorage.setItem("ai-draw.model-name", event.target.value.toString());
+										localStorage.setItem("ai-art.model-name", event.target.value.toString());
 									}}
 								>
 									{modelList.map((item, index) => (
@@ -764,7 +764,7 @@ const TextToImageUI = () => {
 									value={samplerName}
 									onChange={(event) => {
 										setSamplerName(event.target.value);
-										localStorage.setItem("ai-draw.sampler-name", event.target.value.toString());
+										localStorage.setItem("ai-art.sampler-name", event.target.value.toString());
 									}}
 								>
 									{samplerList.map((item, index) => (
@@ -782,7 +782,7 @@ const TextToImageUI = () => {
 									value={scheduler}
 									onChange={(event) => {
 										setScheduler(event.target.value);
-										localStorage.setItem("ai-draw.scheduler", event.target.value.toString());
+										localStorage.setItem("ai-art.scheduler", event.target.value.toString());
 									}}
 								>
 									<MenuItem value="normal">Normal</MenuItem>
@@ -804,7 +804,7 @@ const TextToImageUI = () => {
 						value={positivePrompt}
 						onChange={(event) => {
 							setPositivePrompt(event.target.value);
-							localStorage.setItem("ai-draw.positive", event.target.value.toString());
+							localStorage.setItem("ai-art.positive", event.target.value.toString());
 						}}
 						multiline
 						maxRows={10}
@@ -819,7 +819,7 @@ const TextToImageUI = () => {
 						value={negativePrompt}
 						onChange={(event) => {
 							setNegativePrompt(event.target.value);
-							localStorage.setItem("ai-draw.negative", event.target.value.toString());
+							localStorage.setItem("ai-art.negative", event.target.value.toString());
 						}}
 						multiline
 						maxRows={10}
@@ -831,7 +831,7 @@ const TextToImageUI = () => {
 							提示词增强
 							<Switch checked={usePromptOptimization} onChange={(event, value) => {
 								setUsePromptOptimization(value);
-								localStorage.setItem("ai-draw.prompt-optimization", value.toString());
+								localStorage.setItem("ai-art.prompt-optimization", value.toString());
 							}}/>
 						</Grid>
 						<LoadingButton
@@ -854,17 +854,17 @@ const Community = () => {
 
 }
 
-export default function AIDraw() {
+export default function AIArt() {
 	document.title = "AI绘图 - chy.web";
 	
-	const [menuValue, setMenuValue] = useState(Number(localStorage.getItem("ai-draw.page-index")) || 0);
+	const [menuValue, setMenuValue] = useState(Number(localStorage.getItem("ai-art.page-index")) || 0);
 	
 	return (
 		<Grid container direction="column" sx={{flex: 1}}>
 			<Box sx={{mb: 2.5}}>
 				<Tabs value={menuValue} onChange={(event, value) => {
 					setMenuValue(value);
-					localStorage.setItem("ai-draw.page-index", value.toString());
+					localStorage.setItem("ai-art.page-index", value.toString());
 				}} centered>
 					<Tab label="文生图"/>
 					<Tab label="我的请求"/>
