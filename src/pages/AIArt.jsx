@@ -437,20 +437,27 @@ const GeneratedResults = () => {
 					<Button onClick={() => setShowMultipleDeletingDialog(false)}>取消</Button>
 					<LoadingButton color="error" loading={isMultipleDeleting} onClick={async () => {
 						setIsMultipleDeleting(true);
-						for (const id of selectedImages) {
-							await axios.post("/api/ai-art/result/delete", {id: id}, {
-								headers: {
-									"Content-Type": "application/json",
-								},
-							}).then(res => {
-								if (res.data.status === 1) {
-									setImageList(imageList => [...imageList].filter((item) => item.imageId !== id));
+						await axios.post("/api/ai-art/result/delete", {idList: [...selectedImages]}, {
+							headers: {
+								"Content-Type": "application/json",
+							},
+						}).then(res => {
+							if (res.data.status === 0) {
+								enqueueSnackbar(res.data.content, {variant: "error"});
+							} else if (res.data.status === 1) {
+								const succeededList = res.data.succeededList;
+								enqueueSnackbar(`成功删除了 ${succeededList.length} 张图片，失败了 ${selectedImages.size - succeededList.length} 张`, {variant: "info"});
+								for (const id of succeededList) {
+									setSelectedImages(selectedImages => {
+										selectedImages.delete(id);
+										return selectedImages;
+									});
 								}
-							});
-						}
-						setSelectedImages(new Set());
-						setIsMultipleDeleting(false);
-						setShowMultipleDeletingDialog(false);
+								setImageList(imageList => [...imageList].filter(item => succeededList.indexOf(item.imageId) === -1));
+								setIsMultipleDeleting(false);
+								setShowMultipleDeletingDialog(false);
+							}
+						});
 					}}>删除</LoadingButton>
 				</DialogActions>
 			</Dialog>
@@ -565,17 +572,23 @@ const GeneratedResults = () => {
 					<Button onClick={() => setShowDeletingDialog(false)}>取消</Button>
 					<LoadingButton color="error" loading={isDeleting} onClick={() => {
 						setIsDeleting(true);
-						axios.post("/api/ai-art/result/delete", {id: deletingImageId}, {
+						axios.post("/api/ai-art/result/delete", {idList: [deletingImageId]}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
 						}).then(res => {
-							enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-							setIsDeleting(false);
-							if (res.data.status === 1) {
-								setImageList([...imageList].filter((item) => item.imageId !== deletingImageId));
-								setShowDeletingDialog(false);
-								setShowImagePreview(false);
+							if (res.data.status === 0) {
+								enqueueSnackbar(res.data.content, {variant: "error"});
+							} else if (res.data.status === 1) {
+								if (res.data.succeededList.length === 1) {
+									enqueueSnackbar("删除成功！", {variant: "success"});
+									setImageList([...imageList].filter((item) => item.imageId !== deletingImageId));
+									setIsDeleting(false);
+									setShowDeletingDialog(false);
+									setShowImagePreview(false);
+								} else {
+									enqueueSnackbar("删除失败！", {variant: "error"});
+								}
 							}
 						});
 					}}>删除</LoadingButton>
