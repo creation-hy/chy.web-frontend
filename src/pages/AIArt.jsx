@@ -13,6 +13,7 @@ import {
 	NavigateBefore,
 	NavigateNext,
 	SelectAllOutlined,
+	Visibility,
 	VisibilityOffOutlined,
 	VisibilityOutlined
 } from "@mui/icons-material";
@@ -310,6 +311,20 @@ const GeneratedResults = () => {
 									}}
 								/>
 							}
+							{item.visibility === 1 &&
+								<Visibility
+									color="primary"
+									sx={{
+										position: "absolute",
+										left: 6,
+										top: 6,
+										width: 32,
+										height: 32,
+										backgroundColor: (theme) => theme.palette.background.default,
+										borderRadius: "50%",
+									}}
+								/>
+							}
 							<img
 								alt="Generated images"
 								src={`/api/ai-art-results/${item.imageId}.webp`}
@@ -394,6 +409,10 @@ const GeneratedResults = () => {
 										return selectedImages;
 									});
 								}
+								setImageList(imageList => [...imageList].map(item => succeededList.includes(item.imageId) ? {
+									...item,
+									visibility: 1,
+								} : item));
 							}
 						});
 					}}>
@@ -419,6 +438,10 @@ const GeneratedResults = () => {
 										return selectedImages;
 									});
 								}
+								setImageList(imageList => [...imageList].map(item => succeededList.includes(item.imageId) ? {
+									...item,
+									visibility: 0,
+								} : item));
 							}
 						});
 					}}>
@@ -431,9 +454,9 @@ const GeneratedResults = () => {
 				<DialogTitle>要删除这 {selectedImages.size} 张图片吗？</DialogTitle>
 				<DialogActions>
 					<Button onClick={() => setShowMultipleDeletingDialog(false)}>取消</Button>
-					<LoadingButton color="error" loading={isMultipleDeleting} onClick={async () => {
+					<LoadingButton color="error" loading={isMultipleDeleting} onClick={() => {
 						setIsMultipleDeleting(true);
-						await axios.post("/api/ai-art/result/delete", {idList: [...selectedImages]}, {
+						axios.post("/api/ai-art/result/delete", {idList: [...selectedImages]}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
@@ -449,7 +472,7 @@ const GeneratedResults = () => {
 										return selectedImages;
 									});
 								}
-								setImageList(imageList => [...imageList].filter(item => succeededList.indexOf(item.imageId) === -1));
+								setImageList(imageList => [...imageList].filter(item => succeededList.includes(item.imageId) === -1));
 								setIsMultipleDeleting(false);
 								setShowMultipleDeletingDialog(false);
 							}
@@ -547,6 +570,7 @@ const GeneratedResults = () => {
 							模型：{modelDisplayNameList[modelList.indexOf(imagePreviewData.modelName)]}<br/>
 							尺寸：{imagePreviewData.width}*{imagePreviewData.height}<br/>
 							生成时间：{convertDateToLocaleOffsetString(imagePreviewData.creationDate)}<br/>
+							{imagePreviewData.visibility === 0 ? "暂未公开" : `首次公开时间：${convertDateToLocaleOffsetString(imagePreviewData.firstPublicationDate)}`}<br/>
 							迭代步数：{imagePreviewData.step}<br/>
 							CFG Scale：{imagePreviewData.cfg}<br/>
 							种子：{imagePreviewData.seed}<br/>
