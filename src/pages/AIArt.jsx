@@ -13,7 +13,6 @@ import {
 	NavigateBefore,
 	NavigateNext,
 	SelectAllOutlined,
-	ShareOutlined,
 	VisibilityOffOutlined,
 	VisibilityOutlined
 } from "@mui/icons-material";
@@ -60,6 +59,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import DialogContent from "@mui/material/DialogContent";
 import {TransitionGroup} from "react-transition-group";
+import {UserSimpleItem} from "src/components/UserItem.jsx";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -364,10 +364,6 @@ const GeneratedResults = () => {
 					}}>
 						<DeleteOutlined fontSize="large"/>
 						<Typography fontSize={14}>删除</Typography>
-					</IconButton>
-					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}>
-						<ShareOutlined fontSize="large"/>
-						<Typography fontSize={14}>分享</Typography>
 					</IconButton>
 					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
 						if (selectedImages.size !== imageList.length) {
@@ -854,7 +850,171 @@ const TextToImageUI = () => {
 }
 
 const Community = () => {
-
+	const {data, isLoading, error} = useQuery({
+		queryKey: ["ai-art-community"],
+		queryFn: () => axios.get("/api/ai-art/community/get-all").then(res => res.data),
+	});
+	
+	const [showImagePreview, setShowImagePreview] = useState(false);
+	const [imagePreviewData, setImagePreviewData] = useState(null);
+	const [hoveredImage, setHoveredImage] = useState(null);
+	
+	if (isLoading || error)
+		return null;
+	
+	if (data.status !== 1 || data.result.length === 0)
+		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
+	
+	return (
+		<Box>
+			<Masonry breakpointCols={{
+				default: 4,
+				1000: 3,
+				700: 2,
+				350: 1,
+			}} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
+				{data.result.map((item) => (
+					<ButtonBase
+						key={item.imageId}
+						sx={{borderRadius: "15px", m: 0.5}}
+						onClick={() => {
+							setImagePreviewData(item);
+							setShowImagePreview(true);
+						}}
+						onContextMenu={(event) => event.preventDefault()}
+					>
+						<ImageListItem
+							sx={{
+								width: "100% !important",
+								height: "100% !important",
+							}}
+							onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
+							onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
+						>
+							<img
+								alt="Generated images"
+								src={`/api/ai-art-results/${item.imageId}.webp`}
+								style={{borderRadius: "15px",}}
+							/>
+							{hoveredImage === item.imageId &&
+								<Box
+									sx={{
+										position: "absolute",
+										top: 0,
+										left: 0,
+										right: 0,
+										height: "100%",
+										background: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0) 30%)`,
+										borderRadius: "15px",
+									}}
+								/>
+							}
+							<ImageListItemBar
+								title={<Typography fontWeight="bold" fontSize={18}>{item.displayName}</Typography>}
+								subtitle={<Typography fontSize={13} mt="-2px">{convertDateToLocaleOffsetString(item.time)}</Typography>}
+								sx={{
+									borderBottomLeftRadius: "15px",
+									borderBottomRightRadius: "15px",
+									'& .MuiImageListItemBar-titleWrap': {
+										px: 1.5,
+										pt: "6px",
+										pb: "6px",
+									},
+								}}
+							/>
+						</ImageListItem>
+					</ButtonBase>
+				))}
+			</Masonry>
+			<Dialog
+				open={showImagePreview}
+				onClose={() => setShowImagePreview(false)}
+				fullScreen
+				onKeyDown={(event) => {
+					if (event.key === "ArrowLeft" && data.result.indexOf(imagePreviewData) !== 0) {
+						setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) - 1]);
+					} else if (event.key === "ArrowRight" && data.result.indexOf(imagePreviewData) !== data.result.length - 1) {
+						setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) + 1]);
+					}
+				}}
+			>
+				{imagePreviewData != null && <Grid container direction="column" sx={{width: "100%", height: "100%"}} wrap="nowrap">
+					<Box sx={{
+						flex: 1,
+						display: "flex",
+						justifyContent: "center",
+						alignItems: "center",
+						overflow: "hidden",
+						position: "relative",
+					}}>
+						<Grow in={true}>
+							<img
+								src={`/api/ai-art-results/${imagePreviewData.imageId}.webp`}
+								alt="Image preview"
+								style={{
+									width: "100%",
+									height: "100%",
+									objectFit: "contain",
+								}}
+							/>
+						</Grow>
+						<IconButton
+							onClick={() => setShowImagePreview(false)}
+							style={{
+								position: "absolute",
+								top: 10,
+								right: 10,
+								color: "white",
+								backgroundColor: "rgba(0, 0, 0, 0.5)",
+							}}
+						>
+							<Close/>
+						</IconButton>
+						{data.result.indexOf(imagePreviewData) !== 0 && <IconButton
+							onClick={() => setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) - 1])}
+							style={{
+								position: "absolute",
+								left: 10,
+								color: "white",
+								backgroundColor: "rgba(0, 0, 0, 0.5)",
+							}}
+						>
+							<NavigateBefore/>
+						</IconButton>}
+						{data.result.indexOf(imagePreviewData) !== data.result.length - 1 && <IconButton
+							onClick={() => setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) + 1])}
+							style={{
+								position: "absolute",
+								right: 10,
+								color: "white",
+								backgroundColor: "rgba(0, 0, 0, 0.5)",
+							}}
+						>
+							<NavigateNext/>
+						</IconButton>}
+					</Box>
+					<Accordion variant="outlined" sx={{border: 0}} disableGutters>
+						<AccordionSummary expandIcon={<ExpandMoreOutlined/>}>
+							<UserSimpleItem username={imagePreviewData.username} displayName={imagePreviewData.displayName}/>
+						</AccordionSummary>
+						<AccordionDetails sx={{maxHeight: "calc(40vh - 48px)", overflowY: "auto"}}>
+							模型：{modelDisplayNameList[modelList.indexOf(imagePreviewData.modelName)]}<br/>
+							尺寸：{imagePreviewData.width}*{imagePreviewData.height}<br/>
+							生成时间：{convertDateToLocaleOffsetString(imagePreviewData.time)}<br/>
+							迭代步数：{imagePreviewData.step}<br/>
+							CFG Scale：{imagePreviewData.cfg}<br/>
+							种子：{imagePreviewData.seed}<br/>
+							采样器：{`${samplerDisplayNameList[samplerList.indexOf(imagePreviewData.samplerName)]}
+								${imagePreviewData.scheduler[0].toUpperCase()}${imagePreviewData.scheduler.slice(1)}`}
+							<Divider sx={{my: 1}}/>
+							正面描述：{imagePreviewData.positive}<br/><br/>
+							负面描述：{imagePreviewData.negative}
+						</AccordionDetails>
+					</Accordion>
+				</Grid>}
+			</Dialog>
+		</Box>
+	);
 }
 
 export default function AIArt() {
