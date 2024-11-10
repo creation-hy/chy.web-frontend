@@ -104,7 +104,7 @@ function InfoContainer({value, info}) {
 		<Grid container direction="column" spacing={3}>
 			{data.result.map((item, index) => (
 				<Grid container key={index} alignItems="center" spacing={1.5} wrap="nowrap" maxWidth="100%">
-					<Avatar src={"/avatars/" + item.username + ".png"} alt={item.displayName}/>
+					<Avatar src={`/avatars/${item.username}.webp`} alt={item.displayName}/>
 					<Grid container gap={0.5} alignItems="center" wrap="nowrap" maxWidth="100%">
 						<Typography variant="h6" sx={{cursor: "pointer"}} onClick={() => {
 							window.location.href = item.username;

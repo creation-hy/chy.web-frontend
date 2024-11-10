@@ -314,7 +314,7 @@ const GeneratedResults = () => {
 							}
 							<img
 								alt="Generated images"
-								src={`/api/ai-draw-result/${item.imageId}.png`}
+								src={`/api/ai-draw-result/${item.imageId}.webp`}
 								style={{borderRadius: "15px",}}
 							/>
 							{hoveredImage === item.imageId &&
@@ -487,7 +487,7 @@ const GeneratedResults = () => {
 					}}>
 						<Grow in={true}>
 							<img
-								src={"/api/ai-draw-result/" + imagePreviewData.imageId + ".png"}
+								src={`/api/ai-draw-result/${imagePreviewData.imageId}.webp`}
 								alt="Image preview"
 								style={{
 									width: "100%",
@@ -570,7 +570,7 @@ const GeneratedResults = () => {
 				<DialogTitle>
 					要删除这张图片吗？
 				</DialogTitle>
-				<img src={`/api/ai-draw-result/${deletingImageId}.png`} alt="Deleting Image"/>
+				<img src={`/api/ai-draw-result/${deletingImageId}.webp`} alt="Deleting Image"/>
 				<DialogActions>
 					<Button onClick={() => setShowDeletingDialog(false)}>取消</Button>
 					<LoadingButton color="error" loading={isDeleting} onClick={() => {

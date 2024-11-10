@@ -286,7 +286,7 @@ const notify = (title, body, iconId) => {
 			navigator.serviceWorker.ready.then((registration) => {
 				registration.showNotification(title, {
 					body: body,
-					icon: "/avatars/" + iconId + ".png",
+					icon: `/avatars/${iconId}.webp`,
 				});
 			});
 		});
