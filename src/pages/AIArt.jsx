@@ -43,7 +43,7 @@ import {
 	Tooltip,
 	useMediaQuery
 } from "@mui/material";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
@@ -210,6 +210,7 @@ const GeneratedResults = () => {
 	const {data, isLoading, error} = useQuery({
 		queryKey: [`ai-art-results`],
 		queryFn: () => axios.get(`/api/ai-art/result/0`).then(res => res.data),
+		staleTime: Infinity,
 	});
 	
 	const [showImagePreview, setShowImagePreview] = useState(false);
@@ -226,9 +227,10 @@ const GeneratedResults = () => {
 	const [makingPrivate, setMakingPrivate] = useState(false);
 	
 	const [hoveredImage, setHoveredImage] = useState(null);
+	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
-	
+	const lastImageRef = useRef(null);
 	const pageLoadingObserver = useRef(new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
 			pageNumberNew.current = pageNumberCurrent.current + 1;
@@ -238,7 +240,6 @@ const GeneratedResults = () => {
 			});
 		}
 	}));
-	const lastImageRef = useRef(null);
 	
 	const toggleSelectImage = (id) => {
 		setSelectedImages(prevSelected => {
@@ -258,10 +259,6 @@ const GeneratedResults = () => {
 	}, [data]);
 	
 	useEffect(() => {
-		pageNumberCurrent.current = pageNumberNew.current;
-	}, [imageList]);
-	
-	useEffect(() => {
 		window.addEventListener("keydown", (event) => {
 			if (event.key === "Escape")
 				setSelectedImages(new Set());
@@ -269,6 +266,7 @@ const GeneratedResults = () => {
 	}, []);
 	
 	useEffect(() => {
+		pageNumberCurrent.current = pageNumberNew.current;
 		if (lastImageRef.current) {
 			pageLoadingObserver.current.observe(lastImageRef.current);
 		}
@@ -520,7 +518,7 @@ const GeneratedResults = () => {
 										return selectedImages;
 									});
 								}
-								setImageList(imageList => [...imageList].filter(item => succeededList.includes(item.imageId) === -1));
+								setImageList(imageList => [...imageList].filter(item => !succeededList.includes(item.imageId)));
 								setIsMultipleDeleting(false);
 								setShowMultipleDeletingDialog(false);
 							}
@@ -922,17 +920,44 @@ const TextToImageUI = () => {
 }
 
 const Community = () => {
-	const [onlyShowFollowed, setOnlyShowFollowed] = useState(0);
+	const [onlyShowFollowed, setOnlyShowFollowed] = useState(Number(localStorage.getItem("ai-art.only-show-followed")) || 0);
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: [`ai-art-community-${onlyShowFollowed}`],
-		queryFn: () => axios.get(`/api/ai-art/community/${onlyShowFollowed === 1 ? "get-followed" : "get-all"}`).then(res => res.data),
+		queryFn: () => axios.get(`/api/ai-art/community/${onlyShowFollowed === 1 ? "get-followed" : "get-all"}/0`).then(res => res.data),
+		staleTime: Infinity,
 	});
 	
+	const [imageList, setImageList] = useState([]);
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
 	const [hoveredImage, setHoveredImage] = useState(null);
 	const widthGreaterThan650 = useMediaQuery("(min-width: 650px)");
+	
+	const pageNumberCurrent = useRef(0);
+	const pageNumberNew = useRef(0);
+	const lastImageRef = useRef(null);
+	const pageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
+			pageNumberNew.current = pageNumberCurrent.current + 1;
+			axios.get(`/api/ai-art/community/${onlyShowFollowed === 1 ? "get-followed" : "get-all"}/${pageNumberNew.current}`).then(res => {
+				if (res.data.result)
+					setImageList(imageList => [...imageList, ...res.data.result]);
+			});
+		}
+	}), [onlyShowFollowed]);
+	
+	useEffect(() => {
+		if (data && data.result)
+			setImageList(data.result);
+	}, [data]);
+	
+	useEffect(() => {
+		pageNumberCurrent.current = pageNumberNew.current;
+		if (lastImageRef.current) {
+			pageLoadingObserver.observe(lastImageRef.current);
+		}
+	}, [imageList]);
 	
 	if (isLoading || error)
 		return null;
@@ -948,6 +973,9 @@ const Community = () => {
 					value={onlyShowFollowed}
 					onChange={(event) => {
 						setOnlyShowFollowed(event.target.value);
+						localStorage.setItem("ai-art.only-show-followed", event.target.value.toString());
+						pageNumberNew.current = 0;
+						pageNumberCurrent.current = 0;
 					}}
 				>
 					<MenuItem value={0}>所有人</MenuItem>
@@ -963,58 +991,60 @@ const Community = () => {
 					700: 2,
 					350: 1,
 				}} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
-					{data.result.map((item) => (
-						<ButtonBase
-							key={item.imageId}
-							sx={{borderRadius: "15px", m: 0.5}}
-							onClick={() => {
-								setImagePreviewData(item);
-								setShowImagePreview(true);
-							}}
-							onContextMenu={(event) => event.preventDefault()}
-						>
-							<ImageListItem
-								sx={{
-									width: "100% !important",
-									height: "100% !important",
+					{imageList.map((item) => (
+						<Grow in={true} key={item.imageId}>
+							<ButtonBase
+								ref={item === imageList[imageList.length - 1] ? lastImageRef : undefined}
+								sx={{borderRadius: "15px", m: 0.5}}
+								onClick={() => {
+									setImagePreviewData(item);
+									setShowImagePreview(true);
 								}}
-								onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
-								onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
+								onContextMenu={(event) => event.preventDefault()}
 							>
-								<img
-									alt="Generated images"
-									src={`/api/ai-art-results/${item.imageId}.webp`}
-									style={{borderRadius: "15px",}}
-								/>
-								{hoveredImage === item.imageId &&
-									<Box
+								<ImageListItem
+									sx={{
+										width: "100% !important",
+										height: "100% !important",
+									}}
+									onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
+									onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
+								>
+									<img
+										alt="Generated images"
+										src={`/api/ai-art-results/${item.imageId}.webp`}
+										style={{borderRadius: "15px",}}
+									/>
+									{hoveredImage === item.imageId &&
+										<Box
+											sx={{
+												position: "absolute",
+												top: 0,
+												left: 0,
+												right: 0,
+												height: "100%",
+												background: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0) 30%)`,
+												borderRadius: "15px",
+											}}
+										/>
+									}
+									<ImageListItemBar
+										title={<Typography fontWeight="bold" fontSize={18} overflow="hidden"
+										                   textOverflow="ellipsis">{item.displayName}</Typography>}
+										subtitle={<Typography fontSize={13} mt="-2px">{convertDateToLocaleOffsetString(item.firstPublicationDate)}</Typography>}
 										sx={{
-											position: "absolute",
-											top: 0,
-											left: 0,
-											right: 0,
-											height: "100%",
-											background: `linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0) 30%)`,
-											borderRadius: "15px",
+											borderBottomLeftRadius: "15px",
+											borderBottomRightRadius: "15px",
+											'& .MuiImageListItemBar-titleWrap': {
+												px: 1.5,
+												pt: "6px",
+												pb: "6px",
+											},
 										}}
 									/>
-								}
-								<ImageListItemBar
-									title={<Typography fontWeight="bold" fontSize={18} overflow="hidden"
-									                   textOverflow="ellipsis">{item.displayName}</Typography>}
-									subtitle={<Typography fontSize={13} mt="-2px">{convertDateToLocaleOffsetString(item.firstPublicationDate)}</Typography>}
-									sx={{
-										borderBottomLeftRadius: "15px",
-										borderBottomRightRadius: "15px",
-										'& .MuiImageListItemBar-titleWrap': {
-											px: 1.5,
-											pt: "6px",
-											pb: "6px",
-										},
-									}}
-								/>
-							</ImageListItem>
-						</ButtonBase>
+								</ImageListItem>
+							</ButtonBase>
+						</Grow>
 					))}
 				</Masonry>
 				<Dialog
