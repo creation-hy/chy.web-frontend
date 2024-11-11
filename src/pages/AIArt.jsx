@@ -140,7 +140,7 @@ const MyRequests = () => {
 		window.location.href = "/register";
 	}
 	
-	if (data.status !== 1 || requestList.length === 0)
+	if (requestList.length === 0)
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
 	
 	return (
@@ -240,7 +240,7 @@ const GeneratedResults = () => {
 		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
 			pageNumberNew.current = pageNumberCurrent.current + 1;
 			axios.get(`/api/ai-art/result/${pageNumberNew.current}`).then(res => {
-				if (res.data.result)
+				if (res.data.result && res.data.result.length > 0)
 					setImageList(imageList => [...imageList, ...res.data.result]);
 			});
 		}
@@ -259,7 +259,7 @@ const GeneratedResults = () => {
 	};
 	
 	useEffect(() => {
-		if (data && data.result)
+		if (data && data.result && data.result.length > 0)
 			setImageList(data.result);
 	}, [data]);
 	
@@ -284,7 +284,7 @@ const GeneratedResults = () => {
 		window.location.href = "/register";
 	}
 	
-	if (data.status !== 1 || imageList.length === 0)
+	if (imageList.length === 0)
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
 	
 	return (
@@ -349,7 +349,7 @@ const GeneratedResults = () => {
 											color="info"
 											sx={{
 												position: "absolute",
-												left: 8,
+												left: 7,
 												top: 2,
 												width: 32,
 												height: 32,
@@ -359,7 +359,7 @@ const GeneratedResults = () => {
 									<img
 										alt="Generated images"
 										src={`/api/ai-art-results/${item.imageId}.webp`}
-										style={{borderRadius: "15px"}}
+										style={{borderRadius: "15px", pointerEvents: "none"}}
 									/>
 									{hoveredImage === item.imageId &&
 										<Box
@@ -1018,7 +1018,7 @@ const Community = () => {
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
 	const [hoveredImage, setHoveredImage] = useState(null);
-	const widthGreaterThan650 = useMediaQuery("(min-width: 650px)");
+	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("md"));
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -1027,14 +1027,14 @@ const Community = () => {
 		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
 			pageNumberNew.current = pageNumberCurrent.current + 1;
 			axios.get(`/api/ai-art/community/${viewRange}/${sortMethod}/${pageNumberNew.current}`).then(res => {
-				if (res.data.result)
+				if (res.data.result && res.data.result.length > 0)
 					setImageList(imageList => [...imageList, ...res.data.result]);
 			});
 		}
 	}), [viewRange, sortMethod]);
 	
 	useEffect(() => {
-		if (data && data.result)
+		if (data && data.result && data.result.length > 0)
 			setImageList(data.result);
 	}, [data]);
 	
@@ -1050,7 +1050,7 @@ const Community = () => {
 	
 	return (
 		<Grid container direction="column" alignItems="flex-end" wrap="nowrap" width="100%">
-			<Grid container spacing={1} sx={{mb: 1.25, mt: widthGreaterThan650 ? -8.25 : 0}}>
+			<Grid container spacing={1} sx={{mb: 1.25, mt: isSmallScreen ? 0 : -8.25}}>
 				<FormControl>
 					<InputLabel id="sort-method-label">排序规则</InputLabel>
 					<Select
@@ -1117,7 +1117,7 @@ const Community = () => {
 									<img
 										alt="Generated images"
 										src={`/api/ai-art-results/${item.imageId}.webp`}
-										style={{borderRadius: "15px",}}
+										style={{borderRadius: "15px", pointerEvents: "none"}}
 									/>
 									{hoveredImage === item.imageId &&
 										<Box

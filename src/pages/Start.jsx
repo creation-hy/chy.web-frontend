@@ -12,7 +12,7 @@ export default function Start() {
 			<Box>
 				<Typography variant="h3" align="center" fontWeight="bold" mt={2}>
 					<Badge badgeContent="Beta" color="primary">
-						chy.web 5.0
+						chy.web 5.1
 					</Badge>
 				</Typography>
 				<Typography variant="h4" align="center">全新升级</Typography>
