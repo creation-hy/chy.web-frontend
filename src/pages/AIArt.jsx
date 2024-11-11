@@ -271,87 +271,107 @@ const GeneratedResults = () => {
 				350: 1,
 			}} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
 				{imageList.map((item) => (
-					<ButtonBase
+					<Box
 						key={item.imageId}
-						sx={{borderRadius: "15px", m: 0.5}}
-						onClick={() => {
-							if (selectedImages.size > 0) {
-								toggleSelectImage(item.imageId);
-							} else {
-								setImagePreviewData(item);
-								setShowImagePreview(true);
-							}
-						}}
-						onContextMenu={(event) => {
-							event.preventDefault();
-							toggleSelectImage(item.imageId);
-						}}
+						sx={{position: "relative"}}
+						onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
+						onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
 					>
-						<ImageListItem
-							sx={{
-								width: "100% !important",
-								height: "100% !important",
-								transform: selectedImages.has(item.imageId) ? "scale(0.9)" : "scale(1)",
-								transition: "transform 150ms ease-in-out",
+						<ButtonBase
+							sx={{borderRadius: "15px", m: 0.5}}
+							onClick={() => {
+								if (selectedImages.size > 0) {
+									toggleSelectImage(item.imageId);
+								} else {
+									setImagePreviewData(item);
+									setShowImagePreview(true);
+								}
 							}}
-							onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
-							onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
+							onContextMenu={(event) => {
+								event.preventDefault();
+								toggleSelectImage(item.imageId);
+							}}
 						>
-							{selectedImages.has(item.imageId) &&
-								<CheckCircle
-									color="primary"
-									sx={{
-										position: "absolute",
-										right: -8,
-										top: -8,
-										width: 32,
-										height: 32,
-										backgroundColor: (theme) => theme.palette.background.default,
-										borderRadius: "50%",
-									}}
-								/>
-							}
-							{item.visibility === 1 &&
-								<Visibility
-									color="primary"
-									sx={{
-										position: "absolute",
-										left: 6,
-										top: 6,
-										width: 32,
-										height: 32,
-										backgroundColor: (theme) => theme.palette.background.default,
-										borderRadius: "50%",
-									}}
-								/>
-							}
-							<img
-								alt="Generated images"
-								src={`/api/ai-art-results/${item.imageId}.webp`}
-								style={{borderRadius: "15px",}}
-							/>
-							{hoveredImage === item.imageId &&
-								<Box
-									sx={{
-										position: "absolute",
-										top: 0,
-										left: 0,
-										right: 0,
-										height: "100%",
-										background: `linear-gradient(to ${selectedImages.size === 0 ? "bottom" : "top"}, rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0) 30%)`,
-										borderRadius: "15px",
-									}}
-								/>
-							}
-							<ImageListItemBar
-								title={`${convertDateToLocaleOffsetString(item.creationDate)}`}
+							<ImageListItem
 								sx={{
-									borderBottomLeftRadius: "15px",
-									borderBottomRightRadius: "15px",
+									width: "100% !important",
+									height: "100% !important",
+									transform: selectedImages.has(item.imageId) ? "scale(0.9)" : "scale(1)",
+									transition: "transform 150ms ease-in-out",
 								}}
-							/>
-						</ImageListItem>
-					</ButtonBase>
+							>
+								{selectedImages.has(item.imageId) &&
+									<CheckCircle
+										color="primary"
+										sx={{
+											position: "absolute",
+											right: -8,
+											top: -8,
+											width: 32,
+											height: 32,
+											backgroundColor: (theme) => theme.palette.background.default,
+											borderRadius: "50%",
+										}}
+									/>
+								}
+								{item.visibility === 1 &&
+									<Visibility
+										color="info"
+										sx={{
+											position: "absolute",
+											left: 8,
+											top: 2,
+											width: 32,
+											height: 32,
+										}}
+									/>
+								}
+								<img
+									alt="Generated images"
+									src={`/api/ai-art-results/${item.imageId}.webp`}
+									style={{borderRadius: "15px",}}
+								/>
+								{hoveredImage === item.imageId &&
+									<Box
+										sx={{
+											position: "absolute",
+											top: 0,
+											left: 0,
+											right: 0,
+											height: "100%",
+											background: `linear-gradient(to ${selectedImages.size === 0 ? "bottom" : "top"}, rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0) 30%)`,
+											borderRadius: "15px",
+										}}
+									/>
+								}
+								<ImageListItemBar
+									title={`${convertDateToLocaleOffsetString(item.creationDate)}`}
+									sx={{
+										borderBottomLeftRadius: "15px",
+										borderBottomRightRadius: "15px",
+									}}
+								/>
+							</ImageListItem>
+						</ButtonBase>
+						{hoveredImage === item.imageId &&
+							<IconButton
+								sx={{
+									display: selectedImages.has(item.imageId) ? "none" : "flex",
+									position: "absolute",
+									right: 8,
+									top: 8,
+									width: 32,
+									height: 32,
+								}}
+								onClick={(event) => {
+									event.preventDefault();
+									toggleSelectImage(item.imageId);
+								}}
+							>
+								<CheckCircle sx={{color: (theme) => theme.palette.background.default}}/>
+							</IconButton>
+						}
+					</Box>
 				))}
 			</Masonry>
 			<Drawer
@@ -682,7 +702,7 @@ const TextToImageUI = () => {
 							}}
 							sx={{flex: 1}}
 						/>
-						<Typography>{width}px</Typography>
+						<Typography>{width}</Typography>
 					</Grid>
 					<Grid container wrap="nowrap" alignItems="center" spacing={2}>
 						<Typography>高度</Typography>
@@ -698,7 +718,7 @@ const TextToImageUI = () => {
 							}}
 							sx={{flex: 1}}
 						/>
-						<Typography>{height}px</Typography>
+						<Typography>{height}</Typography>
 					</Grid>
 					<Grid container alignItems="center" spacing={1}>
 						图片数量：
@@ -823,7 +843,7 @@ const TextToImageUI = () => {
 					<TextField
 						name="positive"
 						label="图片描述"
-						placeholder="英文单词，用逗号隔开"
+						placeholder="英文单词或短语，用逗号隔开"
 						value={positivePrompt}
 						onChange={(event) => {
 							setPositivePrompt(event.target.value);
@@ -838,7 +858,7 @@ const TextToImageUI = () => {
 					<TextField
 						name="negative"
 						label="负面描述"
-						placeholder="英文单词，用逗号隔开"
+						placeholder="英文单词或短语，用逗号隔开"
 						value={negativePrompt}
 						onChange={(event) => {
 							setNegativePrompt(event.target.value);
