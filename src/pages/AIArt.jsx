@@ -13,6 +13,8 @@ import {
 	NavigateBefore,
 	NavigateNext,
 	SelectAllOutlined,
+	ThumbDownOffAlt,
+	ThumbUpOffAlt,
 	Visibility,
 	VisibilityOffOutlined,
 	VisibilityOutlined
@@ -23,6 +25,7 @@ import {
 	Accordion,
 	AccordionDetails,
 	AccordionSummary,
+	Badge,
 	ButtonBase,
 	CircularProgress,
 	Collapse,
@@ -607,6 +610,40 @@ const GeneratedResults = () => {
 						>
 							<DeleteOutlined/>
 						</IconButton>
+						<Grid container spacing={1} sx={{
+							position: "absolute",
+							bottom: 10,
+							left: 10,
+						}}>
+							<Badge
+								badgeContent={imagePreviewData.likes}
+								color="primary"
+								overlap="circular"
+							>
+								<IconButton
+									style={{
+										color: "white",
+										backgroundColor: "rgba(0, 0, 0, 0.5)",
+									}}
+								>
+									<ThumbUpOffAlt/>
+								</IconButton>
+							</Badge>
+							<Badge
+								badgeContent={imagePreviewData.dislikes}
+								color="primary"
+								overlap="circular"
+							>
+								<IconButton
+									style={{
+										color: "white",
+										backgroundColor: "rgba(0, 0, 0, 0.5)",
+									}}
+								>
+									<ThumbDownOffAlt/>
+								</IconButton>
+							</Badge>
+						</Grid>
 					</Box>
 					<Accordion variant="outlined" sx={{border: 0}} disableGutters>
 						<AccordionSummary expandIcon={<ExpandMoreOutlined/>}>
@@ -920,11 +957,12 @@ const TextToImageUI = () => {
 }
 
 const Community = () => {
-	const [onlyShowFollowed, setOnlyShowFollowed] = useState(Number(localStorage.getItem("ai-art.only-show-followed")) || 0);
+	const [viewRange, setViewRange] = useState(localStorage.getItem("ai-art.view-range") || "get-all");
+	const [sortMethod, setSortMethod] = useState(localStorage.getItem("ai-art.sort-method") || "latest");
 	
 	const {data, isLoading, error} = useQuery({
-		queryKey: [`ai-art-community-${onlyShowFollowed}`],
-		queryFn: () => axios.get(`/api/ai-art/community/${onlyShowFollowed === 1 ? "get-followed" : "get-all"}/0`).then(res => res.data),
+		queryKey: [`ai-art-community-${viewRange}-${sortMethod}`],
+		queryFn: () => axios.get(`/api/ai-art/community/${viewRange}/${sortMethod}/0`).then(res => res.data),
 		staleTime: Infinity,
 	});
 	
@@ -940,12 +978,12 @@ const Community = () => {
 	const pageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
 			pageNumberNew.current = pageNumberCurrent.current + 1;
-			axios.get(`/api/ai-art/community/${onlyShowFollowed === 1 ? "get-followed" : "get-all"}/${pageNumberNew.current}`).then(res => {
+			axios.get(`/api/ai-art/community/${viewRange}/${sortMethod}/${pageNumberNew.current}`).then(res => {
 				if (res.data.result)
 					setImageList(imageList => [...imageList, ...res.data.result]);
 			});
 		}
-	}), [onlyShowFollowed]);
+	}), [viewRange, sortMethod]);
 	
 	useEffect(() => {
 		if (data && data.result)
@@ -964,24 +1002,42 @@ const Community = () => {
 	
 	return (
 		<Grid container direction="column" alignItems="flex-end" wrap="nowrap" width="100%">
-			<FormControl sx={{mb: 1.25, mt: widthGreaterThan650 ? -8.25 : 0}}>
-				<InputLabel id="show-who-label">查看范围</InputLabel>
-				<Select
-					variant="outlined"
-					labelId="show-who-label"
-					label="查看范围"
-					value={onlyShowFollowed}
-					onChange={(event) => {
-						setOnlyShowFollowed(event.target.value);
-						localStorage.setItem("ai-art.only-show-followed", event.target.value.toString());
-						pageNumberNew.current = 0;
-						pageNumberCurrent.current = 0;
-					}}
-				>
-					<MenuItem value={0}>所有人</MenuItem>
-					<MenuItem value={1}>关注的人</MenuItem>
-				</Select>
-			</FormControl>
+			<Grid container spacing={1} sx={{mb: 1.25, mt: widthGreaterThan650 ? -8.25 : 0}}>
+				<FormControl>
+					<InputLabel id="sort-method-label">排序规则</InputLabel>
+					<Select
+						variant="outlined"
+						labelId="sort-method-label"
+						label="排序规则"
+						value={sortMethod}
+						onChange={(event) => {
+							setSortMethod(event.target.value);
+							localStorage.setItem("ai-art.sort-method", event.target.value.toString());
+						}}
+					>
+						<MenuItem value="latest">最新</MenuItem>
+						<MenuItem value="most-popular">最受欢迎</MenuItem>
+					</Select>
+				</FormControl>
+				<FormControl>
+					<InputLabel id="view-range-label">查看范围</InputLabel>
+					<Select
+						variant="outlined"
+						labelId="view-range-label"
+						label="查看范围"
+						value={viewRange}
+						onChange={(event) => {
+							setViewRange(event.target.value);
+							localStorage.setItem("ai-art.view-range", event.target.value);
+							pageNumberNew.current = 0;
+							pageNumberCurrent.current = 0;
+						}}
+					>
+						<MenuItem value="get-all">所有人</MenuItem>
+						<MenuItem value="get-followed">关注的人</MenuItem>
+					</Select>
+				</FormControl>
+			</Grid>
 			{data.status !== 1 || data.result.length === 0 ? (
 				<Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>
 			) : (<>
@@ -1091,32 +1147,70 @@ const Community = () => {
 							>
 								<Close/>
 							</IconButton>
-							{data.result.indexOf(imagePreviewData) !== 0 && <IconButton
-								onClick={() => setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) - 1])}
-								style={{
-									position: "absolute",
-									left: 10,
-									color: "white",
-									backgroundColor: "rgba(0, 0, 0, 0.5)",
-								}}
-							>
-								<NavigateBefore/>
-							</IconButton>}
-							{data.result.indexOf(imagePreviewData) !== data.result.length - 1 && <IconButton
-								onClick={() => setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) + 1])}
-								style={{
-									position: "absolute",
-									right: 10,
-									color: "white",
-									backgroundColor: "rgba(0, 0, 0, 0.5)",
-								}}
-							>
-								<NavigateNext/>
-							</IconButton>}
+							{data.result.indexOf(imagePreviewData) !== 0 &&
+								<IconButton
+									onClick={() => setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) - 1])}
+									style={{
+										position: "absolute",
+										left: 10,
+										color: "white",
+										backgroundColor: "rgba(0, 0, 0, 0.5)",
+									}}
+								>
+									<NavigateBefore/>
+								</IconButton>
+							}
+							{data.result.indexOf(imagePreviewData) !== data.result.length - 1 &&
+								<IconButton
+									onClick={() => setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) + 1])}
+									style={{
+										position: "absolute",
+										right: 10,
+										color: "white",
+										backgroundColor: "rgba(0, 0, 0, 0.5)",
+									}}
+								>
+									<NavigateNext/>
+								</IconButton>
+							}
+							<Grid container spacing={1} sx={{
+								position: "absolute",
+								bottom: 10,
+								right: 10,
+							}}>
+								<Badge
+									badgeContent={imagePreviewData.likes}
+									color="primary"
+									overlap="circular"
+								>
+									<IconButton
+										style={{
+											color: "white",
+											backgroundColor: "rgba(0, 0, 0, 0.5)",
+										}}
+									>
+										<ThumbUpOffAlt/>
+									</IconButton>
+								</Badge>
+								<Badge
+									badgeContent={imagePreviewData.dislikes}
+									color="primary"
+									overlap="circular"
+								>
+									<IconButton
+										style={{
+											color: "white",
+											backgroundColor: "rgba(0, 0, 0, 0.5)",
+										}}
+									>
+										<ThumbDownOffAlt/>
+									</IconButton>
+								</Badge>
+							</Grid>
 						</Box>
 						<Accordion variant="outlined" sx={{border: 0}} disableGutters>
 							<AccordionSummary expandIcon={<ExpandMoreOutlined/>}>
-								查看详情
+								详细信息
 							</AccordionSummary>
 							<AccordionDetails sx={{maxHeight: "calc(40vh - 48px)", overflowY: "auto"}}>
 								<UserSimpleItem username={imagePreviewData.username} displayName={imagePreviewData.displayName} sx={{mb: 0.5}}/>
@@ -1148,7 +1242,7 @@ export default function AIArt() {
 	
 	return (
 		<Grid container direction="column" sx={{flex: 1}}>
-			<Box sx={{mb: 2.5}}>
+			<Box sx={{mb: 2.5}} maxWidth="100%">
 				<Tabs value={menuValue} onChange={(event, value) => {
 					setMenuValue(value);
 					localStorage.setItem("ai-art.page-index", value.toString());
