@@ -624,17 +624,27 @@ const GeneratedResults = () => {
 							>
 								<IconButton
 									onClick={() => {
-										const newImagePreviewData = {
-											...imagePreviewData,
-											imageId: imagePreviewData.imageId,
-											alreadyLiked: !imagePreviewData.alreadyLiked,
-											alreadyDisliked: false,
-											likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
-											dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
-										};
-										setImagePreviewData(newImagePreviewData);
-										setImageList(imageList =>
-											imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+										axios.post("/api/ai-art/community/toggle-liked", {imageId: imagePreviewData.imageId}, {
+											headers: {
+												"Content-Type": "application/json",
+											},
+										}).then(res => {
+											if (res.data.status === 0) {
+												enqueueSnackbar(res.data.content, {variant: "error"});
+											} else if (res.data.status === 1) {
+												const newImagePreviewData = {
+													...imagePreviewData,
+													imageId: imagePreviewData.imageId,
+													alreadyLiked: !imagePreviewData.alreadyLiked,
+													alreadyDisliked: false,
+													likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
+													dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
+												};
+												setImagePreviewData(newImagePreviewData);
+												setImageList(imageList =>
+													imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+											}
+										});
 									}}
 									style={{
 										color: "white",
@@ -651,17 +661,27 @@ const GeneratedResults = () => {
 							>
 								<IconButton
 									onClick={() => {
-										const newImagePreviewData = {
-											...imagePreviewData,
-											imageId: imagePreviewData.imageId,
-											alreadyDisliked: !imagePreviewData.alreadyDisliked,
-											alreadyLiked: false,
-											dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
-											likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
-										};
-										setImagePreviewData(newImagePreviewData);
-										setImageList(imageList =>
-											imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+										axios.post("/api/ai-art/community/toggle-disliked", {imageId: imagePreviewData.imageId}, {
+											headers: {
+												"Content-Type": "application/json",
+											},
+										}).then(res => {
+											if (res.data.status === 0) {
+												enqueueSnackbar(res.data.content, {variant: "error"});
+											} else if (res.data.status === 1) {
+												const newImagePreviewData = {
+													...imagePreviewData,
+													imageId: imagePreviewData.imageId,
+													alreadyDisliked: !imagePreviewData.alreadyDisliked,
+													alreadyLiked: false,
+													dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
+													likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
+												};
+												setImagePreviewData(newImagePreviewData);
+												setImageList(imageList =>
+													imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+											}
+										});
 									}}
 									style={{
 										color: "white",
@@ -1213,17 +1233,27 @@ const Community = () => {
 								>
 									<IconButton
 										onClick={() => {
-											const newImagePreviewData = {
-												...imagePreviewData,
-												imageId: imagePreviewData.imageId,
-												alreadyLiked: !imagePreviewData.alreadyLiked,
-												alreadyDisliked: false,
-												likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
-												dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
-											};
-											setImagePreviewData(newImagePreviewData);
-											setImageList(imageList =>
-												imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+											axios.post("/api/ai-art/community/toggle-liked", {imageId: imagePreviewData.imageId}, {
+												headers: {
+													"Content-Type": "application/json",
+												},
+											}).then(res => {
+												if (res.data.status === 0) {
+													enqueueSnackbar(res.data.content, {variant: "error"});
+												} else if (res.data.status === 1) {
+													const newImagePreviewData = {
+														...imagePreviewData,
+														imageId: imagePreviewData.imageId,
+														alreadyLiked: !imagePreviewData.alreadyLiked,
+														alreadyDisliked: false,
+														likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
+														dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
+													};
+													setImagePreviewData(newImagePreviewData);
+													setImageList(imageList =>
+														imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+												}
+											});
 										}}
 										style={{
 											color: "white",
@@ -1240,17 +1270,27 @@ const Community = () => {
 								>
 									<IconButton
 										onClick={() => {
-											const newImagePreviewData = {
-												...imagePreviewData,
-												imageId: imagePreviewData.imageId,
-												alreadyDisliked: !imagePreviewData.alreadyDisliked,
-												alreadyLiked: false,
-												dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
-												likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
-											};
-											setImagePreviewData(newImagePreviewData);
-											setImageList(imageList =>
-												imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+											axios.post("/api/ai-art/community/toggle-disliked", {imageId: imagePreviewData.imageId}, {
+												headers: {
+													"Content-Type": "application/json",
+												},
+											}).then(res => {
+												if (res.data.status === 0) {
+													enqueueSnackbar(res.data.content, {variant: "error"});
+												} else if (res.data.status === 1) {
+													const newImagePreviewData = {
+														...imagePreviewData,
+														imageId: imagePreviewData.imageId,
+														alreadyDisliked: !imagePreviewData.alreadyDisliked,
+														alreadyLiked: false,
+														dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
+														likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
+													};
+													setImagePreviewData(newImagePreviewData);
+													setImageList(imageList =>
+														imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+												}
+											});
 										}}
 										style={{
 											color: "white",
