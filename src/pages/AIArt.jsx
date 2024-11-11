@@ -43,7 +43,7 @@ import {
 	Tooltip,
 	useMediaQuery
 } from "@mui/material";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
@@ -208,9 +208,8 @@ const MyRequests = () => {
 
 const GeneratedResults = () => {
 	const {data, isLoading, error} = useQuery({
-		queryKey: ["ai-art-results"],
-		queryFn: () => axios.get("/api/ai-art/result").then(res => res.data),
-		staleTime: 10,
+		queryKey: [`ai-art-results`],
+		queryFn: () => axios.get(`/api/ai-art/result/0`).then(res => res.data),
 	});
 	
 	const [showImagePreview, setShowImagePreview] = useState(false);
@@ -227,6 +226,19 @@ const GeneratedResults = () => {
 	const [makingPrivate, setMakingPrivate] = useState(false);
 	
 	const [hoveredImage, setHoveredImage] = useState(null);
+	const pageNumberCurrent = useRef(0);
+	const pageNumberNew = useRef(0);
+	
+	const pageLoadingObserver = useRef(new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
+			pageNumberNew.current = pageNumberCurrent.current + 1;
+			axios.get(`/api/ai-art/result/${pageNumberNew.current}`).then(res => {
+				if (res.data.result)
+					setImageList(imageList => [...imageList, ...res.data.result]);
+			});
+		}
+	}));
+	const lastImageRef = useRef(null);
 	
 	const toggleSelectImage = (id) => {
 		setSelectedImages(prevSelected => {
@@ -246,11 +258,21 @@ const GeneratedResults = () => {
 	}, [data]);
 	
 	useEffect(() => {
+		pageNumberCurrent.current = pageNumberNew.current;
+	}, [imageList]);
+	
+	useEffect(() => {
 		window.addEventListener("keydown", (event) => {
 			if (event.key === "Escape")
 				setSelectedImages(new Set());
 		});
 	}, []);
+	
+	useEffect(() => {
+		if (lastImageRef.current) {
+			pageLoadingObserver.current.observe(lastImageRef.current);
+		}
+	}, [imageList]);
 	
 	if (isLoading || error)
 		return null;
@@ -264,114 +286,120 @@ const GeneratedResults = () => {
 	
 	return (
 		<Box>
-			<Masonry breakpointCols={{
-				default: 4,
-				1000: 3,
-				700: 2,
-				350: 1,
-			}} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
+			<Masonry
+				breakpointCols={{
+					default: 4,
+					1000: 3,
+					700: 2,
+					350: 1,
+				}}
+				className="my-masonry-grid"
+				columnClassName="my-masonry-grid_column"
+			>
 				{imageList.map((item) => (
-					<Box
-						key={item.imageId}
-						sx={{position: "relative"}}
-						onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
-						onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
-					>
-						<ButtonBase
-							sx={{borderRadius: "15px", m: 0.5}}
-							onClick={() => {
-								if (selectedImages.size > 0) {
-									toggleSelectImage(item.imageId);
-								} else {
-									setImagePreviewData(item);
-									setShowImagePreview(true);
-								}
-							}}
-							onContextMenu={(event) => {
-								event.preventDefault();
-								toggleSelectImage(item.imageId);
-							}}
+					<Grow in={true} key={item.imageId}>
+						<Box
+							ref={item === imageList[imageList.length - 1] ? lastImageRef : undefined}
+							sx={{position: "relative"}}
+							onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
+							onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
 						>
-							<ImageListItem
-								sx={{
-									width: "100% !important",
-									height: "100% !important",
-									transform: selectedImages.has(item.imageId) ? "scale(0.9)" : "scale(1)",
-									transition: "transform 150ms ease-in-out",
+							<ButtonBase
+								sx={{borderRadius: "15px", m: 0.5}}
+								onClick={() => {
+									if (selectedImages.size > 0) {
+										toggleSelectImage(item.imageId);
+									} else {
+										setImagePreviewData(item);
+										setShowImagePreview(true);
+									}
 								}}
-							>
-								{selectedImages.has(item.imageId) &&
-									<CheckCircle
-										color="primary"
-										sx={{
-											position: "absolute",
-											right: -8,
-											top: -8,
-											width: 32,
-											height: 32,
-											backgroundColor: (theme) => theme.palette.background.default,
-											borderRadius: "50%",
-										}}
-									/>
-								}
-								{item.visibility === 1 &&
-									<Visibility
-										color="info"
-										sx={{
-											position: "absolute",
-											left: 8,
-											top: 2,
-											width: 32,
-											height: 32,
-										}}
-									/>
-								}
-								<img
-									alt="Generated images"
-									src={`/api/ai-art-results/${item.imageId}.webp`}
-									style={{borderRadius: "15px",}}
-								/>
-								{hoveredImage === item.imageId &&
-									<Box
-										sx={{
-											position: "absolute",
-											top: 0,
-											left: 0,
-											right: 0,
-											height: "100%",
-											background: `linear-gradient(to ${selectedImages.size === 0 ? "bottom" : "top"}, rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0) 30%)`,
-											borderRadius: "15px",
-										}}
-									/>
-								}
-								<ImageListItemBar
-									title={`${convertDateToLocaleOffsetString(item.creationDate)}`}
-									sx={{
-										borderBottomLeftRadius: "15px",
-										borderBottomRightRadius: "15px",
-									}}
-								/>
-							</ImageListItem>
-						</ButtonBase>
-						{hoveredImage === item.imageId &&
-							<IconButton
-								sx={{
-									display: selectedImages.has(item.imageId) ? "none" : "flex",
-									position: "absolute",
-									right: 8,
-									top: 8,
-									width: 32,
-									height: 32,
-								}}
-								onClick={(event) => {
+								onContextMenu={(event) => {
 									event.preventDefault();
 									toggleSelectImage(item.imageId);
 								}}
 							>
-								<CheckCircle sx={{color: (theme) => theme.palette.background.default}}/>
-							</IconButton>
-						}
-					</Box>
+								<ImageListItem
+									sx={{
+										width: "100% !important",
+										height: "100% !important",
+										transform: selectedImages.has(item.imageId) ? "scale(0.9)" : "scale(1)",
+										transition: "transform 150ms ease-in-out",
+									}}
+								>
+									{selectedImages.has(item.imageId) &&
+										<CheckCircle
+											color="primary"
+											sx={{
+												position: "absolute",
+												right: -8,
+												top: -8,
+												width: 32,
+												height: 32,
+												backgroundColor: (theme) => theme.palette.background.default,
+												borderRadius: "50%",
+											}}
+										/>
+									}
+									{item.visibility === 1 &&
+										<Visibility
+											color="info"
+											sx={{
+												position: "absolute",
+												left: 8,
+												top: 2,
+												width: 32,
+												height: 32,
+											}}
+										/>
+									}
+									<img
+										alt="Generated images"
+										src={`/api/ai-art-results/${item.imageId}.webp`}
+										style={{borderRadius: "15px"}}
+									/>
+									{hoveredImage === item.imageId &&
+										<Box
+											sx={{
+												position: "absolute",
+												top: 0,
+												left: 0,
+												right: 0,
+												height: "100%",
+												background: `linear-gradient(to ${selectedImages.size === 0 ? "bottom" : "top"}, rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0) 30%)`,
+												borderRadius: "15px",
+											}}
+										/>
+									}
+									<ImageListItemBar
+										title={`${convertDateToLocaleOffsetString(item.creationDate)}`}
+										sx={{
+											borderBottomLeftRadius: "15px",
+											borderBottomRightRadius: "15px",
+										}}
+									/>
+								</ImageListItem>
+							</ButtonBase>
+							{hoveredImage === item.imageId &&
+								<IconButton
+									sx={{
+										display: selectedImages.has(item.imageId) ? "none" : "flex",
+										position: "absolute",
+										right: 8,
+										top: 8,
+										width: 32,
+										height: 32,
+									}}
+									onClick={(event) => {
+										event.preventDefault();
+										toggleSelectImage(item.imageId);
+									}}
+								>
+									<CheckCircle sx={{color: (theme) => theme.palette.background.default}}/>
+								</IconButton>
+							}
+						</Box>
+					</Grow>
 				))}
 			</Masonry>
 			<Drawer
