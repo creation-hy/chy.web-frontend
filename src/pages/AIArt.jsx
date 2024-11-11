@@ -13,7 +13,9 @@ import {
 	NavigateBefore,
 	NavigateNext,
 	SelectAllOutlined,
+	ThumbDownAlt,
 	ThumbDownOffAlt,
+	ThumbUpAlt,
 	ThumbUpOffAlt,
 	Visibility,
 	VisibilityOffOutlined,
@@ -534,9 +536,9 @@ const GeneratedResults = () => {
 				onClose={() => setShowImagePreview(false)}
 				fullScreen
 				onKeyDown={(event) => {
-					if (event.key === "ArrowLeft" && imageList.indexOf(imagePreviewData) !== 0) {
+					if (event.key === "ArrowLeft" && imageList[0].imageId !== imagePreviewData.imageId) {
 						setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) - 1]);
-					} else if (event.key === "ArrowRight" && imageList.indexOf(imagePreviewData) !== imageList.length - 1) {
+					} else if (event.key === "ArrowRight" && imageList[imageList.length - 1].imageId !== imagePreviewData.imageId) {
 						setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) + 1]);
 					}
 				}}
@@ -573,7 +575,7 @@ const GeneratedResults = () => {
 						>
 							<Close/>
 						</IconButton>
-						{imageList.indexOf(imagePreviewData) !== 0 && <IconButton
+						{imageList[0].imageId !== imagePreviewData.imageId && <IconButton
 							onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) - 1])}
 							style={{
 								position: "absolute",
@@ -584,7 +586,7 @@ const GeneratedResults = () => {
 						>
 							<NavigateBefore/>
 						</IconButton>}
-						{imageList.indexOf(imagePreviewData) !== imageList.length - 1 && <IconButton
+						{imageList[imageList.length - 1].imageId !== imagePreviewData.imageId && <IconButton
 							onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) + 1])}
 							style={{
 								position: "absolute",
@@ -621,12 +623,25 @@ const GeneratedResults = () => {
 								overlap="circular"
 							>
 								<IconButton
+									onClick={() => {
+										const newImagePreviewData = {
+											...imagePreviewData,
+											imageId: imagePreviewData.imageId,
+											alreadyLiked: !imagePreviewData.alreadyLiked,
+											alreadyDisliked: false,
+											likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
+											dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
+										};
+										setImagePreviewData(newImagePreviewData);
+										setImageList(imageList =>
+											imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+									}}
 									style={{
 										color: "white",
 										backgroundColor: "rgba(0, 0, 0, 0.5)",
 									}}
 								>
-									<ThumbUpOffAlt/>
+									{imagePreviewData.alreadyLiked ? <ThumbUpAlt/> : <ThumbUpOffAlt/>}
 								</IconButton>
 							</Badge>
 							<Badge
@@ -635,12 +650,25 @@ const GeneratedResults = () => {
 								overlap="circular"
 							>
 								<IconButton
+									onClick={() => {
+										const newImagePreviewData = {
+											...imagePreviewData,
+											imageId: imagePreviewData.imageId,
+											alreadyDisliked: !imagePreviewData.alreadyDisliked,
+											alreadyLiked: false,
+											dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
+											likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
+										};
+										setImagePreviewData(newImagePreviewData);
+										setImageList(imageList =>
+											imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+									}}
 									style={{
 										color: "white",
 										backgroundColor: "rgba(0, 0, 0, 0.5)",
 									}}
 								>
-									<ThumbDownOffAlt/>
+									{imagePreviewData.alreadyDisliked ? <ThumbDownAlt/> : <ThumbDownOffAlt/>}
 								</IconButton>
 							</Badge>
 						</Grid>
@@ -1038,7 +1066,7 @@ const Community = () => {
 					</Select>
 				</FormControl>
 			</Grid>
-			{data.status !== 1 || data.result.length === 0 ? (
+			{imageList.length === 0 ? (
 				<Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>
 			) : (<>
 				<Masonry breakpointCols={{
@@ -1108,10 +1136,10 @@ const Community = () => {
 					onClose={() => setShowImagePreview(false)}
 					fullScreen
 					onKeyDown={(event) => {
-						if (event.key === "ArrowLeft" && data.result.indexOf(imagePreviewData) !== 0) {
-							setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) - 1]);
-						} else if (event.key === "ArrowRight" && data.result.indexOf(imagePreviewData) !== data.result.length - 1) {
-							setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) + 1]);
+						if (event.key === "ArrowLeft" && imageList[0].imageId !== imagePreviewData.imageId) {
+							setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) - 1]);
+						} else if (event.key === "ArrowRight" && imageList[imageList.length - 1].imageId !== imagePreviewData.imageId) {
+							setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) + 1]);
 						}
 					}}
 				>
@@ -1147,9 +1175,9 @@ const Community = () => {
 							>
 								<Close/>
 							</IconButton>
-							{data.result.indexOf(imagePreviewData) !== 0 &&
+							{imageList[0].imageId !== imagePreviewData.imageId &&
 								<IconButton
-									onClick={() => setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) - 1])}
+									onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) - 1])}
 									style={{
 										position: "absolute",
 										left: 10,
@@ -1160,9 +1188,9 @@ const Community = () => {
 									<NavigateBefore/>
 								</IconButton>
 							}
-							{data.result.indexOf(imagePreviewData) !== data.result.length - 1 &&
+							{imageList[imageList.length - 1].imageId !== imagePreviewData.imageId &&
 								<IconButton
-									onClick={() => setImagePreviewData(data.result[data.result.indexOf(imagePreviewData) + 1])}
+									onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) + 1])}
 									style={{
 										position: "absolute",
 										right: 10,
@@ -1184,12 +1212,25 @@ const Community = () => {
 									overlap="circular"
 								>
 									<IconButton
+										onClick={() => {
+											const newImagePreviewData = {
+												...imagePreviewData,
+												imageId: imagePreviewData.imageId,
+												alreadyLiked: !imagePreviewData.alreadyLiked,
+												alreadyDisliked: false,
+												likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
+												dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
+											};
+											setImagePreviewData(newImagePreviewData);
+											setImageList(imageList =>
+												imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+										}}
 										style={{
 											color: "white",
 											backgroundColor: "rgba(0, 0, 0, 0.5)",
 										}}
 									>
-										<ThumbUpOffAlt/>
+										{imagePreviewData.alreadyLiked ? <ThumbUpAlt/> : <ThumbUpOffAlt/>}
 									</IconButton>
 								</Badge>
 								<Badge
@@ -1198,12 +1239,25 @@ const Community = () => {
 									overlap="circular"
 								>
 									<IconButton
+										onClick={() => {
+											const newImagePreviewData = {
+												...imagePreviewData,
+												imageId: imagePreviewData.imageId,
+												alreadyDisliked: !imagePreviewData.alreadyDisliked,
+												alreadyLiked: false,
+												dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
+												likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
+											};
+											setImagePreviewData(newImagePreviewData);
+											setImageList(imageList =>
+												imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+										}}
 										style={{
 											color: "white",
 											backgroundColor: "rgba(0, 0, 0, 0.5)",
 										}}
 									>
-										<ThumbDownOffAlt/>
+										{imagePreviewData.alreadyDisliked ? <ThumbDownAlt/> : <ThumbDownOffAlt/>}
 									</IconButton>
 								</Badge>
 							</Grid>
