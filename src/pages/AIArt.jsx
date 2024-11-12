@@ -224,7 +224,7 @@ const GeneratedResults = () => {
 	const [showDeletingDialog, setShowDeletingDialog] = useState(false);
 	const [deletingImageId, setDeletingImageId] = useState(null);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [imageList, setImageList] = useState([]);
+	const [imageList, setImageList] = useState(null);
 	
 	const [selectedImages, setSelectedImages] = useState(new Set());
 	const [showMultipleDeletingDialog, setShowMultipleDeletingDialog] = useState(false);
@@ -261,7 +261,7 @@ const GeneratedResults = () => {
 	};
 	
 	useEffect(() => {
-		if (data && data.result && data.result.length > 0)
+		if (data)
 			setImageList(data.result);
 	}, [data]);
 	
@@ -279,7 +279,7 @@ const GeneratedResults = () => {
 		}
 	}, [imageList]);
 	
-	if (isLoading || error)
+	if (isLoading || error || !imageList)
 		return null;
 	
 	if (data.status === 0) {
@@ -1029,7 +1029,7 @@ const Community = () => {
 		staleTime: Infinity,
 	});
 	
-	const [imageList, setImageList] = useState([]);
+	const [imageList, setImageList] = useState(null);
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
 	const [hoveredImage, setHoveredImage] = useState(null);
@@ -1049,7 +1049,7 @@ const Community = () => {
 	}), [viewRange, sortMethod]);
 	
 	useEffect(() => {
-		if (data && data.result && data.result.length > 0)
+		if (data)
 			setImageList(data.result);
 	}, [data]);
 	
@@ -1060,7 +1060,7 @@ const Community = () => {
 		}
 	}, [imageList]);
 	
-	if (isLoading || error)
+	if (isLoading || error || !imageList)
 		return null;
 	
 	return (
