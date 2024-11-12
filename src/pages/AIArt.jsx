@@ -66,6 +66,7 @@ import Button from "@mui/material/Button";
 import DialogContent from "@mui/material/DialogContent";
 import {TransitionGroup} from "react-transition-group";
 import {UserSimpleItem} from "src/components/UserItem.jsx";
+import {isIOS} from "react-device-detect";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -232,6 +233,7 @@ const GeneratedResults = () => {
 	const [makingPrivate, setMakingPrivate] = useState(false);
 	
 	const [hoveredImage, setHoveredImage] = useState(null);
+	const contextMenuTimeout = useRef(null);
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -318,8 +320,21 @@ const GeneratedResults = () => {
 									}
 								}}
 								onContextMenu={(event) => {
-									event.preventDefault();
-									toggleSelectImage(item.imageId);
+									if (!isIOS) {
+										event.preventDefault();
+										toggleSelectImage(item.imageId);
+									}
+								}}
+								onTouchStart={() => {
+									if (isIOS && !contextMenuTimeout.current) {
+										contextMenuTimeout.current = setTimeout(() => toggleSelectImage(item.imageId), 300);
+									}
+								}}
+								onTouchEnd={() => {
+									if (contextMenuTimeout.current) {
+										window.clearTimeout(contextMenuTimeout.current);
+										contextMenuTimeout.current = null;
+									}
 								}}
 							>
 								<ImageListItem
