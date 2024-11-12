@@ -3,7 +3,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import {InputLabel, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import Box from "@mui/material/Box";
-import {useState} from "react";
+import {useCallback, useMemo, useState} from "react";
 import axios from "axios";
 import {useQuery} from "@tanstack/react-query";
 import FormControl from "@mui/material/FormControl";
@@ -17,8 +17,11 @@ const myname = Cookies.get("username");
 export default function ChybenchRanking() {
 	document.title = "排行榜 - Chybench - chy.web";
 	
-	const [rankingItem, setItem] = useState(localStorage.getItem("chybench.ranking.item") || "gpuScore");
-	const [rankingSize, setSize] = useState(Number(localStorage.getItem("chybench.ranking.size")) || 0);
+	const rankingParams = useMemo(() => JSON.parse(localStorage.getItem("chybenchRanking")) || {}, []);
+	const updateRankingParams = useCallback(() => localStorage.setItem("chybenchRanking", JSON.stringify(rankingParams)), []);
+	
+	const [rankingItem, setItem] = useState(rankingParams.item || "gpuScore");
+	const [rankingSize, setSize] = useState(rankingParams.size || 0);
 	
 	const RankingTable = () => {
 		const {data, isLoading, error} = useQuery({
@@ -74,7 +77,8 @@ export default function ChybenchRanking() {
 						value={rankingItem}
 						onChange={(event) => {
 							setItem(event.target.value);
-							localStorage.setItem("chybench.ranking.item", event.target.value.toString());
+							rankingParams.item = event.target.value;
+							updateRankingParams();
 						}}
 					>
 						<MenuItem value="gpuScore">GPU</MenuItem>
@@ -94,7 +98,8 @@ export default function ChybenchRanking() {
 						value={rankingSize}
 						onChange={(event) => {
 							setSize(event.target.value);
-							localStorage.setItem("chybench.ranking.size", event.target.value.toString());
+							rankingParams.size = event.target.value;
+							updateRankingParams();
 						}}
 					>
 						<MenuItem value={0}>高</MenuItem>

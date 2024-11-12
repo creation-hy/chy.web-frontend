@@ -33,8 +33,11 @@ LinearProgressWithLabel.propTypes = {
 	value: PropTypes.number.isRequired,
 };
 
+const chybenchParams = JSON.parse(localStorage.getItem("chybench")) || {};
+const updateChybenchParams = () => localStorage.setItem("chybench", JSON.stringify(chybenchParams));
+
 function MyProgressLabel({id, label}) {
-	const [checked, setChecked] = useState(localStorage.getItem("chybench-" + id) !== "false");
+	const [checked, setChecked] = useState(chybenchParams[id] ?? true);
 	
 	return (
 		<Grid container justifyContent="space-between">
@@ -44,7 +47,8 @@ function MyProgressLabel({id, label}) {
 					checked={checked}
 					onChange={(event) => {
 						setChecked(event.target.checked);
-						localStorage.setItem("chybench-" + id, event.target.checked.toString());
+						chybenchParams[id] = event.target.checked;
+						updateChybenchParams();
 					}}
 				/>
 				{label}：
@@ -179,8 +183,8 @@ const workerScript = URL.createObjectURL(new Blob([workerCode], {type: "applicat
 export default function Chybench() {
 	document.title = "Chybench - chy.web";
 	
-	const [size, setSize] = useState(parseInt(localStorage.getItem("chybench-size") ?? "1"));
-	const [rounds, setRounds] = useState(parseInt(localStorage.getItem("chybench-rounds") ?? "10"));
+	const [size, setSize] = useState(chybenchParams.size || 1);
+	const [rounds, setRounds] = useState(chybenchParams.rounds || 10);
 	const [cpuSingleProgress, setCPUSingleProgress] = useState(0);
 	const [cpuMultiProgress, setCPUMultiProgress] = useState(0);
 	const [gpuProgress, setGPUProgress] = useState(0);
@@ -288,7 +292,8 @@ export default function Chybench() {
 						value={size}
 						onChange={(event) => {
 							setSize(Number(event.target.value));
-							localStorage.setItem("chybench-size", event.target.value.toString());
+							chybenchParams.size = event.target.value;
+							updateChybenchParams();
 						}}
 					>
 						<MenuItem value={0}>高</MenuItem>
@@ -305,7 +310,8 @@ export default function Chybench() {
 						value={rounds}
 						onChange={(event) => {
 							setRounds(Number(event.target.value));
-							localStorage.setItem("chybench-rounds", event.target.value.toString());
+							chybenchParams.rounds = event.target.value;
+							updateChybenchParams();
 						}}
 					>
 						<MenuItem value={3}>快速</MenuItem>
