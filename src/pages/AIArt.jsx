@@ -48,7 +48,7 @@ import {
 	Tooltip,
 	useMediaQuery
 } from "@mui/material";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
@@ -766,21 +766,24 @@ const GeneratedResults = () => {
 }
 
 const TextToImageUI = () => {
-	const [positivePrompt, setPositivePrompt] = useState(localStorage.getItem("ai-art.positive") || "");
-	const [negativePrompt, setNegativePrompt] = useState(localStorage.getItem("ai-art.negative") || "");
+	const drawingParams = useMemo(() => JSON.parse(localStorage.getItem("aiArtDrawing")) || {}, []);
+	const updateDrawingParams = useCallback(() => localStorage.setItem("aiArtDrawing", JSON.stringify(drawingParams)), []);
 	
-	const [width, setWidth] = useState(Number(localStorage.getItem("ai-art.width")) || 512);
-	const [height, setHeight] = useState(Number(localStorage.getItem("ai-art.height")) || 512);
-	const [batchSize, setBatchSize] = useState(Number(localStorage.getItem("ai-art.batch-size")) || 1)
+	const [positivePrompt, setPositivePrompt] = useState(drawingParams.positive || "");
+	const [negativePrompt, setNegativePrompt] = useState(drawingParams.negative || "");
 	
-	const [professionalMode, setProfessionalMode] = useState(localStorage.getItem("ai-art.professional-mode") === "true");
-	const [steps, setSteps] = useState(Number(localStorage.getItem("ai-art.steps")) || 30);
-	const [cfg, setCfg] = useState(Number(localStorage.getItem("ai-art.cfg")) || 7);
+	const [width, setWidth] = useState(drawingParams.width || 512);
+	const [height, setHeight] = useState(drawingParams.height || 512);
+	const [batchSize, setBatchSize] = useState(drawingParams.batchSize || 1)
 	
-	const [modelName, setModelName] = useState(localStorage.getItem("ai-art.model-name") || modelList[0]);
-	const [samplerName, setSamplerName] = useState(localStorage.getItem("ai-art.sampler-name") || "dpmpp_2m");
-	const [scheduler, setScheduler] = useState(localStorage.getItem("ai-art.scheduler") || "karras");
-	const [usePromptOptimization, setUsePromptOptimization] = useState(localStorage.getItem("ai-art.prompt-optimization") === "true");
+	const [professionalMode, setProfessionalMode] = useState(drawingParams.professionalMode || false);
+	const [steps, setSteps] = useState(drawingParams.steps || 30);
+	const [cfg, setCfg] = useState(drawingParams.cfg || 7);
+	
+	const [modelName, setModelName] = useState(drawingParams.modelName || modelList[0]);
+	const [samplerName, setSamplerName] = useState(drawingParams.samplerName || "dpmpp_2m");
+	const [scheduler, setScheduler] = useState(drawingParams.scheduler || "karras");
+	const [usePromptOptimization, setUsePromptOptimization] = useState(drawingParams.promptOptimization || false);
 	
 	const [submitLoading, setSubmitLoading] = useState(false);
 	
@@ -825,7 +828,8 @@ const TextToImageUI = () => {
 							max={1024}
 							onChange={(event, value) => {
 								setWidth(value);
-								localStorage.setItem("ai-art.width", value.toString());
+								drawingParams.width = value;
+								updateDrawingParams();
 							}}
 							sx={{flex: 1}}
 						/>
@@ -841,7 +845,8 @@ const TextToImageUI = () => {
 							max={1024}
 							onChange={(event, value) => {
 								setHeight(value);
-								localStorage.setItem("ai-art.height", value.toString());
+								drawingParams.height = value;
+								updateDrawingParams();
 							}}
 							sx={{flex: 1}}
 						/>
@@ -856,7 +861,8 @@ const TextToImageUI = () => {
 							exclusive
 							onChange={(event, value) => {
 								setBatchSize(value);
-								localStorage.setItem("ai-art.batch-size", value.toString());
+								drawingParams.batchSize = value;
+								updateDrawingParams();
 							}}
 						>
 							<ToggleButton value={1} sx={{flex: 1}}>1</ToggleButton>
@@ -871,7 +877,8 @@ const TextToImageUI = () => {
 						高级
 						<Switch checked={professionalMode} onChange={(event, value) => {
 							setProfessionalMode(value);
-							localStorage.setItem("ai-art.professional-mode", value.toString());
+							drawingParams.professionalMode = value;
+							updateDrawingParams();
 						}}/>
 					</Grid>
 					<Grid container direction="column" spacing={2} display={professionalMode ? "flex" : "none"}>
@@ -884,7 +891,8 @@ const TextToImageUI = () => {
 								max={40}
 								onChange={(event, value) => {
 									setSteps(value);
-									localStorage.setItem("ai-art.steps", value.toString());
+									drawingParams.steps = value;
+									updateDrawingParams();
 								}}
 								sx={{flex: 1}}
 							/>
@@ -899,7 +907,8 @@ const TextToImageUI = () => {
 								max={30}
 								onChange={(event, value) => {
 									setCfg(value);
-									localStorage.setItem("ai-art.cfg", value.toString());
+									drawingParams.cfg = value;
+									updateDrawingParams();
 								}}
 								sx={{flex: 1}}
 							/>
@@ -916,7 +925,8 @@ const TextToImageUI = () => {
 									value={modelName}
 									onChange={(event) => {
 										setModelName(event.target.value);
-										localStorage.setItem("ai-art.model-name", event.target.value.toString());
+										drawingParams.modelName = event.target.value;
+										updateDrawingParams();
 									}}
 								>
 									{modelList.map((item, index) => (
@@ -934,7 +944,8 @@ const TextToImageUI = () => {
 									value={samplerName}
 									onChange={(event) => {
 										setSamplerName(event.target.value);
-										localStorage.setItem("ai-art.sampler-name", event.target.value.toString());
+										drawingParams.samplerName = event.target.value;
+										updateDrawingParams();
 									}}
 								>
 									{samplerList.map((item, index) => (
@@ -952,7 +963,8 @@ const TextToImageUI = () => {
 									value={scheduler}
 									onChange={(event) => {
 										setScheduler(event.target.value);
-										localStorage.setItem("ai-art.scheduler", event.target.value.toString());
+										drawingParams.scheduler = event.target.value;
+										updateDrawingParams();
 									}}
 								>
 									<MenuItem value="normal">Normal</MenuItem>
@@ -974,7 +986,8 @@ const TextToImageUI = () => {
 						value={positivePrompt}
 						onChange={(event) => {
 							setPositivePrompt(event.target.value);
-							localStorage.setItem("ai-art.positive", event.target.value.toString());
+							drawingParams.positive = event.target.value;
+							updateDrawingParams();
 						}}
 						multiline
 						maxRows={10}
@@ -989,7 +1002,8 @@ const TextToImageUI = () => {
 						value={negativePrompt}
 						onChange={(event) => {
 							setNegativePrompt(event.target.value);
-							localStorage.setItem("ai-art.negative", event.target.value.toString());
+							drawingParams.negative = event.target.value;
+							updateDrawingParams();
 						}}
 						multiline
 						maxRows={10}
@@ -1001,7 +1015,8 @@ const TextToImageUI = () => {
 							提示词增强
 							<Switch checked={usePromptOptimization} onChange={(event, value) => {
 								setUsePromptOptimization(value);
-								localStorage.setItem("ai-art.prompt-optimization", value.toString());
+								drawingParams.promptOptimization = value;
+								updateDrawingParams();
 							}}/>
 						</Grid>
 						<LoadingButton
@@ -1021,8 +1036,11 @@ const TextToImageUI = () => {
 }
 
 const Community = () => {
-	const [viewRange, setViewRange] = useState(localStorage.getItem("ai-art.view-range") || "get-all");
-	const [sortMethod, setSortMethod] = useState(localStorage.getItem("ai-art.sort-method") || "latest");
+	const communityParams = useMemo(() => JSON.parse(localStorage.getItem("aiArtCommunity")) || {}, []);
+	const updateCommunityParams = useCallback(() => localStorage.setItem("aiArtCommunity", JSON.stringify(communityParams)), []);
+	
+	const [viewRange, setViewRange] = useState(communityParams.viewRange || "get-all");
+	const [sortMethod, setSortMethod] = useState(communityParams.sortMethod || "latest");
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: [`ai-art-community-${viewRange}-${sortMethod}`],
@@ -1076,7 +1094,8 @@ const Community = () => {
 						value={sortMethod}
 						onChange={(event) => {
 							setSortMethod(event.target.value);
-							localStorage.setItem("ai-art.sort-method", event.target.value.toString());
+							communityParams.sortMethod = event.target.value;
+							updateCommunityParams();
 						}}
 					>
 						<MenuItem value="latest">最新</MenuItem>
@@ -1092,7 +1111,8 @@ const Community = () => {
 						value={viewRange}
 						onChange={(event) => {
 							setViewRange(event.target.value);
-							localStorage.setItem("ai-art.view-range", event.target.value);
+							communityParams.viewRange = event.target.value;
+							updateCommunityParams();
 							pageNumberNew.current = 0;
 							pageNumberCurrent.current = 0;
 						}}
@@ -1349,14 +1369,14 @@ const Community = () => {
 export default function AIArt() {
 	document.title = "AI绘图 - chy.web";
 	
-	const [menuValue, setMenuValue] = useState(Number(localStorage.getItem("ai-art.page-index")) || 0);
+	const [menuValue, setMenuValue] = useState(Number(localStorage.getItem("aiArtPageIndex")) || 0);
 	
 	return (
 		<Grid container direction="column" sx={{flex: 1}}>
 			<Box sx={{mb: 2.5}} maxWidth="100%">
 				<Tabs value={menuValue} onChange={(event, value) => {
 					setMenuValue(value);
-					localStorage.setItem("ai-art.page-index", value.toString());
+					localStorage.setItem("aiArtPageIndex", value.toString());
 				}} centered>
 					<Tab label="文生图"/>
 					<Tab label="我的请求"/>
