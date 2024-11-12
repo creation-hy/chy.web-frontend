@@ -44,7 +44,7 @@ html, body, #root {
 	display: -webkit-box;
 	display: -ms-flexbox;
 	display: flex;
-	width: auto;
+	width: 100%;
 }
 
 .my-masonry-grid_column {
