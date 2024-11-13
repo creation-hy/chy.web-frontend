@@ -65,7 +65,7 @@ export default function ChybenchRanking() {
 	
 	return (
 		<Box>
-			<Grid container justifyContent="center" spacing={2}>
+			<Grid container justifyContent="center" spacing={2} sx={{mb: 2}}>
 				<FormControl margin="dense">
 					<InputLabel id="select-item">
 						项目
@@ -107,7 +107,7 @@ export default function ChybenchRanking() {
 						<MenuItem value={2}>低</MenuItem>
 					</Select>
 				</FormControl>
-			</Grid><br/>
+			</Grid>
 			<RankingTable/>
 		</Box>
 	);

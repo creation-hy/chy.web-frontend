@@ -273,7 +273,7 @@ export default function Chybench() {
 	}
 	
 	return (
-		<Grid container direction="column" sx={{alignItems: "center", width: "100%"}} spacing={3}>
+		<Grid container direction="column" sx={{alignItems: "center", width: "100%"}} spacing={2}>
 			<Card variant="outlined" sx={{padding: 3, width: "100%", maxWidth: 800}}>
 				<Typography>
 					CPU线程数：{cores}<br/>
@@ -282,7 +282,7 @@ export default function Chybench() {
 					浏览器：{browser}
 				</Typography>
 			</Card>
-			<Grid container spacing={2}>
+			<Grid container spacing={2} sx={{mt: 0.5}}>
 				<FormControl>
 					<InputLabel id="size-label">负载</InputLabel>
 					<Select

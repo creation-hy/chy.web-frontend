@@ -23,7 +23,6 @@ import {
 	LightMode,
 	SportsEsportsOutlined
 } from "@mui/icons-material";
-import {isMobile} from "react-device-detect";
 import {useColorMode} from "src/components/ColorMode.jsx";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
@@ -55,7 +54,7 @@ export const AppAppBar = memo(() => {
 		<AppBar
 			position="sticky"
 			id="app-bar"
-			sx={{boxShadow: 0, backgroundColor: 'transparent', backgroundImage: 'none', top: 0, py: isMobile ? 2 : 3}}
+			sx={{boxShadow: 0, backgroundColor: 'transparent', backgroundImage: 'none', top: 0, pt: 2, pb: 2}}
 		>
 			<Container maxWidth="lg">
 				<StyledToolbar variant="dense" disableGutters>
@@ -67,8 +66,8 @@ export const AppAppBar = memo(() => {
 									<ChatBubbleOutline/>
 								</Badge>
 							</Button>
-							<Button variant="text" href="/ai-art">
-								<DrawOutlined/>
+							<Button variant="text" href="/ai-art" sx={{textTransform: 'none'}}>
+								AI Art
 							</Button>
 							<Button variant="text" href="https://creation-hy.top:8080/greedy-snake">
 								贪吃蛇
@@ -89,10 +88,10 @@ export const AppAppBar = memo(() => {
 								Blog
 							</Button>
 							<Button variant="text" href="/ranking">
-								<LeaderboardOutlined/>
+								排行榜
 							</Button>
 							<Button variant="text" href="/about">
-								<InfoOutlined/>
+								关于
 							</Button>
 						</Box>
 					</Box>

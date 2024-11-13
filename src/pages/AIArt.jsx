@@ -1084,7 +1084,7 @@ const Community = () => {
 	
 	return (
 		<Grid container direction="column" alignItems="flex-end" wrap="nowrap" width="100%">
-			<Grid container spacing={1} sx={{mb: 1.25, mt: isSmallScreen ? 0 : -8.25}}>
+			<Grid container spacing={1} sx={{mb: 1, mt: isSmallScreen ? 0 : -8}}>
 				<FormControl>
 					<InputLabel id="sort-method-label">排序规则</InputLabel>
 					<Select
@@ -1373,7 +1373,7 @@ export default function AIArt() {
 	
 	return (
 		<Grid container direction="column" sx={{flex: 1}}>
-			<Box sx={{mb: 2.5}} maxWidth="100%">
+			<Box sx={{mb: 2}} maxWidth="100%">
 				<Tabs value={menuValue} onChange={(event, value) => {
 					setMenuValue(value);
 					localStorage.setItem("aiArtPageIndex", value.toString());

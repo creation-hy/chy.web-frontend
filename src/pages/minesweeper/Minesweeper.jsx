@@ -168,9 +168,9 @@ export default function Minesweeper() {
 	return (
 		<Box>
 			<InitDialog setGrid={setGrid} setElapsedTime={setElapsedTime}/>
-			<Grid container justifyContent="center">
+			<Grid container justifyContent="center" sx={{mb: 2}}>
 				<Typography variant="h4">{elapsedTime}</Typography>
-			</Grid><br/>
+			</Grid>
 			<Grid container direction="column">
 				{grid == null ? <Alert severity="error">你被炸死了！</Alert> :
 					grid.map((item, rowIndex) => (

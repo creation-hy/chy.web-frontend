@@ -20,14 +20,13 @@ import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Start from "src/pages/Start.jsx";
-import {isMobile} from "react-device-detect";
 import {memo} from "react";
 import {Fab, useScrollTrigger, Zoom} from "@mui/material";
 import {KeyboardArrowUpOutlined} from "@mui/icons-material";
 
 const PageContainer = memo(() => {
 	return (
-		<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%", pb: isMobile ? 2 : 3}}>
+		<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%", pb: 2}}>
 			<AppAppBar/>
 			<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
 				<BrowserRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
