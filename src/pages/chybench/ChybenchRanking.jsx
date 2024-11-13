@@ -18,7 +18,7 @@ export default function ChybenchRanking() {
 	document.title = "排行榜 - Chybench - chy.web";
 	
 	const rankingParams = useMemo(() => JSON.parse(localStorage.getItem("chybenchRanking")) || {}, []);
-	const updateRankingParams = useCallback(() => localStorage.setItem("chybenchRanking", JSON.stringify(rankingParams)), []);
+	const updateRankingParams = useCallback(() => localStorage.setItem("chybenchRanking", JSON.stringify(rankingParams)), [rankingParams]);
 	
 	const [rankingItem, setItem] = useState(rankingParams.item || "gpuScore");
 	const [rankingSize, setSize] = useState(rankingParams.size || 0);

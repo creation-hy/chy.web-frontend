@@ -469,7 +469,7 @@ const ScrollTop = ({children, messageCard}) => {
 			else
 				setTrigger(false);
 		});
-	}, []);
+	}, [messageCard]);
 	
 	if (!messageCard.current || messageCard.current.display === "none")
 		return null;
@@ -489,6 +489,11 @@ const ScrollTop = ({children, messageCard}) => {
 			</Box>
 		</Fade>
 	);
+}
+
+ScrollTop.propTypes = {
+	children: PropTypes.node,
+	messageCard: PropTypes.object.isRequired,
 }
 
 export default function Chat() {
@@ -583,7 +588,7 @@ export default function Chat() {
 			setShowScrollTop(true);
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
-	}, [setClientUser]);
+	}, [messageCardScrollTo, setClientUser]);
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["contacts"],
@@ -678,7 +683,7 @@ export default function Chat() {
 		if (scrollTop + clientHeight + 50 >= scrollHeight) {
 			messageCardScrollTo(0, "smooth");
 		}
-	}, [updateUserItem]);
+	}, [messageCardScrollTo, updateUserItem]);
 	
 	let firstRebirth = useRef(false);
 	

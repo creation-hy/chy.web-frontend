@@ -767,7 +767,7 @@ const GeneratedResults = () => {
 
 const TextToImageUI = () => {
 	const drawingParams = useMemo(() => JSON.parse(localStorage.getItem("aiArtDrawing")) || {}, []);
-	const updateDrawingParams = useCallback(() => localStorage.setItem("aiArtDrawing", JSON.stringify(drawingParams)), []);
+	const updateDrawingParams = useCallback(() => localStorage.setItem("aiArtDrawing", JSON.stringify(drawingParams)), [drawingParams]);
 	
 	const [positivePrompt, setPositivePrompt] = useState(drawingParams.positive || "");
 	const [negativePrompt, setNegativePrompt] = useState(drawingParams.negative || "");
@@ -1037,7 +1037,7 @@ const TextToImageUI = () => {
 
 const Community = () => {
 	const communityParams = useMemo(() => JSON.parse(localStorage.getItem("aiArtCommunity")) || {}, []);
-	const updateCommunityParams = useCallback(() => localStorage.setItem("aiArtCommunity", JSON.stringify(communityParams)), []);
+	const updateCommunityParams = useCallback(() => localStorage.setItem("aiArtCommunity", JSON.stringify(communityParams)), [communityParams]);
 	
 	const [viewRange, setViewRange] = useState(communityParams.viewRange || "get-all");
 	const [sortMethod, setSortMethod] = useState(communityParams.sortMethod || "latest");
@@ -1077,7 +1077,7 @@ const Community = () => {
 		if (lastImageRef.current) {
 			pageLoadingObserver.observe(lastImageRef.current);
 		}
-	}, [imageList]);
+	}, [imageList, pageLoadingObserver]);
 	
 	if (isLoading || error || !imageList)
 		return null;

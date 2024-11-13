@@ -42,7 +42,7 @@ export default defineConfig({
 		rollupOptions: {
 			output: {
 				manualChunks(id) {
-					const match = id.match(/node_modules\/([^\/]*)/);
+					const match = id.match(/node_modules\/([^/]*)/);
 					
 					if (match) {
 						if (match[1] === "highlight.js" || match[1] === "@mui" || match[1] === "react-syntax-highlighter") {

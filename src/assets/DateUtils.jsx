@@ -83,7 +83,6 @@ export const convertDateToLocaleOffsetString = (inputDate) => {
 		return "";
 	}
 	
-	const localeTimeString = date.toLocaleTimeString().substring(0, 5);
 	const dayOfYearOffset = getDayOfYear(currentDate) - getDayOfYear(date);
 	const monthOffset = (currentDate.getFullYear() - date.getFullYear()) * 12 + (currentDate.getMonth() - date.getMonth());
 	const hourOffset = (currentDate.getDate() !== date.getDate() ? 24 : 0) + (currentDate.getHours() - date.getHours());
