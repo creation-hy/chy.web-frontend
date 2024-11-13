@@ -20,9 +20,38 @@ import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Start from "src/pages/Start.jsx";
-import {Fab, Fade, useScrollTrigger} from "@mui/material";
-import {KeyboardArrowUpOutlined} from "@mui/icons-material";
 import {isMobile} from "react-device-detect";
+import {memo} from "react";
+import {Fab, useScrollTrigger, Zoom} from "@mui/material";
+import {KeyboardArrowUpOutlined} from "@mui/icons-material";
+
+const PageContainer = memo(() => {
+	return (
+		<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%", pb: isMobile ? 2 : 3}}>
+			<AppAppBar/>
+			<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
+				<BrowserRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
+					<Routes>
+						<Route path="/" element={<Chat/>}/>
+						<Route path="/about" element={<Start/>}/>
+						<Route path="/blog" element={<Blog/>}/>
+						<Route path="/login" element={<SignIn/>}/>
+						<Route path="/register" element={<SignUp/>}/>
+						<Route path="/user/:username" element={<User/>}/>
+						<Route path="/ranking" element={<Ranking/>}/>
+						<Route path="/ai-art" element={<AIArt/>}/>
+						<Route path="/chybench" element={<Chybench/>}/>
+						<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
+						<Route path="/minesweeper" element={<Minesweeper/>}/>
+						<Route path="/chat" element={<Chat/>}/>
+						<Route path="/chat/:username" element={<Chat/>}/>
+						<Route path="*" element={<Error/>}/>
+					</Routes>
+				</BrowserRouter>
+			</Container>
+		</Box>
+	);
+});
 
 export default function App() {
 	const [binaryColorMode] = useBinaryColorMode();
@@ -41,7 +70,7 @@ export default function App() {
 		<ThemeProvider theme={createTheme(getDefaultTheme(binaryColorMode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
-			<Fade in={trigger}>
+			<Zoom in={trigger}>
 				<Box
 					onClick={handleClick}
 					role="presentation"
@@ -51,30 +80,8 @@ export default function App() {
 						<KeyboardArrowUpOutlined/>
 					</Fab>
 				</Box>
-			</Fade>
-			<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%", pb: isMobile ? 2 : 3}}>
-				<AppAppBar/>
-				<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
-					<BrowserRouter>
-						<Routes>
-							<Route path="/" element={<Chat/>}/>
-							<Route path="/about" element={<Start/>}/>
-							<Route path="/blog" element={<Blog/>}/>
-							<Route path="/login" element={<SignIn/>}/>
-							<Route path="/register" element={<SignUp/>}/>
-							<Route path="/user/:username" element={<User/>}/>
-							<Route path="/ranking" element={<Ranking/>}/>
-							<Route path="/ai-art" element={<AIArt/>}/>
-							<Route path="/chybench" element={<Chybench/>}/>
-							<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
-							<Route path="/minesweeper" element={<Minesweeper/>}/>
-							<Route path="/chat" element={<Chat/>}/>
-							<Route path="/chat/:username" element={<Chat/>}/>
-							<Route path="*" element={<Error/>}/>
-						</Routes>
-					</BrowserRouter>
-				</Container>
-			</Box>
+			</Zoom>
+			<PageContainer/>
 		</ThemeProvider>
 	);
 }
