@@ -114,8 +114,8 @@ const samplerDisplayNameList = [
 	"DPM Adaptive",
 ];
 
-const optimizationPositiveTags = "masterpiece, best quality, best quality, Amazing, finely detail, Depth of field, extremely detailed CG unity 8k wallpaper, ";
-const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers:1.5 ), (long body :1.3), (mutation, poorly drawn :1.2) , black-white, bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated, anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers, lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body, fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts, heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand, missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs, fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears, fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears, heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers, one hand with more than 5 fingers, one hand with less than 5 fingers, one hand owith more than 5 digit, one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit, colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts, signature, 3D, 3D game, 3D game scene, 3D character, malformed feet, extra feet, bad feet, poorly drawn feet, fused feet, missing feet, extra shoes, bad shoes, fused shoes, more than two shoes, poorly drawn shoes, bad gloves, poorly drawn gloves, fused gloves, bad cum, poorly drawn cum, fused cum, bad hairs, poorly drawn hairs, fused hairs, big muscles, ugly, bad face, fused face, poorly drawn face, cloned face, big face, long face, bad eyes, fused eyes poorly drawn eyes, extra eyes, malformed limbs, "
+const optimizationPositiveTags = "masterpiece, best quality, Amazing, finely detail, Depth of field, extremely detailed CG unity 8k wallpaper, ";
+const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers: 1.5), (long body: 1.3), (mutation, poorly drawn: 1.2) , black-white, bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated, anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers, lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body, fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts, heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand, missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs, fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears, fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears, heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers, one hand with more than 5 fingers, one hand with less than 5 fingers, one hand owith more than 5 digit, one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit, colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts, signature, 3D, 3D game, 3D game scene, 3D character, malformed feet, extra feet, bad feet, poorly drawn feet, fused feet, missing feet, extra shoes, bad shoes, fused shoes, more than two shoes, poorly drawn shoes, bad gloves, poorly drawn gloves, fused gloves, bad cum, poorly drawn cum, fused cum, bad hairs, poorly drawn hairs, fused hairs, big muscles, ugly, bad face, fused face, poorly drawn face, cloned face, big face, long face, bad eyes, fused eyes poorly drawn eyes, extra eyes, malformed limbs, "
 
 const MyRequests = () => {
 	const {data, isLoading, error} = useQuery({
@@ -769,21 +769,21 @@ const TextToImageUI = () => {
 	const drawingParams = useMemo(() => JSON.parse(localStorage.getItem("aiArtDrawing")) || {}, []);
 	const updateDrawingParams = useCallback(() => localStorage.setItem("aiArtDrawing", JSON.stringify(drawingParams)), [drawingParams]);
 	
-	const [positivePrompt, setPositivePrompt] = useState(drawingParams.positive || "");
-	const [negativePrompt, setNegativePrompt] = useState(drawingParams.negative || "");
+	const [positivePrompt, setPositivePrompt] = useState(drawingParams.positive ?? "");
+	const [negativePrompt, setNegativePrompt] = useState(drawingParams.negative ?? "");
 	
-	const [width, setWidth] = useState(drawingParams.width || 512);
-	const [height, setHeight] = useState(drawingParams.height || 512);
-	const [batchSize, setBatchSize] = useState(drawingParams.batchSize || 1)
+	const [width, setWidth] = useState(drawingParams.width ?? 512);
+	const [height, setHeight] = useState(drawingParams.height ?? 512);
+	const [batchSize, setBatchSize] = useState(drawingParams.batchSize ?? 1)
 	
-	const [professionalMode, setProfessionalMode] = useState(drawingParams.professionalMode || false);
-	const [steps, setSteps] = useState(drawingParams.steps || 30);
-	const [cfg, setCfg] = useState(drawingParams.cfg || 7);
+	const [professionalMode, setProfessionalMode] = useState(drawingParams.professionalMode ?? false);
+	const [steps, setSteps] = useState(drawingParams.steps ?? 30);
+	const [cfg, setCfg] = useState(drawingParams.cfg ?? 7);
 	
-	const [modelName, setModelName] = useState(drawingParams.modelName || modelList[0]);
-	const [samplerName, setSamplerName] = useState(drawingParams.samplerName || "dpmpp_2m");
-	const [scheduler, setScheduler] = useState(drawingParams.scheduler || "karras");
-	const [usePromptOptimization, setUsePromptOptimization] = useState(drawingParams.promptOptimization || false);
+	const [modelName, setModelName] = useState(drawingParams.modelName ?? modelList[0]);
+	const [samplerName, setSamplerName] = useState(drawingParams.samplerName ?? "dpmpp_2m");
+	const [scheduler, setScheduler] = useState(drawingParams.scheduler ?? "karras");
+	const [usePromptOptimization, setUsePromptOptimization] = useState(drawingParams.promptOptimization ?? false);
 	
 	const [submitLoading, setSubmitLoading] = useState(false);
 	
@@ -1039,8 +1039,8 @@ const Community = () => {
 	const communityParams = useMemo(() => JSON.parse(localStorage.getItem("aiArtCommunity")) || {}, []);
 	const updateCommunityParams = useCallback(() => localStorage.setItem("aiArtCommunity", JSON.stringify(communityParams)), [communityParams]);
 	
-	const [viewRange, setViewRange] = useState(communityParams.viewRange || "get-all");
-	const [sortMethod, setSortMethod] = useState(communityParams.sortMethod || "latest");
+	const [viewRange, setViewRange] = useState(communityParams.viewRange ?? "get-all");
+	const [sortMethod, setSortMethod] = useState(communityParams.sortMethod ?? "latest");
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: [`ai-art-community-${viewRange}-${sortMethod}`],
@@ -1369,7 +1369,7 @@ const Community = () => {
 export default function AIArt() {
 	document.title = "AI绘图 - chy.web";
 	
-	const [menuValue, setMenuValue] = useState(Number(localStorage.getItem("aiArtPageIndex")) || 0);
+	const [menuValue, setMenuValue] = useState(Number(localStorage.getItem("aiArtPageIndex")) ?? 0);
 	
 	return (
 		<Grid container direction="column" sx={{flex: 1}}>

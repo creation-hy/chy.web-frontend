@@ -183,8 +183,8 @@ const workerScript = URL.createObjectURL(new Blob([workerCode], {type: "applicat
 export default function Chybench() {
 	document.title = "Chybench - chy.web";
 	
-	const [size, setSize] = useState(chybenchParams.size || 1);
-	const [rounds, setRounds] = useState(chybenchParams.rounds || 10);
+	const [size, setSize] = useState(chybenchParams.size ?? 1);
+	const [rounds, setRounds] = useState(chybenchParams.rounds ?? 10);
 	const [cpuSingleProgress, setCPUSingleProgress] = useState(0);
 	const [cpuMultiProgress, setCPUMultiProgress] = useState(0);
 	const [gpuProgress, setGPUProgress] = useState(0);

@@ -20,8 +20,8 @@ export default function ChybenchRanking() {
 	const rankingParams = useMemo(() => JSON.parse(localStorage.getItem("chybenchRanking")) || {}, []);
 	const updateRankingParams = useCallback(() => localStorage.setItem("chybenchRanking", JSON.stringify(rankingParams)), [rankingParams]);
 	
-	const [rankingItem, setItem] = useState(rankingParams.item || "gpuScore");
-	const [rankingSize, setSize] = useState(rankingParams.size || 0);
+	const [rankingItem, setItem] = useState(rankingParams.item ?? "gpuScore");
+	const [rankingSize, setSize] = useState(rankingParams.size ?? 0);
 	
 	const RankingTable = () => {
 		const {data, isLoading, error} = useQuery({
