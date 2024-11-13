@@ -28,7 +28,7 @@ import {UserAvatar} from "src/components/UserAvatar.jsx";
 
 const InfoContainer = memo(({value, info}) => {
 	const opt = value === 0 ? "info" : (value === 1 ? "chat" : (value === 2 ? "following" : "follower"));
-	const url = opt === "chat" ? "/chat/-1" : "/" + opt;
+	const url = opt === "chat" ? "/chat/0" : "/" + opt;
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: [opt],
@@ -38,23 +38,32 @@ const InfoContainer = memo(({value, info}) => {
 	const [chatList, setChatList] = useState([]);
 	const chatListRef = useRef(-1);
 	
-	useEffect(() => {
-		if (!error && !isLoading && value === 1) {
-			setChatList([...data.result]);
-			chatListRef.current = data.result;
-			let lastScrollStartId = -1;
-			window.addEventListener("scroll", () => {
-				if (document.documentElement.scrollHeight - window.scrollY - window.innerHeight <= 50 &&
-					lastScrollStartId !== chatListRef.current[chatListRef.current.length - 1].id - 1) {
-					lastScrollStartId = chatListRef.current[chatListRef.current.length - 1].id - 1;
-					axios.get("/api/user/" + info.username + "/chat/" + lastScrollStartId).then(res => {
-						chatListRef.current = [...chatListRef.current, ...res.data.result];
-						setChatList([...chatListRef.current]);
-					});
-				}
+	const pageNumberCurrent = useRef(0);
+	const pageNumberNew = useRef(0);
+	const lastMessageRef = useRef(null);
+	const pageLoadingObserver = useRef(new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
+			pageNumberNew.current = pageNumberCurrent.current + 1;
+			axios.get(`/api/user/${info.username}/chat/${pageNumberNew.current}`).then(res => {
+				chatListRef.current = [...chatListRef.current, ...res.data.result];
+				setChatList([...chatListRef.current]);
 			});
 		}
-	}, [data, error, info.username, isLoading, value]);
+	}));
+	
+	useEffect(() => {
+		if (data && data.result && value === 1) {
+			setChatList([...data.result]);
+			chatListRef.current = data.result;
+		}
+	}, [data, info.username, value]);
+	
+	useEffect(() => {
+		pageNumberCurrent.current = pageNumberNew.current;
+		if (lastMessageRef.current) {
+			pageLoadingObserver.current.observe(lastMessageRef.current);
+		}
+	}, [chatList]);
 	
 	if (!data)
 		return null;
@@ -71,7 +80,14 @@ const InfoContainer = memo(({value, info}) => {
 		return (
 			<Box>
 				{chatList.map((item) => (
-					<Grid container key={item.id} justifyContent='flex-start' alignItems="flex-start" sx={{my: 2.5}}>
+					<Grid
+						container
+						key={item.id}
+						ref={item === chatList[chatList.length - 1] ? lastMessageRef : undefined}
+						justifyContent='flex-start'
+						alignItems="flex-start"
+						sx={{my: 2.5}}
+					>
 						<IconButton sx={{mr: 1.5, p: 0}}>
 							<UserAvatar username={info.username} displayName={info.displayName}/>
 						</IconButton>
