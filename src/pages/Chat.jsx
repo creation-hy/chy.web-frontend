@@ -53,8 +53,7 @@ import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
-import dexie from "src/assets/dexie.jsx";
-import debounce from "lodash/debounce";
+import {throttle} from "lodash";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -62,34 +61,28 @@ let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSe
 let usersVar = [], messagesVar = [];
 let socket, stomp;
 
-const getDraft = async (username, contact) =>
-	await dexie.chatDraft.where("[username+contact]").equals([username, contact]).first();
-
-const saveDraft = debounce((contact, content) => {
-	getDraft(myname, contact).then(res => {
-		if (!res) {
-			dexie.chatDraft.add({
-				username: myname,
-				contact: contact,
-				content: content,
-				creationTime: new Date(),
-			});
-		} else {
-			dexie.chatDraft.update(res.id, {
-				content: content,
-				creationTime: new Date(),
-			});
-		}
+const uploadDraft = (contact, content) => {
+	axios.post("/api/chat/draft/save", {contact: contact, content: content}, {
+		headers: {
+			"Content-Type": "application/json",
+		},
 	});
+};
+
+const uploadDraftThrottle = throttle(uploadDraft, 2000);
+
+const saveDraft = throttle((contact, content, setUsers) => {
+	usersVar = usersVar.map(user => (
+		user.username === contact ? ({
+			...usersVar.find(item => item.username === contact),
+			draft: content,
+		}) : user)
+	);
+	setUsers([...usersVar]);
+	uploadDraftThrottle(contact, content);
 }, 100);
 
-function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, displayNameNode}) {
-	const [draft, setDraft] = useState(null);
-	
-	getDraft(myname, username).then(res => {
-		setDraft(res && res.content ? res.content : undefined);
-	});
-	
+function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode}) {
 	return (
 		<>
 			<ListItemAvatar>
@@ -151,7 +144,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 						</Typography>}
 					</Grid>
 				}
-				secondary={draft === null ? "\u00A0" : (draft ? (
+				secondary={draft ? (
 					<Typography variant="body2" color="primary" noWrap textOverflow="ellipsis">
 						[草稿] {draft.toString()}
 					</Typography>
@@ -159,7 +152,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 					<Typography variant="body2" color="text.secondary" noWrap textOverflow="ellipsis">
 						{lastMessageText}
 					</Typography>
-				))}
+				)}
 			/>
 		</>
 	);
@@ -172,6 +165,7 @@ UserItem.propTypes = {
 	newMessageCount: PropTypes.number,
 	lastMessageTime: PropTypes.string,
 	lastMessageText: PropTypes.string,
+	draft: PropTypes.string,
 	displayNameNode: PropTypes.node,
 }
 
@@ -577,14 +571,14 @@ export default function Chat() {
 		const isCurrentUser = currentUserVar === username;
 		
 		if (!isCurrentUser) {
+			if (messageInput.current) {
+				uploadDraft(currentUserVar, messageInput.current.value);
+			}
 			setShowScrollTop(false);
 			currentUserVar = username;
 			setCurrentUser(username);
-			getDraft(myname, username).then(res => {
-				messageInput.current.value = res && res.content ? res.content : "";
-			});
-			navigate.current("/chat/" + username);
 			setQuote(null);
+			navigate.current("/chat/" + username);
 		}
 		
 		if (isMobile) {
@@ -606,13 +600,15 @@ export default function Chat() {
 		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
 			const userItem = usersVar.find(item => item.username === username);
 			if (userItem) {
-				if (clientUserRef.current)
+				if (clientUserRef.current) {
 					setClientUser({
 						...clientUserRef.current,
 						newMessageCount: Math.max(0, clientUserRef.current.newMessageCount - userItem.newMessageCount),
 					});
+				}
 				userItem.newMessageCount = 0;
 				setUsers([...usersVar]);
+				messageInput.current.value = userItem.draft ? userItem.draft : "";
 			}
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
 			messagesVar = startId === -1 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
@@ -898,6 +894,7 @@ export default function Chat() {
 								isOnline={false}
 								newMessageCount={users.find(item => item.username === "ChatRoomSystem").newMessageCount}
 								lastMessageTime={users.find(item => item.username === "ChatRoomSystem").lastMessageTime}
+								draft={users.find(item => item.username === "ChatRoomSystem").draft}
 								lastMessageText={users.find(item => item.username === "ChatRoomSystem").lastMessageText}
 							/>}
 						</ListItemButton>
@@ -917,6 +914,7 @@ export default function Chat() {
 									newMessageCount={user.newMessageCount}
 									lastMessageTime={user.lastMessageTime}
 									lastMessageText={user.lastMessageText}
+									draft={user.draft}
 								/>
 							</ListItemButton>
 						))}
@@ -953,6 +951,7 @@ export default function Chat() {
 										newMessageCount={0}
 										lastMessageTime={user.lastMessageTime}
 										lastMessageText={user.lastMessageText || "\u00A0"}
+										draft={user.draft}
 										displayNameNode={
 											<>
 												{beforeHighlight}
@@ -1080,7 +1079,7 @@ export default function Chat() {
 									sendMessage();
 							}
 						}}
-						onChange={(event) => saveDraft(currentUserVar, event.target.value)}
+						onChange={(event) => saveDraft(currentUserVar, event.target.value, setUsers)}
 					/>
 					<Grid container justifyContent="space-between">
 						<ChatToolBar inputField={messageInput}/>
