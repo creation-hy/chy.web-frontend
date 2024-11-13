@@ -65,7 +65,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import DialogContent from "@mui/material/DialogContent";
 import {TransitionGroup} from "react-transition-group";
-import {UserSimpleItem} from "src/components/UserItem.jsx";
+import {SimpleUserItem} from "src/components/UserItem.jsx";
 import {isIOS} from "react-device-detect";
 
 const modelList = [
@@ -1344,7 +1344,7 @@ const Community = () => {
 								详细信息
 							</AccordionSummary>
 							<AccordionDetails sx={{maxHeight: "calc(40vh - 48px)", overflowY: "auto"}}>
-								<UserSimpleItem username={imagePreviewData.username} displayName={imagePreviewData.displayName} sx={{mb: 0.5}}/>
+								<SimpleUserItem username={imagePreviewData.username} displayName={imagePreviewData.displayName} sx={{mb: 0.5}}/>
 								模型：{modelDisplayNameList[modelList.indexOf(imagePreviewData.modelName)]}<br/>
 								尺寸：{imagePreviewData.width}*{imagePreviewData.height}<br/>
 								生成时间：{convertDateToLocaleOffsetString(imagePreviewData.creationDate)}<br/>

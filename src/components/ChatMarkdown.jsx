@@ -8,8 +8,9 @@ import SyntaxHighlighter from "react-syntax-highlighter";
 import {tomorrow, tomorrowNight} from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import remarkBreaks from "remark-breaks";
+import {memo} from "react";
 
-export const ChatMarkdown = ({children, ...props}) => {
+export const ChatMarkdown = memo(({children, ...props}) => {
 	if (!children)
 		children = "";
 	
@@ -89,7 +90,7 @@ export const ChatMarkdown = ({children, ...props}) => {
 			{md}
 		</Markdown>
 	)
-}
+});
 
 ChatMarkdown.propTypes = {
 	children: PropTypes.string,

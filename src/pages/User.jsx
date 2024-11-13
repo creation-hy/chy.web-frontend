@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
-import {useEffect, useRef, useState} from "react";
+import {memo, useEffect, useRef, useState} from "react";
 import {Alert, InputLabel, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
@@ -26,7 +26,7 @@ import ResetPassword from "src/components/ResetPassword.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
 
-function InfoContainer({value, info}) {
+const InfoContainer = memo(({value, info}) => {
 	const opt = value === 0 ? "info" : (value === 1 ? "chat" : (value === 2 ? "following" : "follower"));
 	const url = opt === "chat" ? "/chat/-1" : "/" + opt;
 	
@@ -116,7 +116,7 @@ function InfoContainer({value, info}) {
 			))}
 		</Grid>
 	);
-}
+});
 
 InfoContainer.propTypes = {
 	value: PropTypes.number.isRequired,

@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import Cookies from "js-cookie";
-import {UserSimpleItem} from "src/components/UserItem.jsx";
+import {SimpleUserItem} from "src/components/UserItem.jsx";
 
 const myname = Cookies.get("username");
 
@@ -41,7 +41,7 @@ export default function Ranking() {
 									<TableRow key={index} selected={rowData.username === myname}>
 										{rowData.row.map((cellItem, index) => (
 											<TableCell key={index}>{table.index[index] === "用户" ?
-												<UserSimpleItem username={rowData.username} displayName={rowData.displayName}/> :
+												<SimpleUserItem username={rowData.username} displayName={rowData.displayName}/> :
 												<Typography>{cellItem}</Typography>
 											}</TableCell>
 										))}

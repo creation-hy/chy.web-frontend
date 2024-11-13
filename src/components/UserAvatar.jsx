@@ -1,7 +1,8 @@
 import PropTypes from "prop-types";
 import Avatar from "@mui/material/Avatar";
+import {memo} from "react";
 
-export const UserAvatar = ({username, displayName, width, height, ...props}) => {
+export const UserAvatar = memo(({username, displayName, width, height, ...props}) => {
 	return (
 		<Avatar src={`/avatars/${username}.webp`}
 		        alt={displayName}
@@ -9,7 +10,7 @@ export const UserAvatar = ({username, displayName, width, height, ...props}) => 
 		        {...props}
 		/>
 	);
-}
+});
 
 UserAvatar.propTypes = {
 	username: PropTypes.string.isRequired,

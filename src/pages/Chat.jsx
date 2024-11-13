@@ -1,4 +1,4 @@
-import {Fragment, useCallback, useEffect, useRef, useState} from "react";
+import {Fragment, memo, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
 import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, Zoom} from "@mui/material";
@@ -82,7 +82,7 @@ const saveDraft = throttle((contact, content, setUsers) => {
 	uploadDraftThrottle(contact, content);
 }, 100);
 
-function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode}) {
+const UserItem = memo(({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode}) => {
 	return (
 		<>
 			<ListItemAvatar>
@@ -156,7 +156,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 			/>
 		</>
 	);
-}
+});
 
 UserItem.propTypes = {
 	username: PropTypes.string,
@@ -169,7 +169,7 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-const Message = ({messageId, username, displayName, content, quote, setQuote}) => {
+const Message = memo(({messageId, username, displayName, content, quote, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	
@@ -287,7 +287,7 @@ const Message = ({messageId, username, displayName, content, quote, setQuote}) =
 			</Menu>
 		</Grid>
 	);
-};
+});
 
 Message.propTypes = {
 	messageId: PropTypes.number,
@@ -318,7 +318,7 @@ const notify = (title, body, iconId) => {
 	}
 };
 
-const ChatToolBar = (inputField) => {
+const ChatToolBar = memo((inputField) => {
 	const [binaryColorMode] = useBinaryColorMode();
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -476,13 +476,13 @@ const ChatToolBar = (inputField) => {
 			</Dialog>
 		</>
 	);
-}
+});
 
 ChatToolBar.propTypes = {
 	inputField: PropTypes.object.isRequired,
 }
 
-const ScrollTop = ({children, messageCard}) => {
+const ScrollTop = memo(({children, messageCard}) => {
 	const [trigger, setTrigger] = useState(false);
 	
 	useEffect(() => {
@@ -512,7 +512,7 @@ const ScrollTop = ({children, messageCard}) => {
 			</Box>
 		</Zoom>
 	);
-}
+});
 
 ScrollTop.propTypes = {
 	children: PropTypes.node,

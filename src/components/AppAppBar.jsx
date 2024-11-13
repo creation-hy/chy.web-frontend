@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {memo, useState} from 'react';
 import {alpha, styled} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
@@ -42,7 +42,7 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	padding: '8px 12px',
 }));
 
-export const AppAppBar = () => {
+export const AppAppBar = memo(() => {
 	const [open, setOpen] = useState(false);
 	const [colorMode, toggleColorMode] = useColorMode();
 	const {clientUser, clientUserLoading} = useClientUser();
@@ -225,4 +225,4 @@ export const AppAppBar = () => {
 			</Container>
 		</AppBar>
 	);
-}
+});

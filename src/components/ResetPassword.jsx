@@ -8,12 +8,12 @@ import Button from "@mui/material/Button";
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
-import {useRef, useState} from "react";
+import {memo, useRef, useState} from "react";
 import {enqueueSnackbar} from "notistack";
 import {LoadingButton} from "@mui/lab";
 import Cookies from "js-cookie";
 
-export default function ResetPassword({open, handleClose}) {
+const ResetPassword = memo(({open, handleClose}) => {
 	const emailText = useRef(null);
 	const verificationText = useRef(null);
 	const passwordText = useRef(null);
@@ -106,9 +106,11 @@ export default function ResetPassword({open, handleClose}) {
 			</DialogActions>
 		</Dialog>
 	);
-}
+});
 
 ResetPassword.propTypes = {
 	handleClose: PropTypes.func.isRequired,
 	open: PropTypes.bool.isRequired,
 };
+
+export default ResetPassword;

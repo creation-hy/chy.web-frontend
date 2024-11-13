@@ -7,7 +7,7 @@ import {useCallback, useMemo, useState} from "react";
 import axios from "axios";
 import {useQuery} from "@tanstack/react-query";
 import FormControl from "@mui/material/FormControl";
-import {UserSimpleItem} from "src/components/UserItem.jsx";
+import {SimpleUserItem} from "src/components/UserItem.jsx";
 import Cookies from "js-cookie";
 import Typography from "@mui/material/Typography";
 import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
@@ -51,7 +51,7 @@ export default function ChybenchRanking() {
 								{indexKey.map((item, index) => (
 									<TableCell key={index}>{
 										item === "date" ? <Typography>{convertDateToLocaleDateString(rowData[item])}</Typography> :
-											(item === "user" ? <UserSimpleItem username={rowData.username} displayName={rowData.displayName}/> :
+											(item === "user" ? <SimpleUserItem username={rowData.username} displayName={rowData.displayName}/> :
 												<Typography>{rowData[item]}</Typography>)
 									}</TableCell>
 								))}
