@@ -936,10 +936,12 @@ export default function Chat() {
 								beforeHighlight = user.displayName.slice(0, displayNameIndex);
 								highlight = user.displayName.slice(displayNameIndex, displayNameIndex + keyLength);
 								afterHighlight = `${user.displayName.slice(displayNameIndex + keyLength)} (@${user.username})`;
-							} else {
+							} else if (usernameIndex !== -1) {
 								beforeHighlight = `${user.displayName} (@${user.username.slice(0, usernameIndex)}`;
 								highlight = user.username.slice(usernameIndex, usernameIndex + keyLength);
 								afterHighlight = `${user.username.slice(usernameIndex + keyLength)})`;
+							} else {
+								return null;
 							}
 							
 							return (
