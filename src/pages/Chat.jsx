@@ -542,7 +542,6 @@ export default function Chat() {
 	const userSearchField = useRef(null);
 	
 	const disconnectErrorBarKey = useRef(null);
-	const lastScrollStartId = useRef(-1);
 	const queryClient = useRef(useQueryClient());
 	
 	const chatMainComponent = useRef(null);
@@ -554,6 +553,16 @@ export default function Chat() {
 	if (!clientUserLoading)
 		clientUserRef.current = clientUser;
 	
+	const pageNumberCurrent = useRef(0);
+	const pageNumberNew = useRef(0);
+	const lastMessageRef = useRef(null);
+	const messageLoadingObserver = useRef(new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
+			pageNumberNew.current = pageNumberCurrent.current + 1;
+			getMessages(currentUserVar, pageNumberNew.current);
+		}
+	}));
+	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
 		Promise.all(Array.prototype.slice.call(messageCard.current.getElementsByTagName("img")).map(img => new Promise(resolve => {
@@ -564,8 +573,8 @@ export default function Chat() {
 		});
 	}, []);
 	
-	const getMessages = useCallback((username, startId = -1, doRefresh = false) => {
-		if (!username || currentUserVar === username && startId === -1 && !doRefresh)
+	const getMessages = useCallback((username, pageNumber = 0, doRefresh = false) => {
+		if (!username || currentUserVar === username && pageNumber === 0 && !doRefresh)
 			return;
 		
 		const isCurrentUser = currentUserVar === username;
@@ -579,6 +588,8 @@ export default function Chat() {
 			setCurrentUser(username);
 			setQuote(null);
 			navigate.current("/chat/" + username);
+			pageNumberNew.current = 0;
+			pageNumberCurrent.current = 0;
 		}
 		
 		if (isMobile) {
@@ -597,7 +608,7 @@ export default function Chat() {
 			console.log("你的浏览器不支持通知，人家也没办法呀……", e);
 		}
 		
-		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
+		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
 			const userItem = usersVar.find(item => item.username === username);
 			if (userItem) {
 				if (clientUserRef.current) {
@@ -611,7 +622,7 @@ export default function Chat() {
 				messageInput.current.value = userItem.draft ? userItem.draft : "";
 			}
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
-			messagesVar = startId === -1 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
+			messagesVar = pageNumber === 0 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
 			flushSync(() => {
 				setCurrentUserDisplayName(res.data.result.displayName);
 				setLastOnline(res.data.result.isOnline || username === myname ? "在线" : (
@@ -728,7 +739,7 @@ export default function Chat() {
 		
 		if (disconnectErrorBarKey.current) {
 			closeSnackbar(disconnectErrorBarKey.current);
-			getMessages(currentUserVar, -1, true);
+			getMessages(currentUserVar, 0, true);
 			queryClient.current.invalidateQueries({queryKey: ["contacts"]});
 			disconnectErrorBarKey.current = null;
 		}
@@ -857,6 +868,14 @@ export default function Chat() {
 		if (logged)
 			stompConnect();
 	}, [getMessages, logged, stompOnConnect]);
+	
+	useEffect(() => {
+		pageNumberCurrent.current = pageNumberNew.current;
+		console.log(lastMessageRef.current);
+		if (lastMessageRef.current) {
+			messageLoadingObserver.current.observe(lastMessageRef.current);
+		}
+	}, [messages]);
 	
 	if (logged === false)
 		return <SignUp/>;
@@ -995,15 +1014,15 @@ export default function Chat() {
 						</Grid>
 						<Box>
 							<IconButton onClick={async () => {
-								let text = "", startId = -1;
+								let text = "", pageNumber = 0;
 								while (true) {
-									const res = await axios.get("/api/chat/message/" + currentUserVar + "/" + startId);
+									const res = await axios.get(`/api/chat/message/${currentUserVar}/${pageNumber}`);
 									const message = res.data.result.message;
 									if (!message.length)
 										break;
 									text = message.map((item) => (`## ${item.displayName} (@${item.username}) ${convertDateToLocaleAbsoluteString(item.time)}\n\n` + item.content)).join("\n\n")
 										+ "\n\n" + text;
-									startId = message[0].id;
+									pageNumber++;
 								}
 								const link = document.createElement("a");
 								link.href = URL.createObjectURL(new Blob([text], {type: "text/plain;charset=utf-8"}));
@@ -1021,18 +1040,13 @@ export default function Chat() {
 						</Box>
 					</Grid>
 				</Card>}
-				<Card variant="outlined" ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}} onScroll={(event) => {
-					if (event.target.scrollTop <= 50 && messagesVar.length > 0 && lastScrollStartId.current !== messagesVar[0].id - 1 && messagesVar.length >= 30) {
-						lastScrollStartId.current = messagesVar[0].id - 1;
-						getMessages(currentUserVar, lastScrollStartId.current);
-					}
-				}}>
+				<Card variant="outlined" ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}}>
 					{messages.map((message, index) => {
 						const currentDate = new Date(message.time);
 						const previousDate = new Date(!index ? 0 : messages[index - 1].time);
 						const showTime = currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000;
 						return (
-							<Fragment key={message.id}>
+							<Box ref={message === messages[0] ? lastMessageRef : undefined} key={message.id}>
 								{showTime && <Grid container><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
 								<Message
 									messageId={message.id}
@@ -1043,7 +1057,7 @@ export default function Chat() {
 									timestamp={message.time}
 									setQuote={setQuote}
 								/>
-							</Fragment>
+							</Box>
 						);
 					})}
 					{showScrollTop && <ScrollTop messageCard={messageCard}>
