@@ -65,12 +65,12 @@ let socket, stomp;
 const getDraft = async (username, contact) =>
 	await dexie.chatDraft.where("[username+contact]").equals([username, contact]).first();
 
-const saveDraft = debounce((content) => {
-	getDraft(myname, currentUserVar).then(res => {
+const saveDraft = debounce((contact, content) => {
+	getDraft(myname, contact).then(res => {
 		if (!res) {
 			dexie.chatDraft.add({
 				username: myname,
-				contact: currentUserVar,
+				contact: contact,
 				content: content,
 				creationTime: new Date(),
 			});
@@ -81,18 +81,14 @@ const saveDraft = debounce((content) => {
 			});
 		}
 	});
-}, 300);
+}, 100);
 
 function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, displayNameNode}) {
 	const [draft, setDraft] = useState(null);
 	
-	useEffect(() => {
-		getDraft(myname, username).then(res => {
-			if (res && res.content && res.content.length > 0) {
-				setDraft(res.content);
-			}
-		});
-	}, [username]);
+	getDraft(myname, username).then(res => {
+		setDraft(res && res.content ? res.content : undefined);
+	});
 	
 	return (
 		<>
@@ -155,7 +151,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 						</Typography>}
 					</Grid>
 				}
-				secondary={draft ? (
+				secondary={draft === null ? "\u00A0" : (draft ? (
 					<Typography variant="body2" color="primary" noWrap textOverflow="ellipsis">
 						[草稿] {draft.toString()}
 					</Typography>
@@ -163,7 +159,7 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 					<Typography variant="body2" color="text.secondary" noWrap textOverflow="ellipsis">
 						{lastMessageText}
 					</Typography>
-				)}
+				))}
 			/>
 		</>
 	);
@@ -907,7 +903,7 @@ export default function Chat() {
 						</ListItemButton>
 					</List>
 					<Divider/>
-					{!matchList && <List>
+					<List sx={{display: matchList ? "none" : "block"}}>
 						{users != null && users.map((user) => (user.username !== "ChatRoomSystem" &&
 							<ListItemButton
 								key={user.username}
@@ -924,8 +920,8 @@ export default function Chat() {
 								/>
 							</ListItemButton>
 						))}
-					</List>}
-					{matchList != null && <List>
+					</List>
+					{matchList && <List>
 						{matchList.map((user) => {
 							const displayNameIndex = user.displayName.toLowerCase().indexOf(userSearchField.current.value.toLowerCase());
 							const usernameIndex = user.username.toLowerCase().indexOf(userSearchField.current.value.toLowerCase());
@@ -955,6 +951,8 @@ export default function Chat() {
 										displayName={`${user.displayName} (@${user.username})`}
 										isOnline={user.isOnline}
 										newMessageCount={0}
+										lastMessageTime={user.lastMessageTime}
+										lastMessageText={user.lastMessageText || "\u00A0"}
 										displayNameNode={
 											<>
 												{beforeHighlight}
@@ -1082,7 +1080,7 @@ export default function Chat() {
 									sendMessage();
 							}
 						}}
-						onChange={(event) => saveDraft(event.target.value)}
+						onChange={(event) => saveDraft(currentUserVar, event.target.value)}
 					/>
 					<Grid container justifyContent="space-between">
 						<ChatToolBar inputField={messageInput}/>
