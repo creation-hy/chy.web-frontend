@@ -1,7 +1,7 @@
 import {Fragment, useCallback, useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
-import {Badge, Fab, Fade, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch} from "@mui/material";
+import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
@@ -53,6 +53,8 @@ import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
+import dexie from "src/assets/dexie.jsx";
+import debounce from "lodash/debounce";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -60,7 +62,38 @@ let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSe
 let usersVar = [], messagesVar = [];
 let socket, stomp;
 
+const getDraft = async (username, contact) =>
+	await dexie.chatDraft.where("[username+contact]").equals([username, contact]).first();
+
+const saveDraft = debounce((content) => {
+	getDraft(myname, currentUserVar).then(res => {
+		if (!res) {
+			dexie.chatDraft.add({
+				username: myname,
+				contact: currentUserVar,
+				content: content,
+				creationTime: new Date(),
+			});
+		} else {
+			dexie.chatDraft.update(res.id, {
+				content: content,
+				creationTime: new Date(),
+			});
+		}
+	});
+}, 300);
+
 function UserItem({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, displayNameNode}) {
+	const [draft, setDraft] = useState(null);
+	
+	useEffect(() => {
+		getDraft(myname, username).then(res => {
+			if (res && res.content && res.content.length > 0) {
+				setDraft(res.content);
+			}
+		});
+	}, [username]);
+	
 	return (
 		<>
 			<ListItemAvatar>
@@ -122,15 +155,15 @@ function UserItem({username, displayName, isOnline, newMessageCount, lastMessage
 						</Typography>}
 					</Grid>
 				}
-				secondary={
-					<Typography variant="body2" color="textSecondary" sx={{
-						whiteSpace: "nowrap",
-						overflow: "hidden",
-						textOverflow: "ellipsis",
-					}}>
+				secondary={draft ? (
+					<Typography variant="body2" color="primary" noWrap textOverflow="ellipsis">
+						[草稿] {draft.toString()}
+					</Typography>
+				) : (
+					<Typography variant="body2" color="text.secondary" noWrap textOverflow="ellipsis">
 						{lastMessageText}
 					</Typography>
-				}
+				)}
 			/>
 		</>
 	);
@@ -475,7 +508,7 @@ const ScrollTop = ({children, messageCard}) => {
 		return null;
 	
 	return (
-		<Fade in={trigger}>
+		<Zoom in={trigger}>
 			<Box
 				onClick={() => messageCard.current.scrollTo({top: messageCard.current.scrollHeight, behavior: "smooth"})}
 				role="presentation"
@@ -487,7 +520,7 @@ const ScrollTop = ({children, messageCard}) => {
 			>
 				{children}
 			</Box>
-		</Fade>
+		</Zoom>
 	);
 }
 
@@ -544,14 +577,20 @@ export default function Chat() {
 	const getMessages = useCallback((username, startId = -1, doRefresh = false) => {
 		if (!username || currentUserVar === username && startId === -1 && !doRefresh)
 			return;
+		
 		const isCurrentUser = currentUserVar === username;
+		
 		if (!isCurrentUser) {
 			setShowScrollTop(false);
 			currentUserVar = username;
 			setCurrentUser(username);
+			getDraft(myname, username).then(res => {
+				messageInput.current.value = res && res.content ? res.content : "";
+			});
 			navigate.current("/chat/" + username);
 			setQuote(null);
 		}
+		
 		if (isMobile) {
 			if (contactsComponent.current) {
 				contactsComponent.current.style.display = "none";
@@ -561,11 +600,13 @@ export default function Chat() {
 			}
 			document.getElementById("app-bar").style.display = "none";
 		}
+		
 		try {
 			Notification.requestPermission();
 		} catch (e) {
 			console.log("你的浏览器不支持通知，人家也没办法呀……", e);
 		}
+		
 		axios.get("/api/chat/message/" + username + "/" + startId).then(res => {
 			const userItem = usersVar.find(item => item.username === username);
 			if (userItem) {
@@ -1039,6 +1080,7 @@ export default function Chat() {
 									sendMessage();
 							}
 						}}
+						onChange={(event) => saveDraft(event.target.value)}
 					/>
 					<Grid container justifyContent="space-between">
 						<ChatToolBar inputField={messageInput}/>
