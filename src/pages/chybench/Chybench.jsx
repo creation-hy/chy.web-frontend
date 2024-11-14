@@ -1,4 +1,4 @@
-import {browserName, fullBrowserVersion, osName, osVersion} from "react-device-detect";
+import {browserName, fullBrowserVersion, isMobile, osName, osVersion} from "react-device-detect";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import Select from "@mui/material/Select";
@@ -9,10 +9,14 @@ import Box from "@mui/material/Box";
 import {InputLabel, LinearProgress, Switch} from "@mui/material";
 import PropTypes from "prop-types";
 import {useState} from "react";
-import {Leaderboard, PlayArrow} from "@mui/icons-material";
+import {Close, Leaderboard, PlayArrow} from "@mui/icons-material";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import FormControl from "@mui/material/FormControl";
+import Dialog from "@mui/material/Dialog";
+import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
+import DialogContent from "@mui/material/DialogContent";
+import IconButton from "@mui/material/IconButton";
 
 function LinearProgressWithLabel(props) {
 	return (
@@ -190,6 +194,8 @@ export default function Chybench() {
 	const [gpuProgress, setGPUProgress] = useState(0);
 	const [memoryProgress, setMemoryProgress] = useState(0);
 	
+	const [showRanking, toggleRanking] = useState(false);
+	
 	const benchmark = async (size, rounds) => {
 		let cpuSingleScore = 0, cpuMultiScore = 0, gpuScore = 0, memoryScore = 0;
 		
@@ -341,7 +347,28 @@ export default function Chybench() {
 					<LinearProgressWithLabel value={memoryProgress}/>
 				</Box>
 			</Grid>
-			<Button variant="contained" startIcon={<Leaderboard/>} href={window.location.href + "/ranking"}>排行榜</Button>
+			<Button variant="contained" startIcon={<Leaderboard/>} onClick={() => toggleRanking(true)}>排行榜</Button>
+			<Dialog
+				open={showRanking}
+				fullWidth
+				maxWidth="xl"
+				fullScreen={isMobile}
+				onClose={() => toggleRanking(false)}
+			>
+				<DialogContent>
+					<IconButton
+						onClick={() => toggleRanking(false)}
+						sx={{
+							position: "absolute",
+							right: 8,
+							top: 8,
+						}}
+					>
+						<Close/>
+					</IconButton>
+					<ChybenchRanking/>
+				</DialogContent>
+			</Dialog>
 		</Grid>
 	)
 }
