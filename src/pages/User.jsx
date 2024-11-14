@@ -139,19 +139,11 @@ Follows.propTypes = {
 }
 
 const TabPanel = memo(({value, info}) => {
-	if (value === 0)
-		return (
-			<Typography>
-				注册时间：{convertDateToLocaleDateString(info.registrationTime)}<br/>
-				性别：{info.gender}
-			</Typography>
-		);
-	
-	if (value === 1) {
+	if (value === 0) {
 		return <News username={info.username} displayName={info.displayName}/>;
 	}
 	
-	return <Follows username={info.username} type={value === 2 ? "following" : "follower"}/>;
+	return <Follows username={info.username} type={value === 1 ? "following" : "follower"}/>;
 });
 
 TabPanel.propTypes = {
@@ -230,12 +222,12 @@ export default function User() {
 	return (
 		<Box maxWidth="md" alignSelf="center" width="100%">
 			<Card sx={{p: 2}}>
-				<Grid container direction="column" gap={1.5}>
-					<Grid container alignItems="center" gap={1.5} wrap="nowrap" width="100%">
+				<Grid container direction="column" gap={0.5}>
+					<Grid container alignItems="center" gap={1.5} wrap="nowrap" width="100%" sx={{mb: 0.5}}>
 						{data.username === myname ? (
 							<IconButton
 								onClick={() => document.getElementById("avatar-upload").click()}
-								sx={{width: 100, height: 100, mb: 0.5}}
+								sx={{width: 100, height: 100}}
 							>
 								<UserAvatar username={data.username} displayName={data.displayName} width={100} height={100}/>
 							</IconButton>
@@ -281,6 +273,10 @@ export default function User() {
 							)}
 						</Grid>
 					</Grid>
+					<Typography fontSize={14} color="text.secondary">
+						注册于{convertDateToLocaleDateString(data.registrationTime)}<br/>
+						性别：{data.gender}
+					</Typography>
 					<Box id="introduction" sx={{fontSize: 15, maxWidth: "100%"}}>
 						<ChatMarkdown>{data["introduction"]}</ChatMarkdown>
 					</Box>
@@ -288,7 +284,6 @@ export default function User() {
 			</Card>
 			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2, mt: 2}}>
 				<Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-					<Tab label="信息" data-option="info"/>
 					<Tab label="动态" data-option="chat"/>
 					<Tab label="关注" data-option="following" id="tab-following"/>
 					<Tab label="粉丝" data-option="follower" id="tab-follower"/>
