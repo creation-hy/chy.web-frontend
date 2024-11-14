@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
-import {memo, useEffect, useRef, useState} from "react";
+import {memo, useEffect, useMemo, useRef, useState} from "react";
 import {Alert, InputLabel, List, ListItem, ListItemAvatar, ListItemButton, ListItemText, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
@@ -105,19 +105,41 @@ News.propTypes = {
 }
 
 const Follows = memo(({username, type}) => {
-	const {data} = useQuery({
-		queryKey: [type],
-		queryFn: () => axios.get(`/api/user/${username}/${type}/0`).then(res => res.data),
-	});
+	const [userList, setUserList] = useState([]);
 	
-	if (!data || !data.result) {
-		return null;
-	}
+	const pageNumberCurrent = useRef(0);
+	const pageNumberNew = useRef(0);
+	const lastUserRef = useRef(null);
+	const pageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
+			pageNumberNew.current = pageNumberCurrent.current + 1;
+			axios.get(`/api/user/${username}/${type}/${pageNumberNew.current}`).then(res => {
+				if (res.data.result.length > 0) {
+					setUserList(userList => [...userList, ...res.data.result]);
+				}
+			});
+		}
+	}), [username, type]);
+	
+	useEffect(() => {
+		axios.get(`/api/user/${username}/${type}/0`).then(res => {
+			pageNumberNew.current = 0;
+			pageNumberCurrent.current = 0;
+			setUserList([...res.data.result]);
+		});
+	}, [username, type]);
+	
+	useEffect(() => {
+		pageNumberCurrent.current = pageNumberNew.current;
+		if (lastUserRef.current) {
+			pageLoadingObserver.observe(lastUserRef.current);
+		}
+	}, [userList]);
 	
 	return (
 		<List sx={{mt: -2}}>
-			{data.result.map((item) => (
-				<ListItem key={item.username} sx={{p: 0}}>
+			{userList.map((item) => (
+				<ListItem key={item.username} ref={item === userList[userList.length - 1] ? lastUserRef : undefined} sx={{p: 0}}>
 					<ListItemButton href={`/user/${item.username}`}>
 						<ListItemAvatar>
 							<UserAvatar username={item.username} displayName={item.displayName}/>
