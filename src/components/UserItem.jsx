@@ -7,11 +7,11 @@ import {memo} from "react";
 
 export const SimpleUserItem = memo(({username, displayName, ...props}) => {
 	return (
-		<Grid container wrap="nowrap" alignItems="center" spacing={1} {...props}>
+		<Grid container wrap="nowrap" alignItems="center" spacing={1} height="100%" {...props}>
 			<Link href={"/user/" + username} underline="none">
 				<UserAvatar username={username} displayName={displayName}/>
 			</Link>
-			<Link href={"/user/" + username} underline="hover" color="inherit">
+			<Link href={"/user/" + username} underline="hover" color="inherit" overflow="hidden">
 				<Typography fontWeight="bold" maxWidth={150} noWrap textOverflow="ellipsis">
 					{displayName}
 				</Typography>
