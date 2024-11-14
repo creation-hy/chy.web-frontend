@@ -72,13 +72,14 @@ const uploadDraft = (contact, content) => {
 const uploadDraftThrottle = throttle(uploadDraft, 2000);
 
 const saveDraft = throttle((contact, content, setUsers) => {
-	usersVar = usersVar.map(user => (
-		user.username === contact ? ({
-			...usersVar.find(item => item.username === contact),
-			draft: content,
-		}) : user)
-	);
-	setUsers([...usersVar]);
+	setUsers(users => (
+		users.map(user => (
+			user.username === contact ? ({
+				...users.find(item => item.username === contact),
+				draft: content,
+			}) : user)
+		)
+	));
 	uploadDraftThrottle(contact, content);
 }, 100);
 
@@ -570,8 +571,28 @@ export default function Chat() {
 		if (entries[0].isIntersecting && userFindPageNumberNew.current === userFindPageNumberCurrent.current) {
 			userFindPageNumberNew.current = userFindPageNumberCurrent.current + 1;
 			axios.get(`/api/user/find/${userFindPageNumberNew.current}`, {params: {key: userSearchField.current.value}}).then(res => {
-				if (res.data.result.length > 0)
+				if (res.data.result.length > 0) {
 					setMatchList(matchList => [...matchList, ...res.data.result]);
+				}
+			});
+		}
+	}));
+	
+	const contactPageNumberCurrent = useRef(0);
+	const contactPageNumberNew = useRef(0);
+	const lastContactRef = useRef(null);
+	const contactFetchSuccess = useRef(true);
+	const contactPageObserver = useRef(new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && contactPageNumberNew.current === contactPageNumberCurrent.current) {
+			contactPageNumberNew.current = contactPageNumberCurrent.current + 1;
+			axios.get(`/api/chat/contacts/${contactPageNumberNew.current}`).then(res => {
+				if (res.data.result.length > 0) {
+					contactFetchSuccess.current = true;
+					setUsers(users => {
+						usersVar = [...users, ...res.data.result];
+						return usersVar;
+					});
+				}
 			});
 		}
 	}));
@@ -622,9 +643,6 @@ export default function Chat() {
 		}
 		
 		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
-			if (res.data.result.message.length === 0) {
-				return;
-			}
 			const userItem = usersVar.find(item => item.username === username);
 			if (userItem) {
 				if (clientUserRef.current) {
@@ -652,12 +670,12 @@ export default function Chat() {
 	
 	const {data, isLoading, error} = useQuery({
 		queryKey: ["contacts"],
-		queryFn: () => axios.get("/api/chat/contacts").then(res => res.data),
+		queryFn: () => axios.get("/api/chat/contacts/0").then(res => res.data),
 		staleTime: Infinity,
 	});
 	
 	useEffect(() => {
-		if (!isLoading && !error) {
+		if (data) {
 			if (data.status !== 1) {
 				setLogged(false);
 				return;
@@ -672,7 +690,7 @@ export default function Chat() {
 				userJumped.current = true;
 			}
 		}
-	}, [data, error, getMessages, isLoading, urlParams]);
+	}, [data, getMessages, urlParams]);
 	
 	const sendMessage = useCallback(() => {
 		const content = messageInput.current.value;
@@ -699,7 +717,7 @@ export default function Chat() {
 			usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
 			setUsers([...usersVar]);
 		} else {
-			axios.get(`/api/user/find/${username}/0`).then(res => {
+			axios.get(`/api/user/find/0`, {params: {key: username}}).then(res => {
 				usersVar = [{
 					username: username,
 					displayName: displayName,
@@ -899,6 +917,14 @@ export default function Chat() {
 		}
 	}, [matchList]);
 	
+	useEffect(() => {
+		if (contactFetchSuccess.current && lastContactRef.current) {
+			contactPageNumberCurrent.current = contactPageNumberNew.current;
+			contactPageObserver.current.observe(lastContactRef.current);
+			contactFetchSuccess.current = false;
+		}
+	}, [users]);
+	
 	if (logged === false)
 		return <SignUp/>;
 	
@@ -953,6 +979,7 @@ export default function Chat() {
 						{users != null && users.map((user) => (user.username !== "ChatRoomSystem" &&
 							<ListItemButton
 								key={user.username}
+								ref={user === users[users.length - 1] ? lastContactRef : undefined}
 								onClick={() => getMessages(user.username)}
 								selected={currentUser === user.username}
 							>
