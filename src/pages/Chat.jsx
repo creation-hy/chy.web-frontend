@@ -563,6 +563,19 @@ export default function Chat() {
 		}
 	}));
 	
+	const userFindPageNumberCurrent = useRef(0);
+	const userFindPageNumberNew = useRef(0);
+	const lastUserFindingRef = useRef(null);
+	const userFindingObserver = useRef(new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && userFindPageNumberNew.current === userFindPageNumberCurrent.current) {
+			userFindPageNumberNew.current = userFindPageNumberCurrent.current + 1;
+			axios.get(`/api/user/find/${userFindPageNumberNew.current}`, {params: {key: userSearchField.current.value}}).then(res => {
+				if (res.data.result.length > 0)
+					setMatchList(matchList => [...matchList, ...res.data.result]);
+			});
+		}
+	}));
+	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
 		Promise.all(Array.prototype.slice.call(messageCard.current.getElementsByTagName("img")).map(img => new Promise(resolve => {
@@ -683,7 +696,7 @@ export default function Chat() {
 			usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
 			setUsers([...usersVar]);
 		} else {
-			axios.get("/api/user/find/" + username).then(res => {
+			axios.get(`/api/user/find/${username}/0`).then(res => {
 				usersVar = [{
 					username: username,
 					displayName: displayName,
@@ -871,11 +884,17 @@ export default function Chat() {
 	
 	useEffect(() => {
 		pageNumberCurrent.current = pageNumberNew.current;
-		console.log(lastMessageRef.current);
 		if (lastMessageRef.current) {
 			messageLoadingObserver.current.observe(lastMessageRef.current);
 		}
 	}, [messages]);
+	
+	useEffect(() => {
+		userFindPageNumberCurrent.current = userFindPageNumberNew.current;
+		if (lastUserFindingRef.current) {
+			userFindingObserver.current.observe(lastUserFindingRef.current);
+		}
+	}, [matchList]);
 	
 	if (logged === false)
 		return <SignUp/>;
@@ -896,8 +915,16 @@ export default function Chat() {
 						else {
 							const controller = new AbortController();
 							setAbortController(controller);
-							axios.get("/api/user/find/" + encodeURIComponent(event.target.value), {signal: controller.signal})
-								.then(res => setMatchList(res.data.result)).catch(() => null);
+							axios.get(`/api/user/find/0`, {
+								signal: controller.signal,
+								params: {
+									key: event.target.value,
+								},
+							}).then(res => {
+								setMatchList(res.data.result);
+								userFindPageNumberNew.current = 0;
+								userFindPageNumberCurrent.current = 0;
+							}).catch(() => null);
 						}
 					}}
 				/>
@@ -960,6 +987,7 @@ export default function Chat() {
 							return (
 								<ListItemButton
 									key={user.username}
+									ref={user === matchList[matchList.length - 1] ? lastUserFindingRef : undefined}
 									onClick={() => getMessages(user.username)}
 									selected={currentUser === user.username}
 								>
