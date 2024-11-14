@@ -29,15 +29,16 @@ const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
 	const columns = [
 		{
 			field: "id",
-			width: 110,
-			headerName: "排名",
+			width: 65,
+			headerName: "ID",
+			hideSortIcons: true,
 		},
 		{
 			field: "percentage",
 			width: 130,
 			headerName: "相比第一",
 			renderCell: (params) => (
-				<Box position="static" width="100%" height="100%" sx={{p: 1.5}}>
+				<Box position="static" width="100%" height="100%" sx={{py: 1.5, pr: 2}}>
 					<Box position="relative" width="100%" height="100%" sx={{border: 1, borderColor: theme => theme.palette.divider}}>
 						<Grid container position="absolute" width="100%" height="100%" justifyContent="center" alignItems="center">
 							<Typography fontSize="inherit">
@@ -54,9 +55,9 @@ const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
 			field: "displayName",
 			headerName: "用户",
 			flex: 1,
-			minWidth: 150,
+			minWidth: 175,
 			renderCell: (params) => {
-				return <SimpleUserItem username={params.row.username} displayName={params.row.displayName}/>
+				return <SimpleUserItem username={params.row.username} displayName={params.row.displayName} sx={{mr: 1}}/>
 			}
 		},
 		{
@@ -66,13 +67,13 @@ const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
 		},
 		{
 			field: "gpuName",
-			width: 200,
+			minWidth: 200,
 			flex: 1,
 			headerName: "GPU型号",
 		},
 		{
 			field: "os",
-			width: 125,
+			width: 150,
 			headerName: "OS",
 		},
 		{
@@ -104,6 +105,7 @@ const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
 			rowSelectionModel={myItem ? myItem.id : undefined}
 			disableRowSelectionOnClick
 			hideFooter
+			sx={{maxWidth: "100%", flex: 0}}
 		/>
 	);
 });
@@ -131,7 +133,7 @@ export default function ChybenchRanking() {
 	});
 	
 	return (
-		<Box>
+		<Grid container direction="column" sx={{minHeight: "100%", justifyContent: "space-between", maxWidth: "100%"}}>
 			<Grid container justifyContent="center" spacing={2} sx={{mb: 2}}>
 				<FormControl margin="dense">
 					<InputLabel id="select-item">
@@ -176,13 +178,13 @@ export default function ChybenchRanking() {
 				</FormControl>
 			</Grid>
 			<RankingTable rankingItem={rankingItem} rankingSize={rankingSize} pageNumber={pageNumber}/>
-			<Grid container sx={{mt: 2}} justifyContent="center">
+			<Grid container sx={{mt: 2}} justifyContent="center" alignItems="flex-end" flex={1}>
 				<Pagination
 					color="primary"
 					count={dataCount && dataCount.data ? Math.ceil(dataCount.data.result / 10.0) : 0}
 					onChange={(event, value) => setPageNumber(value - 1)}
 				/>
 			</Grid>
-		</Box>
+		</Grid>
 	);
 }
