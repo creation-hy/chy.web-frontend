@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
 import {memo, useEffect, useRef, useState} from "react";
-import {Alert, InputLabel, Paper, Tab, Tabs} from "@mui/material";
+import {Alert, InputLabel, List, ListItem, ListItemAvatar, ListItemButton, ListItemText, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
@@ -26,17 +26,13 @@ import ResetPassword from "src/components/ResetPassword.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
 
-const InfoContainer = memo(({value, info}) => {
-	const opt = value === 0 ? "info" : (value === 1 ? "chat" : (value === 2 ? "following" : "follower"));
-	const url = opt === "chat" ? "/chat/0" : "/" + opt;
-	
-	const {data, isLoading, error} = useQuery({
-		queryKey: [opt],
-		queryFn: () => axios.get("/api/user/" + info.username + url).then(res => res.data),
+const News = memo(({username, displayName}) => {
+	const {data} = useQuery({
+		queryKey: ["news"],
+		queryFn: () => axios.get(`/api/user/${username}/chat/0`).then(res => res.data),
 	});
 	
 	const [chatList, setChatList] = useState([]);
-	const chatListRef = useRef(-1);
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -44,21 +40,19 @@ const InfoContainer = memo(({value, info}) => {
 	const pageLoadingObserver = useRef(new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
 			pageNumberNew.current = pageNumberCurrent.current + 1;
-			axios.get(`/api/user/${info.username}/chat/${pageNumberNew.current}`).then(res => {
+			axios.get(`/api/user/${username}/chat/${pageNumberNew.current}`).then(res => {
 				if (res.data.result.length > 0) {
-					chatListRef.current = [...chatListRef.current, ...res.data.result];
-					setChatList([...chatListRef.current]);
+					setChatList(chatList => [...chatList, ...res.data.result]);
 				}
 			});
 		}
 	}));
 	
 	useEffect(() => {
-		if (data && data.result && value === 1) {
+		if (data && data.result) {
 			setChatList([...data.result]);
-			chatListRef.current = data.result;
 		}
-	}, [data, info.username, value]);
+	}, [data]);
 	
 	useEffect(() => {
 		pageNumberCurrent.current = pageNumberNew.current;
@@ -67,76 +61,100 @@ const InfoContainer = memo(({value, info}) => {
 		}
 	}, [chatList]);
 	
-	if (!data)
-		return null;
+	return (
+		<Box>
+			{chatList.map((item) => (
+				<Grid
+					container
+					key={item.id}
+					ref={item === chatList[chatList.length - 1] ? lastMessageRef : undefined}
+					justifyContent='flex-start'
+					alignItems="flex-start"
+					sx={{my: 3}}
+				>
+					<IconButton sx={{mr: 1.5, p: 0}}>
+						<UserAvatar username={username} displayName={displayName}/>
+					</IconButton>
+					<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-end' spacing={0.7}>
+						<Paper
+							elevation={3}
+							sx={{
+								padding: '8px 11px',
+								borderRadius: '10px',
+								wordBreak: 'break-word',
+								maxWidth: "100%",
+							}}
+						>
+							<Box sx={{fontSize: 15}}>
+								<ChatMarkdown>{item.content}</ChatMarkdown>
+							</Box>
+							<Typography variant="caption" display="block" textAlign="right" mt={1}>
+								{convertDateToLocaleAbsoluteString(item.time)}
+							</Typography>
+						</Paper>
+					</Grid>
+				</Grid>
+			))}
+		</Box>
+	);
+});
+
+News.propTypes = {
+	username: PropTypes.string.isRequired,
+	displayName: PropTypes.string,
+}
+
+const Follows = memo(({username, type}) => {
+	const {data} = useQuery({
+		queryKey: [type],
+		queryFn: () => axios.get(`/api/user/${username}/${type}/0`).then(res => res.data),
+	});
 	
+	if (!data || !data.result) {
+		return null;
+	}
+	
+	return (
+		<List sx={{mt: -2}}>
+			{data.result.map((item) => (
+				<ListItem key={item.username} sx={{p: 0}}>
+					<ListItemButton href={`/user/${item.username}`}>
+						<ListItemAvatar>
+							<UserAvatar username={item.username} displayName={item.displayName}/>
+						</ListItemAvatar>
+						<ListItemText
+							primary={<Typography fontWeight="bold">{item.displayName}</Typography>}
+							secondary={"@" + item.username}
+						/>
+					</ListItemButton>
+				</ListItem>
+			))}
+		</List>
+	);
+});
+
+Follows.propTypes = {
+	username: PropTypes.string.isRequired,
+	type: PropTypes.string.isRequired,
+}
+
+const TabPanel = memo(({value, info}) => {
 	if (value === 0)
 		return (
 			<Typography>
-				注册时间：{convertDateToLocaleDateString(data["registrationTime"])}<br/>
-				性别：{data["gender"]}
+				注册时间：{convertDateToLocaleDateString(info.registrationTime)}<br/>
+				性别：{info.gender}
 			</Typography>
 		);
 	
 	if (value === 1) {
-		return (
-			<Box>
-				{chatList.map((item) => (
-					<Grid
-						container
-						key={item.id}
-						ref={item === chatList[chatList.length - 1] ? lastMessageRef : undefined}
-						justifyContent='flex-start'
-						alignItems="flex-start"
-						sx={{my: 2.5}}
-					>
-						<IconButton sx={{mr: 1.5, p: 0}}>
-							<UserAvatar username={info.username} displayName={info.displayName}/>
-						</IconButton>
-						<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-end' spacing={0.7}>
-							<Paper
-								elevation={3}
-								sx={{
-									padding: '8px 11px',
-									borderRadius: '10px',
-									wordBreak: 'break-word',
-									maxWidth: "100%",
-								}}
-							>
-								<Box sx={{fontSize: 15}}>
-									<ChatMarkdown>{item.content}</ChatMarkdown>
-								</Box>
-								<Typography variant="caption" display="block" textAlign="right" mt={1}>
-									{convertDateToLocaleAbsoluteString(item.time)}
-								</Typography>
-							</Paper>
-						</Grid>
-					</Grid>
-				))}
-			</Box>
-		);
+		return <News username={info.username} displayName={info.displayName}/>;
 	}
 	
-	return (
-		<Grid container direction="column" spacing={3}>
-			{data.result.map((item, index) => (
-				<Grid container key={index} alignItems="center" spacing={1.5} wrap="nowrap" maxWidth="100%">
-					<UserAvatar username={item.username} displayName={item.displayName}/>
-					<Grid container gap={0.5} alignItems="center" wrap="nowrap" maxWidth="100%">
-						<Typography variant="h6" sx={{cursor: "pointer"}} onClick={() => {
-							window.location.href = item.username;
-						}} noWrap overflow="hidden" textOverflow="ellipsis" fontWeight="bold">
-							{item.displayName}
-						</Typography>
-						{item["verification"] && (<Verified color="primary"/>)}
-					</Grid>
-				</Grid>
-			))}
-		</Grid>
-	);
+	return <Follows username={info.username} type={value === 2 ? "following" : "follower"}/>;
 });
 
-InfoContainer.propTypes = {
+TabPanel.propTypes = {
 	value: PropTypes.number.isRequired,
 	info: PropTypes.object,
 }
@@ -268,7 +286,7 @@ export default function User() {
 					</Box>
 				</Grid>
 			</Card>
-			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2, mt: 1}}>
+			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2, mt: 2}}>
 				<Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
 					<Tab label="信息" data-option="info"/>
 					<Tab label="动态" data-option="chat"/>
@@ -276,7 +294,7 @@ export default function User() {
 					<Tab label="粉丝" data-option="follower" id="tab-follower"/>
 				</Tabs>
 			</Box>
-			<InfoContainer value={value} info={data}/>
+			<TabPanel value={value} info={data}/>
 			<Dialog
 				open={modifying}
 				onClose={() => setModifying(false)}
