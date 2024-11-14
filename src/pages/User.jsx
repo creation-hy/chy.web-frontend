@@ -45,8 +45,10 @@ const InfoContainer = memo(({value, info}) => {
 		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
 			pageNumberNew.current = pageNumberCurrent.current + 1;
 			axios.get(`/api/user/${info.username}/chat/${pageNumberNew.current}`).then(res => {
-				chatListRef.current = [...chatListRef.current, ...res.data.result];
-				setChatList([...chatListRef.current]);
+				if (res.data.result.length > 0) {
+					chatListRef.current = [...chatListRef.current, ...res.data.result];
+					setChatList([...chatListRef.current]);
+				}
 			});
 		}
 	}));

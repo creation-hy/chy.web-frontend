@@ -622,6 +622,9 @@ export default function Chat() {
 		}
 		
 		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
+			if (res.data.result.message.length === 0) {
+				return;
+			}
 			const userItem = usersVar.find(item => item.username === username);
 			if (userItem) {
 				if (clientUserRef.current) {
