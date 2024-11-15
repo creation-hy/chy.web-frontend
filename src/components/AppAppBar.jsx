@@ -27,6 +27,7 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import {useLocation, useNavigate} from "react-router";
 import PropTypes from "prop-types";
+import Button from "@mui/material/Button";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -64,7 +65,16 @@ const LeftBar = memo(({navigateCallback}) => {
 						<Skeleton variant="rectangular" width="100%"/>
 						<Skeleton variant="rectangular" width="100%"/>
 					</Grid>
-				) : (!clientUser ? null : (
+				) : (!clientUser ? (
+					<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
+						<Button variant="contained" onClick={() => navigateAndCloseDrawer("register")} sx={{mx: 2}}>
+							注册
+						</Button>
+						<Button variant="outlined" onClick={() => navigateAndCloseDrawer("login")} sx={{mx: 2}}>
+							登录
+						</Button>
+					</Grid>
+				) : (
 					<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
 						<IconButton sx={{width: 80, height: 80, mb: 0.75}} onClick={() => navigateAndCloseDrawer(`user/${clientUser.username}`)}>
 							<UserAvatar username={clientUser.username} displayName={clientUser.displayName} width={80} height={80}/>
