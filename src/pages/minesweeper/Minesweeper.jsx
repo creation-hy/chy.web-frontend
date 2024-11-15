@@ -1,5 +1,4 @@
-import {memo, useRef, useState} from 'react';
-import DialogActions from "@mui/material/DialogActions";
+import {memo, useMemo, useRef, useState} from 'react';
 import Grid from "@mui/material/Grid2";
 import TextField from "@mui/material/TextField";
 import DialogContent from "@mui/material/DialogContent";
@@ -12,12 +11,13 @@ import {enqueueSnackbar} from "notistack";
 import Typography from "@mui/material/Typography";
 import axios from "axios";
 import PropTypes from "prop-types";
-import {Close, Leaderboard, PlayArrow, Replay} from "@mui/icons-material";
+import {Close, Leaderboard, PlayArrow, Replay, Stop} from "@mui/icons-material";
 import {DataGrid} from "@mui/x-data-grid";
 import {SimpleUserItem} from "src/components/UserItem.jsx";
 import IconButton from "@mui/material/IconButton";
 import Pagination from "@mui/material/Pagination";
 import {useQuery} from "@tanstack/react-query";
+import {flushSync} from "react-dom";
 
 let flippedCount = 0, passedTimeInterval;
 let startTime = 0, rows = 10, mines = 10;
@@ -70,57 +70,6 @@ const getPassedTime = () => {
 	if (hour > 23)
 		return "23:59:59";
 	return (hour < 10 ? "0" : "") + hour + ":" + (minute < 10 ? "0" : "") + minute + ":" + (second < 10 ? "0" : "") + second;
-}
-
-const InitDialog = memo(({setGrid, setElapsedTime, open, setOpen, setIsGameStarted}) => {
-	const rowsRef = useRef(null);
-	const minesRef = useRef(null);
-	
-	return (
-		<Dialog open={open} onClose={() => setOpen(false)}>
-			<DialogTitle>设置参数</DialogTitle>
-			<DialogContent>
-				<TextField
-					autoFocus
-					margin="dense"
-					label="行数"
-					type="number"
-					fullWidth
-					variant="outlined"
-					inputRef={rowsRef}
-				/>
-				<TextField
-					label="雷数"
-					margin="dense"
-					type="number"
-					fullWidth
-					variant="outlined"
-					inputRef={minesRef}
-				/>
-			</DialogContent>
-			<DialogActions>
-				<Button onClick={() => {
-					rows = Math.max(Number(rowsRef.current.value || 0), 10);
-					mines = Number(minesRef.current.value || 0);
-					mines = Math.max(mines, Math.floor(rows * rows * 0.2));
-					mines = Math.min(mines, Math.floor(rows * rows * 0.98));
-					setGrid(generateGrid(rows, mines));
-					startTime = new Date().getTime();
-					passedTimeInterval = setInterval(() => setElapsedTime(getPassedTime()), 1000);
-					setOpen(false);
-					setIsGameStarted(true);
-				}}>开始</Button>
-			</DialogActions>
-		</Dialog>
-	);
-});
-
-InitDialog.propTypes = {
-	setGrid: PropTypes.func,
-	setElapsedTime: PropTypes.func,
-	open: PropTypes.bool,
-	setOpen: PropTypes.func,
-	setIsGameStarted: PropTypes.func,
 }
 
 const tableColumns = [
@@ -221,12 +170,15 @@ Ranking.propTypes = {
 }
 
 export default function Minesweeper() {
-	const [isSettingParams, setIsSettingParams] = useState(false);
 	const [isGameStarted, setIsGameStarted] = useState(false);
 	const [grid, setGrid] = useState([]);
 	const [elapsedTime, setElapsedTime] = useState("00:00:00");
 	const [showRanking, setShowRanking] = useState(false);
 	const boxes = useRef([]);
+	
+	const minesweeperSettings = useMemo(() => JSON.parse(localStorage.getItem("minesweeperSettings")) || {}, []);
+	const [inputRows, setInputRows] = useState(minesweeperSettings.rows);
+	const [inputMines, setInputMines] = useState(minesweeperSettings.mines);
 	
 	const purge = (x, y) => {
 		const current = boxes.current[x][y];
@@ -277,16 +229,65 @@ export default function Minesweeper() {
 	
 	return (
 		<Box>
-			<InitDialog setGrid={setGrid} setElapsedTime={setElapsedTime}
-			            open={isSettingParams} setOpen={setIsSettingParams} setIsGameStarted={setIsGameStarted}/>
 			{isGameStarted ? (
 				<Grid container justifyContent="center" sx={{mb: 1.5}} spacing={2}>
 					<Typography variant="h4">{elapsedTime}</Typography>
 				</Grid>
 			) : (
-				<Grid container gap={2} justifyContent="center">
-					<Button variant="contained" onClick={() => setIsSettingParams(true)}><PlayArrow/></Button>
-					<Button variant="contained" onClick={() => setShowRanking(true)}><Leaderboard/></Button>
+				<Grid container direction="column" gap={1}>
+					<Grid container justifyContent="center" gap={1}>
+						<TextField
+							margin="dense"
+							label="行数"
+							type="number"
+							sx={{width: 105}}
+							variant="outlined"
+							value={inputRows}
+							onChange={(event) => {
+								setInputRows(event.target.value);
+								minesweeperSettings.rows = event.target.value;
+								localStorage.setItem("minesweeperSettings", JSON.stringify(minesweeperSettings));
+							}}
+						/>
+						<TextField
+							label="雷数"
+							margin="dense"
+							type="number"
+							sx={{width: 105}}
+							variant="outlined"
+							value={inputMines}
+							onChange={(event) => {
+								setInputMines(event.target.value);
+								minesweeperSettings.mines = event.target.value;
+								localStorage.setItem("minesweeperSettings", JSON.stringify(minesweeperSettings));
+							}}
+						/>
+					</Grid>
+					<Grid container justifyContent="center" gap={1}>
+						<Button
+							variant="contained"
+							startIcon={<PlayArrow/>}
+							onClick={() => {
+								rows = Math.max(Number(inputRows || 0), 10);
+								mines = Number(inputMines || 0);
+								mines = Math.max(mines, Math.floor(rows * rows * 0.2));
+								mines = Math.min(mines, Math.floor(rows * rows * 0.98));
+								setGrid(generateGrid(rows, mines));
+								startTime = new Date().getTime();
+								passedTimeInterval = setInterval(() => setElapsedTime(getPassedTime()), 1000);
+								setIsGameStarted(true);
+							}}
+						>
+							开始游戏
+						</Button>
+						<Button
+							variant="contained"
+							startIcon={<Leaderboard/>}
+							onClick={() => setShowRanking(true)}
+						>
+							排行榜
+						</Button>
+					</Grid>
 				</Grid>
 			)}
 			<Grid container direction="column" overflow="auto">
@@ -342,21 +343,37 @@ export default function Minesweeper() {
 				<Grid container justifyContent="center" sx={{mt: 2.5}} gap={2}>
 					<Button
 						variant="contained"
+						startIcon={<Replay/>}
+						onClick={() => {
+							setElapsedTime("00:00:00");
+							flippedCount = 0;
+							flushSync(() => setGrid([]));
+							setGrid(generateGrid(rows, mines));
+							startTime = new Date().getTime();
+							window.clearInterval(passedTimeInterval);
+							passedTimeInterval = setInterval(() => setElapsedTime(getPassedTime()), 1000);
+						}}
+					>
+						重新开始
+					</Button>
+					<Button
+						variant="contained"
+						startIcon={<Stop/>}
 						onClick={() => {
 							setGrid([]);
 							setIsGameStarted(false);
-							setIsSettingParams(true);
 							setElapsedTime("00:00:00");
 							window.clearInterval(passedTimeInterval);
 						}}
 					>
-						<Replay/>
+						结束游戏
 					</Button>
 					<Button
 						variant="contained"
+						startIcon={<Leaderboard/>}
 						onClick={() => setShowRanking(true)}
 					>
-						<Leaderboard/>
+						排行榜
 					</Button>
 				</Grid>
 			)}
