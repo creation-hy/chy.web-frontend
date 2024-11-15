@@ -72,14 +72,15 @@ const uploadDraft = (contact, content) => {
 const uploadDraftThrottle = throttle(uploadDraft, 2000);
 
 const saveDraft = throttle((contact, content, setUsers) => {
-	setUsers(users => (
-		users.map(user => (
+	setUsers(users => {
+		usersVar = users.map(user => (
 			user.username === contact ? ({
 				...users.find(item => item.username === contact),
 				draft: content,
 			}) : user)
-		)
-	));
+		);
+		return usersVar;
+	});
 	uploadDraftThrottle(contact, content);
 }, 100);
 
@@ -684,7 +685,7 @@ export default function Chat() {
 			document.getElementById("page-container").style.height = "0";
 			document.getElementById("page-main").style.height = "0";
 			usersVar = data.result;
-			setUsers(usersVar);
+			setUsers([...usersVar]);
 			if (!userJumped.current && urlParams.current["username"]) {
 				getMessages(urlParams.current["username"]);
 				userJumped.current = true;
