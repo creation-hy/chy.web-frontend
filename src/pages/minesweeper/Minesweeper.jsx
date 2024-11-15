@@ -12,7 +12,7 @@ import {enqueueSnackbar} from "notistack";
 import Typography from "@mui/material/Typography";
 import axios from "axios";
 import PropTypes from "prop-types";
-import {Close, Leaderboard, PlayArrow} from "@mui/icons-material";
+import {Close, Leaderboard, PlayArrow, Replay} from "@mui/icons-material";
 import {DataGrid} from "@mui/x-data-grid";
 import {SimpleUserItem} from "src/components/UserItem.jsx";
 import IconButton from "@mui/material/IconButton";
@@ -339,8 +339,25 @@ export default function Minesweeper() {
 					))}
 			</Grid>
 			{isGameStarted && (
-				<Grid container justifyContent="center" sx={{mt: 2.5}}>
-					<Button variant="contained" onClick={() => setShowRanking(true)}><Leaderboard/></Button>
+				<Grid container justifyContent="center" sx={{mt: 2.5}} gap={2}>
+					<Button
+						variant="contained"
+						onClick={() => {
+							setGrid([]);
+							setIsGameStarted(false);
+							setIsSettingParams(true);
+							setElapsedTime("00:00:00");
+							window.clearInterval(passedTimeInterval);
+						}}
+					>
+						<Replay/>
+					</Button>
+					<Button
+						variant="contained"
+						onClick={() => setShowRanking(true)}
+					>
+						<Leaderboard/>
+					</Button>
 				</Grid>
 			)}
 			<Ranking showRanking={showRanking} setShowRanking={setShowRanking}/>
