@@ -555,13 +555,14 @@ export default function Chat() {
 	if (!clientUserLoading)
 		clientUserRef.current = clientUser;
 	
-	const pageNumberCurrent = useRef(0);
-	const pageNumberNew = useRef(0);
+	const messagePageNumberCurrent = useRef(0);
+	const messagePageNumberNew = useRef(0);
 	const lastMessageRef = useRef(null);
 	const messageLoadingObserver = useRef(new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
-			pageNumberNew.current = pageNumberCurrent.current + 1;
-			getMessages(currentUserVar, pageNumberNew.current);
+		if (entries[0].isIntersecting && messagePageNumberNew.current === messagePageNumberCurrent.current) {
+			console.log(messagePageNumberNew.current, messagePageNumberCurrent.current);
+			messagePageNumberNew.current = messagePageNumberCurrent.current + 1;
+			getMessages(currentUserVar, messagePageNumberNew.current);
 		}
 	}));
 	
@@ -623,8 +624,8 @@ export default function Chat() {
 			setCurrentUser(username);
 			setQuote(null);
 			navigate.current("/chat/" + username);
-			pageNumberNew.current = 0;
-			pageNumberCurrent.current = 0;
+			messagePageNumberNew.current = 0;
+			messagePageNumberCurrent.current = 0;
 		}
 		
 		if (isMobile) {
@@ -657,14 +658,20 @@ export default function Chat() {
 				messageInput.current.value = userItem.draft ? userItem.draft : "";
 			}
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
-			messagesVar = pageNumber === 0 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
-			flushSync(() => {
-				setCurrentUserDisplayName(res.data.result.displayName);
-				setLastOnline(res.data.result.isOnline || username === myname ? "在线" : (
-					res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
-				setMessages([...messagesVar]);
-			});
-			setShowScrollTop(true);
+			if (res.data.result && res.data.result.message && res.data.result.message.length > 0) {
+				flushSync(() => {
+					messagesVar = pageNumber === 0 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
+					setMessages([...messagesVar]);
+				});
+			}
+			if (!isCurrentUser) {
+				flushSync(() => {
+					setCurrentUserDisplayName(res.data.result.displayName);
+					setLastOnline(res.data.result.isOnline || username === myname ? "在线" : (
+						res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
+				});
+				setShowScrollTop(true);
+			}
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
 	}, [messageCardScrollTo, setClientUser]);
@@ -906,7 +913,8 @@ export default function Chat() {
 	
 	useEffect(() => {
 		if (lastMessageRef.current) {
-			pageNumberCurrent.current = pageNumberNew.current;
+			console.log("hi");
+			messagePageNumberCurrent.current = messagePageNumberNew.current;
 			messageLoadingObserver.current.disconnect();
 			messageLoadingObserver.current.observe(lastMessageRef.current);
 		}
