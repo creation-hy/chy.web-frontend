@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import {memo, useRef, useState} from 'react';
 import DialogActions from "@mui/material/DialogActions";
 import Grid from "@mui/material/Grid2";
 import TextField from "@mui/material/TextField";
@@ -12,6 +12,7 @@ import {enqueueSnackbar} from "notistack";
 import Typography from "@mui/material/Typography";
 import axios from "axios";
 import PropTypes from "prop-types";
+import {Leaderboard, PlayArrow} from "@mui/icons-material";
 
 let flippedCount = 0, passedTimeInterval;
 let startTime = 0, rows = 10, mines = 10;
@@ -66,13 +67,12 @@ const getPassedTime = () => {
 	return (hour < 10 ? "0" : "") + hour + ":" + (minute < 10 ? "0" : "") + minute + ":" + (second < 10 ? "0" : "") + second;
 }
 
-const InitDialog = ({setGrid, setElapsedTime}) => {
-	const [open, setOpen] = useState(true);
+const InitDialog = memo(({setGrid, setElapsedTime, open, setOpen, setIsGameStarted}) => {
 	const rowsRef = useRef(null);
 	const minesRef = useRef(null);
 	
 	return (
-		<Dialog open={open}>
+		<Dialog open={open} onClose={() => setOpen(false)}>
 			<DialogTitle>设置参数</DialogTitle>
 			<DialogContent>
 				<TextField
@@ -103,20 +103,27 @@ const InitDialog = ({setGrid, setElapsedTime}) => {
 					startTime = new Date().getTime();
 					passedTimeInterval = setInterval(() => setElapsedTime(getPassedTime()), 1000);
 					setOpen(false);
+					setIsGameStarted(true);
 				}}>开始</Button>
 			</DialogActions>
 		</Dialog>
 	);
-};
+});
 
 InitDialog.propTypes = {
 	setGrid: PropTypes.func,
 	setElapsedTime: PropTypes.func,
+	open: PropTypes.bool,
+	setOpen: PropTypes.func,
+	setIsGameStarted: PropTypes.func,
 }
 
 export default function Minesweeper() {
+	const [isSettingParams, setIsSettingParams] = useState(false);
+	const [isGameStarted, setIsGameStarted] = useState(false);
 	const [grid, setGrid] = useState([]);
 	const [elapsedTime, setElapsedTime] = useState("00:00:00");
+	const [showRanking, setShowRanking] = useState(false);
 	const boxes = useRef([]);
 	
 	const purge = (x, y) => {
@@ -130,7 +137,7 @@ export default function Minesweeper() {
 			const score = getPassedTime();
 			enqueueSnackbar("你赢了！", {variant: "success"});
 			window.clearInterval(passedTimeInterval);
-			if (rows >= 10 && mines >= rows * rows * 0.2 && mines <= rows * rows * 0.98)
+			if (rows >= 10 && mines >= rows * rows * 0.2 && mines <= rows * rows * 0.98) {
 				axios.post("/api/minesweeper/submit", {time: score}, {
 					headers: {
 						"Content-Type": "application/json",
@@ -138,8 +145,9 @@ export default function Minesweeper() {
 				}).then(res => {
 					enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 				});
-			else
+			} else {
 				enqueueSnackbar("检测到作弊行为，本次成绩不会上传", {variant: "error"});
+			}
 			return;
 		}
 		
@@ -167,11 +175,19 @@ export default function Minesweeper() {
 	
 	return (
 		<Box>
-			<InitDialog setGrid={setGrid} setElapsedTime={setElapsedTime}/>
-			<Grid container justifyContent="center" sx={{mb: 2}}>
-				<Typography variant="h4">{elapsedTime}</Typography>
-			</Grid>
-			<Grid container direction="column">
+			<InitDialog setGrid={setGrid} setElapsedTime={setElapsedTime}
+			            open={isSettingParams} setOpen={setIsSettingParams} setIsGameStarted={setIsGameStarted}/>
+			{isGameStarted ? (
+				<Grid container justifyContent="center" sx={{mb: 1.5}} spacing={2}>
+					<Typography variant="h4">{elapsedTime}</Typography>
+				</Grid>
+			) : (
+				<Grid container gap={2} justifyContent="center">
+					<Button variant="contained" onClick={() => setIsSettingParams(true)}><PlayArrow/></Button>
+					<Button variant="contained" onClick={() => setShowRanking(true)}><Leaderboard/></Button>
+				</Grid>
+			)}
+			<Grid container direction="column" overflow="auto">
 				{grid == null ? <Alert severity="error">你被炸死了！</Alert> :
 					grid.map((item, rowIndex) => (
 						<Grid container direction="row" key={rowIndex} justifyContent="center" wrap="nowrap">
@@ -220,6 +236,11 @@ export default function Minesweeper() {
 						</Grid>
 					))}
 			</Grid>
+			{isGameStarted && (
+				<Grid container justifyContent="center" sx={{mt: 2.5}}>
+					<Button variant="contained" onClick={() => setShowRanking(true)}><Leaderboard/></Button>
+				</Grid>
+			)}
 		</Box>
 	);
 }
