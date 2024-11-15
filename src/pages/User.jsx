@@ -25,6 +25,7 @@ import IconButton from "@mui/material/IconButton";
 import ResetPassword from "src/components/ResetPassword.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
+import Chip from "@mui/material/Chip";
 
 const News = memo(({username, displayName}) => {
 	const {data} = useQuery({
@@ -76,7 +77,7 @@ const News = memo(({username, displayName}) => {
 					<IconButton sx={{mr: 1.5, p: 0}}>
 						<UserAvatar username={username} displayName={displayName}/>
 					</IconButton>
-					<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-end' spacing={0.7}>
+					<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-start' spacing={0.7}>
 						<Paper
 							elevation={3}
 							sx={{
@@ -93,6 +94,14 @@ const News = memo(({username, displayName}) => {
 								{convertDateToLocaleAbsoluteString(item.time)}
 							</Typography>
 						</Paper>
+						{item.quote != null &&
+							<Chip
+								variant="outlined"
+								avatar={<UserAvatar username={item.quote.username} displayName={item.quote.displayName}/>}
+								label={item.quote.displayName + ": " + item.quote.content}
+								clickable
+							/>
+						}
 					</Grid>
 				</Grid>
 			))}
