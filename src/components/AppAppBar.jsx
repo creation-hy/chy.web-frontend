@@ -26,6 +26,7 @@ import {
 import {useColorMode} from "src/components/ColorMode.jsx";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
+import Typography from "@mui/material/Typography";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -135,7 +136,7 @@ export const AppAppBar = memo(() => {
 						</Grid>
 						<SwipeableDrawer anchor="left" open={open} onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
 							<Box sx={{backgroundColor: 'background.default', minHeight: "100%", width: 250}}>
-								<Box sx={{mt: 2.5, mb: 1.5}}>
+								<Box sx={{mt: 2.5, mb: 1}}>
 									{clientUserLoading ? null : (!clientUser ? (
 										<Grid container direction="column" gap={1.5}>
 											<Button variant="contained" href="/register" sx={{mx: 2}}>
@@ -146,11 +147,17 @@ export const AppAppBar = memo(() => {
 											</Button>
 										</Grid>
 									) : (
-										<Box display="flex" justifyContent="center">
-											<IconButton sx={{width: 50, height: 50}} href={"/user/" + clientUser.username}>
-												<UserAvatar username={clientUser.username} displayName={clientUser.displayName} width={50} height={50}/>
+										<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
+											<IconButton sx={{width: 80, height: 80, mb: 0.75}} href={"/user/" + clientUser.username}>
+												<UserAvatar username={clientUser.username} displayName={clientUser.displayName} width={80} height={80}/>
 											</IconButton>
-										</Box>
+											<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
+												{clientUser.displayName}
+											</Typography>
+											<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
+												@{clientUser.username}
+											</Typography>
+										</Grid>
 									))}
 								</Box>
 								<List sx={{width: "100%"}}>

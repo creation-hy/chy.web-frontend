@@ -145,8 +145,16 @@ const Follows = memo(({username, type}) => {
 							<UserAvatar username={item.username} displayName={item.displayName}/>
 						</ListItemAvatar>
 						<ListItemText
-							primary={<Typography fontWeight="bold">{item.displayName}</Typography>}
-							secondary={"@" + item.username}
+							primary={
+								<Typography fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis">
+									{item.displayName}
+								</Typography>
+							}
+							secondary={
+								<Typography fontSize={14} color="text.secondary" noWrap overflow="hidden" textOverflow="ellipsis">
+									@{item.username}
+								</Typography>
+							}
 						/>
 					</ListItemButton>
 				</ListItem>
