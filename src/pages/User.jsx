@@ -55,8 +55,9 @@ const News = memo(({username, displayName}) => {
 	}, [data]);
 	
 	useEffect(() => {
-		pageNumberCurrent.current = pageNumberNew.current;
 		if (lastMessageRef.current) {
+			pageNumberCurrent.current = pageNumberNew.current;
+			pageLoadingObserver.current.disconnect();
 			pageLoadingObserver.current.observe(lastMessageRef.current);
 		}
 	}, [chatList]);
@@ -130,8 +131,9 @@ const Follows = memo(({username, type}) => {
 	}, [username, type]);
 	
 	useEffect(() => {
-		pageNumberCurrent.current = pageNumberNew.current;
 		if (lastUserRef.current) {
+			pageNumberCurrent.current = pageNumberNew.current;
+			pageLoadingObserver.disconnect();
 			pageLoadingObserver.observe(lastUserRef.current);
 		}
 	}, [userList]);

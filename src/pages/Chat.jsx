@@ -904,15 +904,17 @@ export default function Chat() {
 	}, [getMessages, logged, stompOnConnect]);
 	
 	useEffect(() => {
-		pageNumberCurrent.current = pageNumberNew.current;
 		if (lastMessageRef.current) {
+			pageNumberCurrent.current = pageNumberNew.current;
+			messageLoadingObserver.current.disconnect();
 			messageLoadingObserver.current.observe(lastMessageRef.current);
 		}
 	}, [messages]);
 	
 	useEffect(() => {
-		userFindPageNumberCurrent.current = userFindPageNumberNew.current;
 		if (lastUserFindingRef.current) {
+			userFindPageNumberCurrent.current = userFindPageNumberNew.current;
+			userFindingObserver.current.disconnect();
 			userFindingObserver.current.observe(lastUserFindingRef.current);
 		}
 	}, [matchList]);
@@ -920,6 +922,7 @@ export default function Chat() {
 	useEffect(() => {
 		if (contactFetchSuccess.current && lastContactRef.current) {
 			contactPageNumberCurrent.current = contactPageNumberNew.current;
+			contactPageObserver.current.disconnect();
 			contactPageObserver.current.observe(lastContactRef.current);
 			contactFetchSuccess.current = false;
 		}

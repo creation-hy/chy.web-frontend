@@ -273,8 +273,9 @@ const GeneratedResults = () => {
 	}, []);
 	
 	useEffect(() => {
-		pageNumberCurrent.current = pageNumberNew.current;
 		if (lastImageRef.current) {
+			pageNumberCurrent.current = pageNumberNew.current;
+			pageLoadingObserver.current.disconnect();
 			pageLoadingObserver.current.observe(lastImageRef.current);
 		}
 	}, [imageList]);
@@ -1073,8 +1074,9 @@ const Community = () => {
 	}, [data]);
 	
 	useEffect(() => {
-		pageNumberCurrent.current = pageNumberNew.current;
 		if (lastImageRef.current) {
+			pageNumberCurrent.current = pageNumberNew.current;
+			pageLoadingObserver.disconnect();
 			pageLoadingObserver.observe(lastImageRef.current);
 		}
 	}, [imageList, pageLoadingObserver]);
