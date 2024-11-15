@@ -689,8 +689,6 @@ export default function Chat() {
 				return;
 			}
 			setLogged(true);
-			document.getElementById("page-container").style.height = "0";
-			document.getElementById("page-main").style.height = "0";
 			usersVar = data.result;
 			setUsers([...usersVar]);
 			if (!userJumped.current && urlParams.current["username"]) {
@@ -941,7 +939,7 @@ export default function Chat() {
 		return <SignUp/>;
 	
 	return (
-		<Grid container sx={{flex: 1, height: 0, display: !users ? "none" : "flex"}} gap={2}>
+		<Grid container sx={{flex: 1, display: !users ? "none" : "flex", minHeight: 0}} gap={2}>
 			<Card variant="outlined" ref={contactsComponent} sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
 					inputRef={userSearchField}

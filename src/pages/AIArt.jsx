@@ -978,7 +978,7 @@ const TextToImageUI = () => {
 					</Grid>
 				</Grid>
 			</Card>
-			<Card variant="outlined" sx={{padding: 2.5, flex: isSmallScreen ? 0 : 1}}>
+			<Card variant="outlined" sx={{padding: 2.5, flex: 1}}>
 				<Grid container direction="column" spacing={2}>
 					<TextField
 						name="positive"

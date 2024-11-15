@@ -7,7 +7,7 @@ import Chat from "src/pages/Chat.jsx";
 import User from "src/pages/User.jsx";
 import AIArt from "src/pages/AIArt.jsx";
 import Container from "@mui/material/Container";
-import {AppAppBar} from "src/components/AppAppBar.jsx";
+import {MobileAppBar, PCAppBar} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -20,66 +20,90 @@ import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Start from "src/pages/Start.jsx";
-import {memo} from "react";
-import {Fab, useScrollTrigger, Zoom} from "@mui/material";
+import {memo, useEffect, useRef, useState} from "react";
+import {Fab, useMediaQuery, Zoom} from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import {KeyboardArrowUpOutlined} from "@mui/icons-material";
 
 const PageContainer = memo(() => {
+	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
+	const containerRef = useRef(null);
+	
+	const [scrollTrigger, setScrollTrigger] = useState(false);
+	
+	const handleClick = () => {
+		containerRef.current.scrollTo({top: 0, behavior: "smooth"});
+	};
+	
+	useEffect(() => {
+		containerRef.current.addEventListener("scroll", () => {
+			if (containerRef.current.scrollTop >= 100)
+				setScrollTrigger(true);
+			else
+				setScrollTrigger(false);
+		});
+	}, []);
+	
 	return (
-		<Box id="page-container" display="flex" flexDirection="column" sx={{minHeight: "100%", pb: 2}}>
-			<AppAppBar/>
-			<Container id="page-main" maxWidth="lg" component="main" sx={{display: 'flex', flexDirection: 'column', flex: 1}}>
-				<BrowserRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
-					<Routes>
-						<Route path="/" element={<Chat/>}/>
-						<Route path="/about" element={<Start/>}/>
-						<Route path="/blog" element={<Blog/>}/>
-						<Route path="/login" element={<SignIn/>}/>
-						<Route path="/register" element={<SignUp/>}/>
-						<Route path="/user/:username" element={<User/>}/>
-						<Route path="/ranking" element={<Ranking/>}/>
-						<Route path="/ai-art" element={<AIArt/>}/>
-						<Route path="/chybench" element={<Chybench/>}/>
-						<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
-						<Route path="/minesweeper" element={<Minesweeper/>}/>
-						<Route path="/chat" element={<Chat/>}/>
-						<Route path="/chat/:username" element={<Chat/>}/>
-						<Route path="*" element={<Error/>}/>
-					</Routes>
-				</BrowserRouter>
-			</Container>
-		</Box>
+		<Grid container width="100%" height="100%" overflow="hidden">
+			<BrowserRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
+				{!isSmallScreen && <PCAppBar/>}
+				<Box
+					ref={containerRef} display="flex" flexDirection="column" sx={{height: "100%", flex: 1, overflow: "auto"}}>
+					{isSmallScreen && <MobileAppBar/>}
+					<Container
+						maxWidth="lg"
+						component="main"
+						sx={{
+							display: 'flex',
+							flexDirection: 'column',
+							flex: 1,
+							minHeight: 0,
+						}}
+					>
+						{!isSmallScreen && <Box minHeight={16}/>}
+						<Routes>
+							<Route path="/" element={<Chat/>}/>
+							<Route path="/about" element={<Start/>}/>
+							<Route path="/blog" element={<Blog/>}/>
+							<Route path="/login" element={<SignIn/>}/>
+							<Route path="/register" element={<SignUp/>}/>
+							<Route path="/user/:username" element={<User/>}/>
+							<Route path="/ranking" element={<Ranking/>}/>
+							<Route path="/ai-art" element={<AIArt/>}/>
+							<Route path="/chybench" element={<Chybench/>}/>
+							<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
+							<Route path="/minesweeper" element={<Minesweeper/>}/>
+							<Route path="/chat" element={<Chat/>}/>
+							<Route path="/chat/:username" element={<Chat/>}/>
+							<Route path="*" element={<Error/>}/>
+						</Routes>
+						<Box minHeight={16}/>
+					</Container>
+					<Zoom in={scrollTrigger}>
+						<Box
+							onClick={handleClick}
+							role="presentation"
+							sx={{position: 'fixed', bottom: 25, right: 25, zIndex: 1}}
+						>
+							<Fab size="small" aria-label="scroll back to top">
+								<KeyboardArrowUpOutlined/>
+							</Fab>
+						</Box>
+					</Zoom>
+				</Box>
+			</BrowserRouter>
+		</Grid>
 	);
 });
 
 export default function App() {
 	const [binaryColorMode] = useBinaryColorMode();
 	
-	const trigger = useScrollTrigger({
-		target: window ? window : undefined,
-		disableHysteresis: true,
-		threshold: 100,
-	});
-	
-	const handleClick = () => {
-		window.scrollTo({top: 0, behavior: "smooth"});
-	};
-	
 	return (
 		<ThemeProvider theme={createTheme(getDefaultTheme(binaryColorMode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
-			<Zoom in={trigger}>
-				<Box
-					onClick={handleClick}
-					role="presentation"
-					sx={{position: 'fixed', bottom: 25, right: 25, zIndex: 1}}
-				>
-					<Fab size="small" aria-label="scroll back to top">
-						<KeyboardArrowUpOutlined/>
-					</Fab>
-				</Box>
-			</Zoom>
 			<PageContainer/>
 		</ThemeProvider>
 	);
