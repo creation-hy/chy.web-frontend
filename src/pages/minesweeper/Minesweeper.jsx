@@ -18,9 +18,11 @@ import IconButton from "@mui/material/IconButton";
 import Pagination from "@mui/material/Pagination";
 import {useQuery} from "@tanstack/react-query";
 import {flushSync} from "react-dom";
+import Cookies from "js-cookie";
 
 let flippedCount = 0, passedTimeInterval;
 let startTime = 0, rows = 10, mines = 10;
+const myname = Cookies.get("username");
 
 const generateGrid = (rows, mines) => {
 	const grid = Array.from({length: rows}, () => new Array(rows).fill(0));
@@ -126,6 +128,9 @@ const Ranking = memo(({showRanking, setShowRanking}) => {
 		queryFn: () => axios.get(`/api/minesweeper/ranking-count`).then(res => res.data),
 	});
 	
+	
+	const myItem = data && data.result ? data.result.find(item => item.username === myname) : undefined;
+	
 	return (
 		<Dialog
 			open={showRanking}
@@ -149,6 +154,7 @@ const Ranking = memo(({showRanking, setShowRanking}) => {
 				<DataGrid
 					columns={tableColumns}
 					rows={data ? data.result : undefined}
+					rowSelectionModel={myItem ? myItem.id : undefined}
 					disableRowSelectionOnClick
 					hideFooter
 				/>
