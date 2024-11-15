@@ -12,7 +12,12 @@ import {enqueueSnackbar} from "notistack";
 import Typography from "@mui/material/Typography";
 import axios from "axios";
 import PropTypes from "prop-types";
-import {Leaderboard, PlayArrow} from "@mui/icons-material";
+import {Close, Leaderboard, PlayArrow} from "@mui/icons-material";
+import {DataGrid} from "@mui/x-data-grid";
+import {SimpleUserItem} from "src/components/UserItem.jsx";
+import IconButton from "@mui/material/IconButton";
+import Pagination from "@mui/material/Pagination";
+import {useQuery} from "@tanstack/react-query";
 
 let flippedCount = 0, passedTimeInterval;
 let startTime = 0, rows = 10, mines = 10;
@@ -116,6 +121,103 @@ InitDialog.propTypes = {
 	open: PropTypes.bool,
 	setOpen: PropTypes.func,
 	setIsGameStarted: PropTypes.func,
+}
+
+const tableColumns = [
+	{
+		field: "id",
+		width: 65,
+		headerName: "ID",
+		hideSortIcons: true,
+	},
+	{
+		field: "percentage",
+		width: 130,
+		headerName: "相比第一",
+		renderCell: (params) => (
+			<Box position="static" width="100%" height="100%" sx={{py: 1.5, pr: 2}}>
+				<Box position="relative" width="100%" height="100%" sx={{border: 1, borderColor: theme => theme.palette.divider}}>
+					<Grid container position="absolute" width="100%" height="100%" justifyContent="center" alignItems="center">
+						<Typography fontSize="inherit">
+							{params.value}%
+						</Typography>
+					</Grid>
+					<Box width={params.row.percentage + "%"} height="100%"
+					     sx={{backgroundColor: theme => theme.palette.mode === "light" ? theme.palette.primary.light : theme.palette.info.dark}}/>
+				</Box>
+			</Box>
+		),
+	},
+	{
+		field: "displayName",
+		headerName: "用户",
+		flex: 1,
+		minWidth: 175,
+		renderCell: (params) => {
+			return <SimpleUserItem username={params.row.username} displayName={params.row.displayName} sx={{mr: 1}}/>
+		}
+	},
+	{
+		field: "time",
+		width: 130,
+		headerName: "完成用时",
+	},
+];
+
+const Ranking = memo(({showRanking, setShowRanking}) => {
+	const [pageNumber, setPageNumber] = useState(0);
+	
+	const {data} = useQuery({
+		queryKey: ["minesweeper-ranking", pageNumber],
+		queryFn: () => axios.get(`/api/minesweeper/ranking/${pageNumber}`).then(res => res.data),
+	});
+	
+	const countData = useQuery({
+		queryKey: ["minesweeper-ranking", "count"],
+		queryFn: () => axios.get(`/api/minesweeper/ranking-count`).then(res => res.data),
+	});
+	
+	return (
+		<Dialog
+			open={showRanking}
+			onClose={() => setShowRanking(false)}
+			fullWidth
+		>
+			<IconButton
+				onClick={() => setShowRanking(false)}
+				sx={{
+					position: "absolute",
+					right: 12,
+					top: 12,
+				}}
+			>
+				<Close/>
+			</IconButton>
+			<DialogTitle>
+				排行榜
+			</DialogTitle>
+			<DialogContent>
+				<DataGrid
+					columns={tableColumns}
+					rows={data ? data.result : undefined}
+					disableRowSelectionOnClick
+					hideFooter
+				/>
+				<Grid container sx={{mt: 2}} justifyContent="center" alignItems="flex-end" flex={1}>
+					<Pagination
+						color="primary"
+						count={countData.data ? Math.ceil(countData.data.result / 10.0) : 0}
+						onChange={(event, value) => setPageNumber(value - 1)}
+					/>
+				</Grid>
+			</DialogContent>
+		</Dialog>
+	);
+});
+
+Ranking.propTypes = {
+	showRanking: PropTypes.bool.isRequired,
+	setShowRanking: PropTypes.func.isRequired,
 }
 
 export default function Minesweeper() {
@@ -241,6 +343,7 @@ export default function Minesweeper() {
 					<Button variant="contained" onClick={() => setShowRanking(true)}><Leaderboard/></Button>
 				</Grid>
 			)}
+			<Ranking showRanking={showRanking} setShowRanking={setShowRanking}/>
 		</Box>
 	);
 }
