@@ -487,6 +487,8 @@ ChatToolBar.propTypes = {
 
 const ScrollTop = memo(({children, messageCard}) => {
 	const [trigger, setTrigger] = useState(false);
+	const [top, setTop] = useState(0);
+	const [left, setLeft] = useState(0);
 	
 	useEffect(() => {
 		messageCard.current.addEventListener("scroll", () => {
@@ -495,10 +497,18 @@ const ScrollTop = memo(({children, messageCard}) => {
 			else
 				setTrigger(false);
 		});
+		
+		const observer = new ResizeObserver(() => {
+			setTop(messageCard.current.clientHeight + messageCard.current.offsetTop - 50);
+			setLeft(messageCard.current.clientWidth / 2 + messageCard.current.offsetLeft - 25);
+		});
+		
+		observer.observe(messageCard.current);
 	}, [messageCard]);
 	
-	if (!messageCard.current || messageCard.current.display === "none")
+	if (!messageCard.current || messageCard.current.display === "none") {
 		return null;
+	}
 	
 	return (
 		<Zoom in={trigger}>
@@ -507,8 +517,8 @@ const ScrollTop = memo(({children, messageCard}) => {
 				role="presentation"
 				sx={{
 					position: "absolute",
-					top: messageCard.current.clientHeight + messageCard.current.offsetTop - 50 + "px",
-					left: messageCard.current.clientWidth / 2 + messageCard.current.offsetLeft - 25 + "px",
+					top: top + "px",
+					left: left + "px",
 				}}
 			>
 				{children}
@@ -674,7 +684,7 @@ export default function Chat() {
 		});
 	}, [messageCardScrollTo, setClientUser]);
 	
-	const {data} = useQuery({
+	const {data, isLoading} = useQuery({
 		queryKey: ["contacts"],
 		queryFn: () => axios.get("/api/chat/contacts/0").then(res => res.data),
 		staleTime: Infinity,
@@ -693,14 +703,14 @@ export default function Chat() {
 	}, [data]);
 	
 	useEffect(() => {
-		if (data) {
+		if (!isLoading) {
 			currentUserVar = null;
 			setCurrentUser(null);
 			if (username) {
 				getMessages(username, 0, true);
 			}
 		}
-	}, [data, username]);
+	}, [isLoading, username]);
 	
 	useEffect(() => {
 		return () => {
@@ -1152,7 +1162,7 @@ export default function Chat() {
 						</Fab>
 					</ScrollTop>}
 				</Card>
-				{currentUser != null && <Card variant="outlined" sx={{maxWidth: "100%"}}>
+				<Box sx={{width: "100%"}}>
 					{quote != null &&
 						<Chip
 							variant="outlined"
@@ -1163,36 +1173,38 @@ export default function Chat() {
 							onDelete={() => setQuote(null)}
 						/>
 					}
-					<TextField
-						inputRef={messageInput}
-						placeholder="Message"
-						multiline
-						fullWidth
-						maxRows={10}
-						slotProps={{input: {style: {fontSize: 15, padding: 10}}}}
-						onKeyDown={(event) => {
-							if (!isMobile && event.keyCode === 13) {
-								event.preventDefault();
-								if (event.metaKey || event.ctrlKey)
-									document.execCommand("insertLineBreak");
-								else
-									sendMessage();
-							}
-						}}
-						onChange={(event) => saveDraft(currentUserVar, event.target.value, setUsers)}
-					/>
-					<Grid container justifyContent="space-between">
-						<ChatToolBar inputField={messageInput}/>
-						<IconButton
-							size="large"
-							color="primary"
-							sx={{justifySelf: "flex-end"}}
-							onClick={sendMessage}
-						>
-							<Send/>
-						</IconButton>
-					</Grid>
-				</Card>}
+					{currentUser != null && <Card variant="outlined" sx={{maxWidth: "100%"}}>
+						<TextField
+							inputRef={messageInput}
+							placeholder="Message"
+							multiline
+							fullWidth
+							maxRows={10}
+							slotProps={{input: {style: {fontSize: 15, padding: 10}}}}
+							onKeyDown={(event) => {
+								if (!isMobile && event.keyCode === 13) {
+									event.preventDefault();
+									if (event.metaKey || event.ctrlKey)
+										document.execCommand("insertLineBreak");
+									else
+										sendMessage();
+								}
+							}}
+							onChange={(event) => saveDraft(currentUserVar, event.target.value, setUsers)}
+						/>
+						<Grid container justifyContent="space-between">
+							<ChatToolBar inputField={messageInput}/>
+							<IconButton
+								size="large"
+								color="primary"
+								sx={{justifySelf: "flex-end"}}
+								onClick={sendMessage}
+							>
+								<Send/>
+							</IconButton>
+						</Grid>
+					</Card>}
+				</Box>
 			</Grid>
 		</Grid>
 	);
