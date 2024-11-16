@@ -666,7 +666,7 @@ export default function Chat() {
 				messageInput.current.value = userItem.draft ? userItem.draft : "";
 			}
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
-			if (res.data.result && res.data.result.message && res.data.result.message.length > 0) {
+			if (res.data.result && res.data.result.message && res.data.result.message.length > 0 || pageNumber === 0) {
 				flushSync(() => {
 					messagesVar = pageNumber === 0 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
 					setMessages([...messagesVar]);
