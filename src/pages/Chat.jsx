@@ -499,8 +499,10 @@ const ScrollTop = memo(({children, messageCard}) => {
 		});
 		
 		const observer = new ResizeObserver(() => {
-			setTop(messageCard.current.clientHeight + messageCard.current.offsetTop - 50);
-			setLeft(messageCard.current.clientWidth / 2 + messageCard.current.offsetLeft - 25);
+			if (messageCard.current) {
+				setTop(messageCard.current.clientHeight + messageCard.current.offsetTop - 50);
+				setLeft(messageCard.current.clientWidth / 2 + messageCard.current.offsetLeft - 25);
+			}
 		});
 		
 		observer.observe(messageCard.current);
