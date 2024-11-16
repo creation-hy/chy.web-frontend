@@ -60,10 +60,14 @@ const LeftBar = memo(({navigateCallback}) => {
 		<>
 			<Box sx={{mt: 2.5, mb: 1}}>
 				{clientUserLoading ? (
-					<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}} gap={1}>
-						<Skeleton variant="circular" width={80} height={80}/>
-						<Skeleton variant="rectangular" width="100%"/>
-						<Skeleton variant="rectangular" width="100%"/>
+					<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
+						<Skeleton variant="circular" width={80} height={80} sx={{mb: 0.75}}/>
+						<Typography>
+							<Skeleton/>
+						</Typography>
+						<Typography fontSize={14}>
+							<Skeleton/>
+						</Typography>
 					</Grid>
 				) : (!clientUser ? (
 					<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
