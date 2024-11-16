@@ -704,8 +704,14 @@ export default function Chat() {
 	
 	useEffect(() => {
 		return () => {
-			if (document.getElementById("app-bar"))
+			if (document.getElementById("app-bar")) {
 				document.getElementById("app-bar").style.display = "flex";
+			}
+			if (stomp) {
+				stomp.onWebSocketClose = () => {
+				};
+				stomp.disconnect(() => stomp = null);
+			}
 		}
 	}, []);
 	
