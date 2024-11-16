@@ -903,7 +903,7 @@ export default function Chat() {
 		};
 		
 		const stompReconnect = async () => {
-			if (firstRebirth) {
+			if (firstRebirth.current) {
 				firstRebirth.current = false;
 				if (!disconnectErrorBarKey.current)
 					disconnectErrorBarKey.current = enqueueSnackbar("服务器连接已断开，正在尝试重连...", {
@@ -912,8 +912,9 @@ export default function Chat() {
 						persist: true,
 					});
 				stompConnect();
-			} else
+			} else {
 				setTimeout(stompConnect, 1000);
+			}
 		};
 		
 		if (logged && !stomp) {
