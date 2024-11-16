@@ -67,6 +67,7 @@ import DialogContent from "@mui/material/DialogContent";
 import {TransitionGroup} from "react-transition-group";
 import {SimpleUserItem} from "src/components/UserItem.jsx";
 import {isIOS} from "react-device-detect";
+import {useNavigate} from "react-router";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -128,17 +129,21 @@ const MyRequests = () => {
 	const [showInfo, setShowInfo] = useState(false);
 	const [infoData, setInfoData] = useState(null);
 	const [deletingId, setDeletingId] = useState(null);
+	const navigate = useNavigate();
 	
 	useEffect(() => {
 		if (data && data.result)
 			setRequestList(data.result);
 	}, [data]);
 	
-	if (isLoading || error)
-		return null;
+	useEffect(() => {
+		if (data && data.status === 0) {
+			navigate("/register");
+		}
+	}, [data, navigate]);
 	
-	if (data.status === 0) {
-		window.location.href = "/register";
+	if (isLoading || error) {
+		return null;
 	}
 	
 	if (requestList.length === 0)
@@ -225,6 +230,7 @@ const GeneratedResults = () => {
 	const [deletingImageId, setDeletingImageId] = useState(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [imageList, setImageList] = useState(null);
+	const navigate = useNavigate();
 	
 	const [selectedImages, setSelectedImages] = useState(new Set());
 	const [showMultipleDeletingDialog, setShowMultipleDeletingDialog] = useState(false);
@@ -280,11 +286,14 @@ const GeneratedResults = () => {
 		}
 	}, [imageList]);
 	
-	if (isLoading || error || !imageList)
-		return null;
+	useEffect(() => {
+		if (data && data.status === 0) {
+			navigate("/register");
+		}
+	}, [data, navigate]);
 	
-	if (data.status === 0) {
-		window.location.href = "/register";
+	if (isLoading || error || !imageList) {
+		return null;
 	}
 	
 	if (imageList.length === 0)

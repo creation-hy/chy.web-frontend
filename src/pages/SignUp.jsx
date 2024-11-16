@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -14,8 +14,9 @@ import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import Cookies from "js-cookie";
-import {useQuery} from "@tanstack/react-query";
 import {LoadingButton} from "@mui/lab";
+import {useNavigate} from "react-router";
+import {useClientUser} from "src/components/ClientUser.jsx";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -49,13 +50,14 @@ export default function SignUp() {
 	const [verifyLoading, setVerifyLoading] = useState(false);
 	const [registerLoading, setRegisterLoading] = useState(false);
 	
-	const {data} = useQuery({
-		queryKey: ["accountCheck"],
-		queryFn: () => axios.get("/api/account/check").then(res => res.data),
-	});
+	const navigate = useNavigate();
+	const {clientUser} = useClientUser();
 	
-	if (data && data.status !== 0)
-		window.location.href = "/user/" + data.username;
+	useEffect(() => {
+		if (clientUser) {
+			navigate(`/user/${clientUser.username}`);
+		}
+	}, [clientUser, navigate]);
 	
 	const register = (event) => {
 		event.preventDefault();
@@ -240,9 +242,9 @@ export default function SignUp() {
 				<Typography sx={{textAlign: 'center'}}>
 					已经有账号了？{' '}
 					<Link
-						href={"/login"}
+						onClick={() => navigate("/login")}
 						variant="body2"
-						sx={{alignSelf: 'center'}}
+						sx={{alignSelf: 'center', cursor: "pointer"}}
 					>
 						登录
 					</Link>

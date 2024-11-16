@@ -174,12 +174,13 @@ UserItem.propTypes = {
 const Message = memo(({messageId, username, displayName, content, quote, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
+	const navigate = useNavigate();
 	
 	const isMe = username === myname;
 	
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
-			{!isMe && <IconButton sx={{mr: 1, p: 0}} href={"/user/" + username}>
+			{!isMe && <IconButton sx={{mr: 1, p: 0}} onClick={() => navigate(`/user/${username}`)}>
 				<UserAvatar username={username} displayName={displayName}/>
 			</IconButton>}
 			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
@@ -218,7 +219,7 @@ const Message = memo(({messageId, username, displayName, content, quote, setQuot
 					/>
 				}
 			</Grid>
-			{isMe && <IconButton sx={{ml: 1, p: 0}} href={"/user/" + username}>
+			{isMe && <IconButton sx={{ml: 1, p: 0}} onClick={() => navigate(`/user/${username}`)}>
 				<UserAvatar username={username} displayName={displayName}/>
 			</IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
@@ -524,9 +525,8 @@ ScrollTop.propTypes = {
 export default function Chat() {
 	document.title = "Chat - chy.web";
 	
-	const urlParams = useRef(useParams());
-	const navigate = useRef(useNavigate());
-	const userJumped = useRef(false);
+	const {username} = useParams();
+	const navigate = useNavigate();
 	
 	const [users, setUsers] = useState(null);
 	const [logged, setLogged] = useState(null);
@@ -560,7 +560,6 @@ export default function Chat() {
 	const lastMessageRef = useRef(null);
 	const messageLoadingObserver = useRef(new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && messagePageNumberNew.current === messagePageNumberCurrent.current) {
-			console.log(messagePageNumberNew.current, messagePageNumberCurrent.current);
 			messagePageNumberNew.current = messagePageNumberCurrent.current + 1;
 			getMessages(currentUserVar, messagePageNumberNew.current);
 		}
@@ -623,7 +622,6 @@ export default function Chat() {
 			currentUserVar = username;
 			setCurrentUser(username);
 			setQuote(null);
-			navigate.current("/chat/" + username);
 			messagePageNumberNew.current = 0;
 			messagePageNumberCurrent.current = 0;
 		}
@@ -676,7 +674,7 @@ export default function Chat() {
 		});
 	}, [messageCardScrollTo, setClientUser]);
 	
-	const {data, isLoading, error} = useQuery({
+	const {data} = useQuery({
 		queryKey: ["contacts"],
 		queryFn: () => axios.get("/api/chat/contacts/0").then(res => res.data),
 		staleTime: Infinity,
@@ -691,12 +689,25 @@ export default function Chat() {
 			setLogged(true);
 			usersVar = data.result;
 			setUsers([...usersVar]);
-			if (!userJumped.current && urlParams.current["username"]) {
-				getMessages(urlParams.current["username"]);
-				userJumped.current = true;
+		}
+	}, [data]);
+	
+	useEffect(() => {
+		if (data) {
+			currentUserVar = null;
+			setCurrentUser(null);
+			if (username) {
+				getMessages(username, 0, true);
 			}
 		}
-	}, [data, getMessages, urlParams]);
+	}, [data, username]);
+	
+	useEffect(() => {
+		return () => {
+			if (document.getElementById("app-bar"))
+				document.getElementById("app-bar").style.display = "flex";
+		}
+	}, []);
 	
 	const sendMessage = useCallback(() => {
 		const content = messageInput.current.value;
@@ -905,13 +916,13 @@ export default function Chat() {
 				setTimeout(stompConnect, 1000);
 		};
 		
-		if (logged)
+		if (logged && !stomp) {
 			stompConnect();
-	}, [getMessages, logged, stompOnConnect]);
+		}
+	}, [logged, stompOnConnect]);
 	
 	useEffect(() => {
 		if (lastMessageRef.current) {
-			console.log("hi");
 			messagePageNumberCurrent.current = messagePageNumberNew.current;
 			messageLoadingObserver.current.disconnect();
 			messageLoadingObserver.current.observe(lastMessageRef.current);
@@ -970,7 +981,7 @@ export default function Chat() {
 				<Box sx={{overflowY: "auto"}}>
 					<List>
 						<ListItemButton
-							onClick={() => getMessages("ChatRoomSystem")}
+							onClick={() => navigate("/chat/ChatRoomSystem")}
 							selected={currentUser === "ChatRoomSystem"}
 						>
 							{users != null && <UserItem
@@ -990,7 +1001,7 @@ export default function Chat() {
 							<ListItemButton
 								key={user.username}
 								ref={user === users[users.length - 1] ? lastContactRef : undefined}
-								onClick={() => getMessages(user.username)}
+								onClick={() => navigate(`/chat/${user.username}`)}
 								selected={currentUser === user.username}
 							>
 								<UserItem
@@ -1028,7 +1039,7 @@ export default function Chat() {
 								<ListItemButton
 									key={user.username}
 									ref={user === matchList[matchList.length - 1] ? lastUserFindingRef : undefined}
-									onClick={() => getMessages(user.username)}
+									onClick={() => navigate(`/chat/${user.username}`)}
 									selected={currentUser === user.username}
 								>
 									<UserItem
@@ -1068,7 +1079,7 @@ export default function Chat() {
 							setCurrentUser(null);
 							setCurrentUserDisplayName(null);
 							currentUserVar = null;
-							navigate.current("/chat");
+							navigate("/chat");
 						}}>
 							<ArrowBack/>
 						</IconButton>}
@@ -1102,7 +1113,7 @@ export default function Chat() {
 							}}>
 								<CloudDownload/>
 							</IconButton>
-							<IconButton href={"/user/" + currentUser}>
+							<IconButton onClick={() => navigate(`/user/${currentUser}`)}>
 								<MoreHoriz/>
 							</IconButton>
 						</Box>

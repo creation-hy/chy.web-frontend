@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -17,6 +17,7 @@ import ResetPassword from "src/components/ResetPassword.jsx";
 import {Tab, Tabs} from "@mui/material";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {LoadingButton} from "@mui/lab";
+import {useNavigate} from "react-router";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -46,6 +47,7 @@ export default function SignIn() {
 	const [passwordError, setPasswordError] = useState(false);
 	const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 	const [open, setOpen] = useState(false);
+	const navigate = useNavigate();
 	
 	const [verifyLoading, setVerifyLoading] = useState(false);
 	const [loginLoading, setLoginLoading] = useState(false);
@@ -54,8 +56,11 @@ export default function SignIn() {
 	
 	const {clientUser} = useClientUser();
 	
-	if (clientUser)
-		window.location.href = "/user/" + clientUser.username;
+	useEffect(() => {
+		if (clientUser) {
+			navigate(`/user/${clientUser.username}`);
+		}
+	}, [clientUser, navigate]);
 	
 	const logIn = (event) => {
 		event.preventDefault();
@@ -231,9 +236,9 @@ export default function SignIn() {
 				<Typography sx={{textAlign: 'center'}}>
 					还没有账号？{' '}
 					<Link
-						href={"/register"}
+						onClick={() => navigate("/register")}
 						variant="body2"
-						sx={{alignSelf: 'center'}}
+						sx={{alignSelf: 'center', cursor: "pointer"}}
 					>
 						注册
 					</Link>

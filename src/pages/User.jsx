@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import {useParams} from "react-router";
+import {useNavigate, useParams} from "react-router";
 import {memo, useEffect, useMemo, useRef, useState} from "react";
 import {Alert, InputLabel, List, ListItem, ListItemAvatar, ListItemButton, ListItemText, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
@@ -29,7 +29,7 @@ import Chip from "@mui/material/Chip";
 
 const News = memo(({username, displayName}) => {
 	const {data} = useQuery({
-		queryKey: ["news"],
+		queryKey: ["news", username],
 		queryFn: () => axios.get(`/api/user/${username}/chat/0`).then(res => res.data),
 	});
 	
@@ -116,6 +116,7 @@ News.propTypes = {
 
 const Follows = memo(({username, type}) => {
 	const [userList, setUserList] = useState([]);
+	const navigate = useNavigate();
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -151,7 +152,7 @@ const Follows = memo(({username, type}) => {
 		<List sx={{mt: -2}}>
 			{userList.map((item) => (
 				<ListItem key={item.username} ref={item === userList[userList.length - 1] ? lastUserRef : undefined} sx={{p: 0}}>
-					<ListItemButton href={`/user/${item.username}`}>
+					<ListItemButton onClick={() => navigate(`/user/${item.username}`)}>
 						<ListItemAvatar>
 							<UserAvatar username={item.username} displayName={item.displayName}/>
 						</ListItemAvatar>
@@ -179,17 +180,18 @@ Follows.propTypes = {
 	type: PropTypes.string.isRequired,
 }
 
-const TabPanel = memo(({value, info}) => {
+const TabPanel = memo(({value, username, displayName}) => {
 	if (value === 0) {
-		return <News username={info.username} displayName={info.displayName}/>;
+		return <News username={username} displayName={displayName}/>;
 	}
 	
-	return <Follows username={info.username} type={value === 1 ? "following" : "follower"}/>;
+	return <Follows username={username} type={value === 1 ? "following" : "follower"}/>;
 });
 
 TabPanel.propTypes = {
 	value: PropTypes.number.isRequired,
-	info: PropTypes.object,
+	username: PropTypes.string.isRequired,
+	displayName: PropTypes.string,
 }
 
 const doFollow = (username, setIsFollowing, queryClient) => {
@@ -205,12 +207,6 @@ const doFollow = (username, setIsFollowing, queryClient) => {
 	})
 };
 
-const logOut = () => {
-	Cookies.remove("username");
-	Cookies.remove("user_token");
-	window.location.href = "/";
-}
-
 const uploadAvatar = (event) => {
 	const formData = new FormData();
 	formData.append("avatar", event.target.files[0]);
@@ -225,8 +221,8 @@ const uploadAvatar = (event) => {
 
 const myname = Cookies.get("username");
 
-export default function User() {
-	const {username} = useParams();
+const UserPage = memo(({username}) => {
+	const navigate = useNavigate();
 	
 	const [value, setValue] = useState(0);
 	const [modifying, setModifying] = useState(false);
@@ -240,14 +236,14 @@ export default function User() {
 	};
 	
 	const {data, isLoading} = useQuery({
-		queryKey: ["user-init"],
+		queryKey: ["user-init", username],
 		queryFn: () => axios.get("/api/user/" + username + "/info").then(res => res.data),
 	});
 	
 	useEffect(() => {
 		if (data && data.username) {
-			document.getElementById("tab-following").innerHTML += "(" + data["followingCount"] + ")";
-			document.getElementById("tab-follower").innerHTML += "(" + data["followerCount"] + ")";
+			document.getElementById("tab-following").innerHTML = "关注(" + data["followingCount"] + ")";
+			document.getElementById("tab-follower").innerHTML = "粉丝(" + data["followerCount"] + ")";
 			setIsFollowing(data["alreadyFollowing"]);
 		}
 	}, [data]);
@@ -295,10 +291,16 @@ export default function User() {
 									<IconButton onClick={() => setResetPasswordOn(true)}>
 										<LockResetOutlined/>
 									</IconButton>
-									<IconButton href={"/chat/" + data.username}>
+									<IconButton onClick={() => navigate(`/chat/${data.username}`)}>
 										<MailOutlined/>
 									</IconButton>
-									<IconButton onClick={logOut}>
+									<IconButton
+										onClick={() => {
+											Cookies.remove("username");
+											Cookies.remove("user_token");
+											window.location.href = "/login";
+										}}
+									>
 										<LogoutOutlined/>
 									</IconButton>
 								</Box>
@@ -307,7 +309,7 @@ export default function User() {
 									<IconButton onClick={() => doFollow(data.username, setIsFollowing, queryClient)}>
 										{isFollowing == null ? null : (isFollowing ? <PersonAddDisabledOutlined/> : <PersonAddOutlined/>)}
 									</IconButton>
-									<IconButton href={"/chat/" + data.username}>
+									<IconButton onClick={() => navigate(`/chat/${data.username}`)}>
 										<MailOutlined/>
 									</IconButton>
 								</Box>
@@ -330,7 +332,7 @@ export default function User() {
 					<Tab label="粉丝" data-option="follower" id="tab-follower"/>
 				</Tabs>
 			</Box>
-			<TabPanel value={value} info={data}/>
+			<TabPanel value={value} username={data.username} displayName={data.displayName}/>
 			<Dialog
 				open={modifying}
 				onClose={() => setModifying(false)}
@@ -408,4 +410,15 @@ export default function User() {
 			</Dialog>
 		</Box>
 	);
+});
+
+UserPage.propTypes = {
+	username: PropTypes.string.isRequired,
 }
+
+const User = () => {
+	const {username} = useParams();
+	return <UserPage key={username} username={username}/>;
+}
+
+export default User;

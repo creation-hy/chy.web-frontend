@@ -1,4 +1,4 @@
-import {memo, useCallback, useRef, useState} from 'react';
+import {memo, useCallback, useState} from 'react';
 import {alpha, styled} from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
@@ -45,12 +45,12 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 
 const LeftBar = memo(({navigateCallback}) => {
 	const {clientUser, clientUserLoading} = useClientUser();
-	const navigate = useRef(useNavigate());
+	const navigate = useNavigate();
 	const firstLevelLocation = useLocation().pathname.split("/")[1];
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const navigateAndCloseDrawer = useCallback((url) => {
-		navigate.current(url);
+		navigate(url);
 		if (navigateCallback) {
 			navigateCallback();
 		}

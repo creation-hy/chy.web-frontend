@@ -4,18 +4,27 @@ import {UserAvatar} from "src/components/UserAvatar.jsx";
 import Typography from "@mui/material/Typography";
 import PropTypes from "prop-types";
 import {memo} from "react";
+import {useNavigate} from "react-router";
 
 export const SimpleUserItem = memo(({username, displayName, ...props}) => {
+	const navigate = useNavigate();
+	
 	return (
 		<Grid container wrap="nowrap" alignItems="center" spacing={1} height="100%" {...props}>
-			<Link href={"/user/" + username} underline="none">
+			<Link onClick={() => navigate(`/user/${username}`)} underline="none">
 				<UserAvatar username={username} displayName={displayName}/>
 			</Link>
-			<Link href={"/user/" + username} underline="hover" color="inherit" overflow="hidden">
-				<Typography fontWeight="bold" maxWidth={150} noWrap textOverflow="ellipsis">
-					{displayName}
-				</Typography>
-			</Link>
+			<Typography
+				fontWeight="bold"
+				maxWidth={150}
+				noWrap
+				overflow="hidden"
+				textOverflow="ellipsis"
+				onClick={() => navigate(`/user/${username}`)}
+				sx={{cursor: "pointer"}}
+			>
+				{displayName}
+			</Typography>
 		</Grid>
 	);
 });
