@@ -31,6 +31,7 @@ const News = memo(({username, displayName}) => {
 	const {data} = useQuery({
 		queryKey: ["news", username],
 		queryFn: () => axios.get(`/api/user/${username}/chat/0`).then(res => res.data),
+		staleTime: Infinity,
 	});
 	
 	const [chatList, setChatList] = useState([]);
@@ -185,7 +186,11 @@ const TabPanel = memo(({value, username, displayName}) => {
 		return <News username={username} displayName={displayName}/>;
 	}
 	
-	return <Follows username={username} type={value === 1 ? "following" : "follower"}/>;
+	if (value === 1) {
+		return <Follows username={username} type="following"/>;
+	}
+	
+	return <Follows username={username} type="follower"/>;
 });
 
 TabPanel.propTypes = {
