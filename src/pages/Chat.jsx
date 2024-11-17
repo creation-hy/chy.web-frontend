@@ -778,8 +778,8 @@ export default function Chat() {
 		});
 		
 		const content = data.recipient === "ChatRoomSystem" ? data.senderDisplayName + ": " + data.content : data.content;
-		updateUserItem(data.recipient === "ChatRoomSystem" ? data.recipient : (data.sender === myname ? data.recipient : data.sender),
-			data.recipient === "ChatRoomSystem" ? data.recipientDisplayName : data.senderDisplayName, content, data.time, true, data.sender);
+		updateUserItem(data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipient : data.sender,
+			data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipientDisplayName : data.senderDisplayName, content, data.time, true, data.sender);
 		
 		messagesVar = [...messagesVar, {
 			id: data.id,
