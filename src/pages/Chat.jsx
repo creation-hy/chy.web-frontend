@@ -1,5 +1,4 @@
 import {Fragment, memo, useCallback, useEffect, useRef, useState} from "react";
-import {useQuery, useQueryClient} from "@tanstack/react-query";
 import axios from "axios";
 import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
@@ -321,7 +320,7 @@ const notify = (title, body, iconId) => {
 	}
 };
 
-const ChatToolBar = memo((inputField) => {
+const ChatToolBar = memo(({inputField}) => {
 	const [binaryColorMode] = useBinaryColorMode();
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -387,17 +386,17 @@ const ChatToolBar = memo((inputField) => {
 					<Button onClick={() => {
 						flushSync(() => handleSpecialFont(false));
 						if (fontStyle === '' && fontTextRef.current.value === '')
-							inputField.inputField.current.value += ' ';
+							inputField.current.value += ' ';
 						else if (fontStyle.charAt(0) === '#') {
-							const lines = inputField.inputField.current.value.split('\n');
-							inputField.inputField.current.focus();
+							const lines = inputField.current.value.split('\n');
+							inputField.current.focus();
 							if (lines[lines.length - 1].trim() !== '')
 								document.execCommand("insertLineBreak");
-							inputField.inputField.current.value += fontStyle + ' ' + fontTextRef.current.value;
+							inputField.current.value += fontStyle + ' ' + fontTextRef.current.value;
 							document.execCommand("insertLineBreak");
 						} else
-							inputField.inputField.current.value += fontStyle + fontTextRef.current.value + fontStyle;
-						inputField.inputField.current.focus();
+							inputField.current.value += fontStyle + fontTextRef.current.value + fontStyle;
+						inputField.current.focus();
 					}}>确认</Button>
 				</DialogActions>
 			</Dialog>
@@ -413,8 +412,8 @@ const ChatToolBar = memo((inputField) => {
 					<Button onClick={() => handleAddLink(false)}>关闭</Button>
 					<Button onClick={() => {
 						flushSync(() => handleAddLink(false));
-						inputField.inputField.current.value += "[" + linkTextRef.current.value + "](" + linkHrefRef.current.value + ")";
-						inputField.inputField.current.focus();
+						inputField.current.value += "[" + linkTextRef.current.value + "](" + linkHrefRef.current.value + ")";
+						inputField.current.focus();
 					}}>确认</Button>
 				</DialogActions>
 			</Dialog>
@@ -429,9 +428,9 @@ const ChatToolBar = memo((inputField) => {
 				<DialogActions>
 					<Button onClick={() => handleAddImage(false)}>关闭</Button>
 					<Button onClick={() => {
-						inputField.inputField.current.value += "![" + imageAltRef.current.value + "](" + imageHrefRef.current.value + ")";
+						inputField.current.value += "![" + imageAltRef.current.value + "](" + imageHrefRef.current.value + ")";
 						flushSync(() => handleAddImage(false));
-						inputField.inputField.current.focus();
+						inputField.current.focus();
 					}}>确认</Button>
 				</DialogActions>
 			</Dialog>
@@ -440,9 +439,9 @@ const ChatToolBar = memo((inputField) => {
 					theme={binaryColorMode}
 					locale="zh"
 					onEmojiSelect={(emoji) => {
-						inputField.inputField.current.value += emoji.native;
+						inputField.current.value += emoji.native;
 						flushSync(() => handleEmojiPicker(false));
-						inputField.inputField.current.focus();
+						inputField.current.focus();
 					}}
 				/>
 			</Dialog>
@@ -550,16 +549,15 @@ export default function Chat() {
 	const [matchList, setMatchList] = useState(null);
 	const [abortController, setAbortController] = useState(null);
 	const [showScrollTop, setShowScrollTop] = useState(false);
+	const [contactsVersion, setContactsVersion] = useState(1);
 	
 	const messageCard = useRef(null);
 	const messageInput = useRef(null);
 	const userSearchField = useRef(null);
-	
-	const disconnectErrorBarKey = useRef(null);
-	const queryClient = useRef(useQueryClient());
-	
 	const chatMainComponent = useRef(null);
 	const contactsComponent = useRef(null);
+	
+	const disconnectErrorBarKey = useRef(null);
 	
 	const {clientUser, setClientUser, clientUserLoading} = useClientUser();
 	const clientUserRef = useRef(null);
@@ -598,8 +596,9 @@ export default function Chat() {
 	const contactPageObserver = useRef(new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && contactPageNumberNew.current === contactPageNumberCurrent.current) {
 			contactPageNumberNew.current = contactPageNumberCurrent.current + 1;
-			axios.get(`/api/chat/contacts/${contactPageNumberNew.current}`).then(res => {
-				if (res.data.result.length > 0) {
+			const fetchedPageNumber = contactPageNumberNew.current;
+			axios.get(`/api/chat/contacts/${fetchedPageNumber}`).then(res => {
+				if (res.data.result.length > 0 && fetchedPageNumber === contactPageNumberNew.current) {
 					contactFetchSuccess.current = true;
 					setUsers(users => {
 						usersVar = [...users, ...res.data.result];
@@ -686,33 +685,33 @@ export default function Chat() {
 		});
 	}, [messageCardScrollTo, setClientUser]);
 	
-	const {data, isLoading} = useQuery({
-		queryKey: ["contacts"],
-		queryFn: () => axios.get("/api/chat/contacts/0").then(res => res.data),
-		staleTime: Infinity,
-	});
+	const [isContactsLoading, setIsContactsLoading] = useState(true);
 	
 	useEffect(() => {
-		if (data) {
-			if (data.status !== 1) {
+		axios.get("/api/chat/contacts/0").then(res => {
+			if (res.data.status !== 1) {
 				setLogged(false);
 				return;
 			}
 			setLogged(true);
-			usersVar = data.result;
+			contactPageNumberNew.current = 0;
+			contactPageNumberCurrent.current = 0;
+			contactFetchSuccess.current = true;
+			usersVar = res.data.result;
 			setUsers([...usersVar]);
-		}
-	}, [data]);
+			setIsContactsLoading(false);
+		});
+	}, [contactsVersion]);
 	
 	useEffect(() => {
-		if (!isLoading) {
+		if (!isContactsLoading) {
 			currentUserVar = null;
 			setCurrentUser(null);
 			if (username) {
 				getMessages(username, 0, true);
 			}
 		}
-	}, [isLoading, username]);
+	}, [isContactsLoading, username]);
 	
 	useEffect(() => {
 		return () => {
@@ -776,7 +775,7 @@ export default function Chat() {
 			headers: {
 				"Content-Type": "application/json",
 			},
-		}).then(() => queryClient.current.invalidateQueries({queryKey: ["accountCheck"]}));
+		});
 		
 		const content = data.recipient === "ChatRoomSystem" ? data.senderDisplayName + ": " + data.content : data.content;
 		updateUserItem(data.recipient === "ChatRoomSystem" ? data.recipient : (data.sender === myname ? data.recipient : data.sender),
@@ -809,7 +808,7 @@ export default function Chat() {
 		if (disconnectErrorBarKey.current) {
 			closeSnackbar(disconnectErrorBarKey.current);
 			getMessages(currentUserVar, 0, true);
-			queryClient.current.invalidateQueries({queryKey: ["contacts"]});
+			setContactsVersion(version => version + 1);
 			disconnectErrorBarKey.current = null;
 		}
 		
@@ -957,13 +956,13 @@ export default function Chat() {
 	}, [matchList]);
 	
 	useEffect(() => {
-		if (contactFetchSuccess.current && lastContactRef.current) {
+		if (!isContactsLoading && contactFetchSuccess.current && lastContactRef.current) {
 			contactPageNumberCurrent.current = contactPageNumberNew.current;
 			contactPageObserver.current.disconnect();
 			contactPageObserver.current.observe(lastContactRef.current);
 			contactFetchSuccess.current = false;
 		}
-	}, [users]);
+	}, [users, isContactsLoading]);
 	
 	if (logged === false)
 		return <SignUp/>;
