@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import {useNavigate, useParams} from "react-router";
 import {memo, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, InputLabel, List, ListItem, ListItemAvatar, ListItemButton, ListItemText, Paper, Tab, Tabs} from "@mui/material";
+import {Alert, InputLabel, List, ListItem, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, MenuList, Paper, Tab, Tabs} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
@@ -11,7 +11,17 @@ import Cookies from "js-cookie";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
-import {EditOutlined, LockResetOutlined, LogoutOutlined, MailOutlined, PersonAddDisabledOutlined, PersonAddOutlined, Verified} from "@mui/icons-material";
+import {
+	EditOutlined,
+	LockResetOutlined,
+	LogoutOutlined,
+	MailOutlined,
+	PersonAddDisabledOutlined,
+	PersonAddOutlined,
+	Restore,
+	Upload,
+	Verified
+} from "@mui/icons-material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -212,15 +222,18 @@ const doFollow = (username, setIsFollowing, queryClient) => {
 	})
 };
 
-const uploadAvatar = (event) => {
+const uploadAvatar = (event, setOpenAvatarModifyDialog) => {
 	const formData = new FormData();
 	formData.append("avatar", event.target.files[0]);
-	axios.post("/api/account/upload-avatar", formData, {
+	axios.post("/api/account/avatar/upload", formData, {
 		headers: {
 			"Content-Type": "multipart/form-data",
 		},
 	}).then((res) => {
 		enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
+		if (res.data.status === 1) {
+			setOpenAvatarModifyDialog(false);
+		}
 	});
 }
 
@@ -233,6 +246,7 @@ const UserPage = memo(({username}) => {
 	const [modifying, setModifying] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
 	const [resetPasswordOn, setResetPasswordOn] = useState(false);
+	const [openAvatarModifyDialog, setOpenAvatarModifyDialog] = useState(false);
 	
 	const queryClient = useQueryClient();
 	
@@ -268,7 +282,7 @@ const UserPage = memo(({username}) => {
 					<Grid container alignItems="center" gap={1.5} wrap="nowrap" width="100%" sx={{mb: 0.5}}>
 						{data.username === myname ? (
 							<IconButton
-								onClick={() => document.getElementById("avatar-upload").click()}
+								onClick={() => setOpenAvatarModifyDialog(true)}
 								sx={{width: 100, height: 100}}
 							>
 								<UserAvatar username={data.username} displayName={data.displayName} width={100} height={100}/>
@@ -276,7 +290,13 @@ const UserPage = memo(({username}) => {
 						) : (
 							<UserAvatar username={data.username} displayName={data.displayName} width={100} height={100}/>
 						)}
-						<input type="file" id="avatar-upload" onChange={uploadAvatar} accept="image/*" hidden/>
+						<input
+							type="file"
+							id="avatar-upload"
+							accept="image/*"
+							hidden
+							onChange={(event) => uploadAvatar(event, setOpenAvatarModifyDialog)}
+						/>
 						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container direction="column" justifyContent="center">
 							<Box display="flex" gap={0.5} alignItems="center" margin={0} flexShrink={1} flexWrap="nowrap" width="100%">
@@ -412,6 +432,40 @@ const UserPage = memo(({username}) => {
 					<Button type="button" onClick={() => setModifying(false)}>关闭</Button>
 					<Button type="submit">确认</Button>
 				</DialogActions>
+			</Dialog>
+			<Dialog
+				open={openAvatarModifyDialog}
+				onClose={() => setOpenAvatarModifyDialog(false)}
+			>
+				<MenuList>
+					<MenuItem
+						sx={{height: 48}}
+						onClick={() => {
+							document.getElementById("avatar-upload").click();
+						}}
+					>
+						<ListItemIcon>
+							<Upload/>
+						</ListItemIcon>
+						<ListItemText>上传头像</ListItemText>
+					</MenuItem>
+					<MenuItem
+						sx={{height: 48}}
+						onClick={() => {
+							axios.post("/api/account/avatar/reset").then((res) => {
+								enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+								if (res.data.status === 1) {
+									setOpenAvatarModifyDialog(false);
+								}
+							});
+						}}
+					>
+						<ListItemIcon>
+							<Restore/>
+						</ListItemIcon>
+						<ListItemText>重置头像</ListItemText>
+					</MenuItem>
+				</MenuList>
 			</Dialog>
 		</Box>
 	);
