@@ -28,6 +28,7 @@ import Container from "@mui/material/Container";
 import {useLocation, useNavigate} from "react-router";
 import PropTypes from "prop-types";
 import Button from "@mui/material/Button";
+import Cookies from "js-cookie";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -43,6 +44,8 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	padding: '8px 12px',
 }));
 
+const myName = Cookies.get("username"), myDisplayName = localStorage.getItem("myDisplayName");
+
 const LeftBar = memo(({navigateCallback}) => {
 	const {clientUser, clientUserLoading} = useClientUser();
 	const navigate = useNavigate();
@@ -56,19 +59,36 @@ const LeftBar = memo(({navigateCallback}) => {
 		}
 	}, []);
 	
+	if (clientUser) {
+		localStorage.setItem("myDisplayName", clientUser.displayName);
+	}
+	
 	return (
 		<>
 			<Box sx={{mt: 2.5, mb: 1}}>
 				{clientUserLoading ? (
-					<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
-						<Skeleton variant="circular" width={80} height={80} sx={{mb: 0.75}}/>
-						<Typography>
-							<Skeleton/>
-						</Typography>
-						<Typography fontSize={14}>
-							<Skeleton/>
-						</Typography>
-					</Grid>
+					(!myName ? (
+						<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
+							<Button variant="contained" onClick={() => navigateAndCloseDrawer("register")} sx={{mx: 2}}>
+								注册
+							</Button>
+							<Button variant="outlined" onClick={() => navigateAndCloseDrawer("login")} sx={{mx: 2}}>
+								登录
+							</Button>
+						</Grid>
+					) : (
+						<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
+							<IconButton sx={{width: 80, height: 80, mb: 0.75}} onClick={() => navigateAndCloseDrawer(`user/${myName}`)}>
+								<UserAvatar username={myName} displayName={myDisplayName} width={80} height={80}/>
+							</IconButton>
+							<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
+								{myDisplayName ? myDisplayName : <Skeleton/>}
+							</Typography>
+							<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
+								@{myName}
+							</Typography>
+						</Grid>
+					))
 				) : (!clientUser ? (
 					<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
 						<Button variant="contained" onClick={() => navigateAndCloseDrawer("register")} sx={{mx: 2}}>
