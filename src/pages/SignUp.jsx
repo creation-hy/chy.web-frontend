@@ -42,8 +42,6 @@ export default function SignUp() {
 	
 	const [emailError, setEmailError] = useState(false);
 	const [emailErrorMessage, setEmailErrorMessage] = useState('');
-	const [passwordError, setPasswordError] = useState(false);
-	const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 	const [nameError, setNameError] = useState(false);
 	const [nameErrorMessage, setNameErrorMessage] = useState('');
 	
@@ -63,7 +61,6 @@ export default function SignUp() {
 		event.preventDefault();
 		
 		const email = document.getElementById('email');
-		const password = document.getElementById('password');
 		const username = document.getElementById('username');
 		
 		let isValid = true;
@@ -77,19 +74,21 @@ export default function SignUp() {
 			setEmailErrorMessage('');
 		}
 		
-		if (!password.value || password.value.length < 4) {
-			setPasswordError(true);
-			setPasswordErrorMessage('密码长度不能低于4。');
-			isValid = false;
-		} else {
-			setPasswordError(false);
-			setPasswordErrorMessage('');
-		}
-		
 		if (!username.value || username.value.length < 1) {
 			setNameError(true);
 			setNameErrorMessage('用户名不能为空。');
 			isValid = false;
+		} else if (!username.value || username.value.length > 15) {
+			setNameError(true);
+			setNameErrorMessage('用户名长度不能超过15。');
+			isValid = false;
+		} else if (/[^a-zA-Z0-9-_.]/.test(username.value)) {
+			setNameError(true);
+			setNameErrorMessage('用户名不能包含特殊字符。');
+			isValid = false;
+		} else if (/[^a-zA-Z]/.test(username.value[0])) {
+			setNameError(true);
+			setNameErrorMessage('用户名首位必须是字母。');
 		} else {
 			setNameError(false);
 			setNameErrorMessage('');
@@ -112,8 +111,6 @@ export default function SignUp() {
 				}
 			});
 		}
-		
-		return false;
 	};
 	
 	const verify = () => {
@@ -166,7 +163,7 @@ export default function SignUp() {
 						required
 						fullWidth
 						id="username"
-						placeholder="大小写字母、横杠、下划线、点"
+						placeholder="字母、数字、下划线、横杠、点"
 						error={nameError}
 						helperText={nameErrorMessage}
 						color={nameError ? 'error' : 'primary'}
@@ -183,9 +180,6 @@ export default function SignUp() {
 						id="password"
 						autoComplete="new-password"
 						variant="outlined"
-						error={passwordError}
-						helperText={passwordErrorMessage}
-						color={passwordError ? 'error' : 'primary'}
 						label="密码"
 					/>
 				</FormControl>
@@ -202,7 +196,7 @@ export default function SignUp() {
 								variant="outlined"
 								error={emailError}
 								helperText={emailErrorMessage}
-								color={passwordError ? 'error' : 'primary'}
+								color={emailError ? 'error' : 'primary'}
 								label="邮箱"
 							/>
 						</Grid>
