@@ -15,7 +15,6 @@ export const ChatMarkdown = memo(({children, ...props}) => {
 		children = "";
 	
 	const md = children
-		.replace(/(```\s*\n)([\s\S]*?)(\n```)/g, "```auto\n$2\n```")
 		.replace(/ {2}/g, " \u00A0")
 		.replace(/(?<!((?<!\S)([*_-]{3,})(?!\S)))\n{2,}(?!((?<!\S)([*_-]{3,})(?!\S)))/g,
 			(match) => "\n\n" + "\u00A0  \n".repeat(match.length - 1))
