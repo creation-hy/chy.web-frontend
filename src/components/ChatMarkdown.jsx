@@ -57,7 +57,6 @@ export const ChatMarkdown = memo(({children, ...props}) => {
 				
 				code: ({className, children}) => {
 					const match = /language-(\w+)/.exec(className || "");
-					
 					return match ? (
 						<SyntaxHighlighter
 							style={binaryColorMode === "light" ? tomorrow : tomorrowNight}
@@ -65,7 +64,7 @@ export const ChatMarkdown = memo(({children, ...props}) => {
 							PreTag="div"
 							className="syntax-highlighter"
 						>
-							{!children ? children : children.replace(/(?<!\n[\s\u00A0]*)\n(?![\s\u00A0]*\n)/g, "\n\n")}
+							{children}
 						</SyntaxHighlighter>
 					) : (
 						<code style={{

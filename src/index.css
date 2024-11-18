@@ -3,11 +3,6 @@ html, body, #root {
 }
 
 .my-markdown {
-	& * {
-		white-space: normal;
-		word-break: break-word;
-	}
-
 	& blockquote {
 		border-left: 0.5em solid lightgrey;
 		padding: 0.5em 1em;
@@ -15,10 +10,6 @@ html, body, #root {
 
 	& h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, li, ol, dl, dt, dd {
 		margin: 0;
-	}
-
-	& code, pre {
-		white-space: pre-wrap;
 	}
 
 	.syntax-highlighter {
