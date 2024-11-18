@@ -6,13 +6,13 @@ import PropTypes from "prop-types";
 import {memo} from "react";
 import {useNavigate} from "react-router";
 
-export const SimpleUserItem = memo(({username, displayName, ...props}) => {
+export const SimpleUserItem = memo(({username, displayName, avatarVersion, ...props}) => {
 	const navigate = useNavigate();
 	
 	return (
 		<Grid container wrap="nowrap" alignItems="center" spacing={1} height="100%" {...props}>
 			<Link onClick={() => navigate(`/user/${username}`)} underline="none">
-				<UserAvatar username={username} displayName={displayName}/>
+				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 			</Link>
 			<Typography
 				fontWeight="bold"
@@ -30,6 +30,7 @@ export const SimpleUserItem = memo(({username, displayName, ...props}) => {
 });
 
 SimpleUserItem.propTypes = {
-	username: PropTypes.string,
+	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
+	avatarVersion: PropTypes.number.isRequired,
 }

@@ -44,7 +44,9 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	padding: '8px 12px',
 }));
 
-const myName = Cookies.get("username"), myDisplayName = localStorage.getItem("myDisplayName");
+const myName = Cookies.get("username");
+const myDisplayName = localStorage.getItem("myDisplayName");
+const myAvatarVersion = Number(localStorage.getItem("myAvatarVersion"));
 
 const LeftBar = memo(({navigateCallback}) => {
 	const {clientUser, clientUserLoading} = useClientUser();
@@ -61,6 +63,7 @@ const LeftBar = memo(({navigateCallback}) => {
 	
 	if (clientUser) {
 		localStorage.setItem("myDisplayName", clientUser.displayName);
+		localStorage.setItem("myAvatarVersion", clientUser.avatarVersion);
 	}
 	
 	return (
@@ -79,7 +82,7 @@ const LeftBar = memo(({navigateCallback}) => {
 					) : (
 						<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
 							<IconButton sx={{width: 80, height: 80, mb: 0.75}} onClick={() => navigateAndCloseDrawer(`user/${myName}`)}>
-								<UserAvatar username={myName} displayName={myDisplayName} width={80} height={80}/>
+								<UserAvatar username={myName} displayName={myDisplayName} avatarVersion={myAvatarVersion} width={80} height={80}/>
 							</IconButton>
 							<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
 								{myDisplayName ? myDisplayName : <Skeleton/>}
@@ -101,7 +104,8 @@ const LeftBar = memo(({navigateCallback}) => {
 				) : (
 					<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
 						<IconButton sx={{width: 80, height: 80, mb: 0.75}} onClick={() => navigateAndCloseDrawer(`user/${clientUser.username}`)}>
-							<UserAvatar username={clientUser.username} displayName={clientUser.displayName} width={80} height={80}/>
+							<UserAvatar username={clientUser.username} displayName={clientUser.displayName}
+							            avatarVersion={clientUser.avatarVersion} width={80} height={80}/>
 						</IconButton>
 						<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
 							{clientUser.displayName}
