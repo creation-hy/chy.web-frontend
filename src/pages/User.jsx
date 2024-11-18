@@ -1,7 +1,22 @@
 import Box from "@mui/material/Box";
 import {useNavigate, useParams} from "react-router";
 import {memo, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, InputLabel, List, ListItem, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, MenuList, Paper, Tab, Tabs} from "@mui/material";
+import {
+	Alert,
+	CircularProgress,
+	InputLabel,
+	List,
+	ListItem,
+	ListItemAvatar,
+	ListItemButton,
+	ListItemIcon,
+	ListItemText,
+	MenuList,
+	Modal,
+	Paper,
+	Tab,
+	Tabs
+} from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
@@ -222,7 +237,7 @@ const doFollow = (username, setIsFollowing, queryClient) => {
 	})
 };
 
-const uploadAvatar = (event, setOpenAvatarModifyDialog) => {
+const uploadAvatar = (event, setOpenAvatarModifyDialog, setAvatarProcessing) => {
 	const formData = new FormData();
 	formData.append("avatar", event.target.files[0]);
 	axios.post("/api/account/avatar/upload", formData, {
@@ -233,6 +248,7 @@ const uploadAvatar = (event, setOpenAvatarModifyDialog) => {
 		enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
 		if (res.data.status === 1) {
 			setOpenAvatarModifyDialog(false);
+			setAvatarProcessing(false);
 		}
 	});
 }
@@ -247,6 +263,7 @@ const UserPage = memo(({username}) => {
 	const [isFollowing, setIsFollowing] = useState(null);
 	const [resetPasswordOn, setResetPasswordOn] = useState(false);
 	const [openAvatarModifyDialog, setOpenAvatarModifyDialog] = useState(false);
+	const [avatarProcessing, setAvatarProcessing] = useState(false);
 	
 	const queryClient = useQueryClient();
 	
@@ -295,8 +312,16 @@ const UserPage = memo(({username}) => {
 							id="avatar-upload"
 							accept="image/*"
 							hidden
-							onChange={(event) => uploadAvatar(event, setOpenAvatarModifyDialog)}
+							onChange={(event) => {
+								setAvatarProcessing(true);
+								uploadAvatar(event, setOpenAvatarModifyDialog, setAvatarProcessing);
+							}}
 						/>
+						<Modal open={avatarProcessing}>
+							<Grid container width="100%" height="100%" alignItems="center" justifyContent="center">
+								<CircularProgress size={50}/>
+							</Grid>
+						</Modal>
 						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container direction="column" justifyContent="center">
 							<Box display="flex" gap={0.5} alignItems="center" margin={0} flexShrink={1} flexWrap="nowrap" width="100%">
@@ -452,10 +477,12 @@ const UserPage = memo(({username}) => {
 					<MenuItem
 						sx={{height: 48}}
 						onClick={() => {
+							setAvatarProcessing(true);
 							axios.post("/api/account/avatar/reset").then((res) => {
 								enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 								if (res.data.status === 1) {
 									setOpenAvatarModifyDialog(false);
+									setAvatarProcessing(false);
 								}
 							});
 						}}
