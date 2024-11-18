@@ -51,6 +51,8 @@ import ResetPassword from "src/components/ResetPassword.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import {UserAvatar} from "src/components/UserAvatar.jsx";
 import Chip from "@mui/material/Chip";
+import {Cropper} from "react-cropper";
+import "cropperjs/dist/cropper.css";
 
 const News = memo(({username, displayName}) => {
 	const {data} = useQuery({
@@ -237,22 +239,6 @@ const doFollow = (username, setIsFollowing, queryClient) => {
 	})
 };
 
-const uploadAvatar = (event, setOpenAvatarModifyDialog, setAvatarProcessing) => {
-	const formData = new FormData();
-	formData.append("avatar", event.target.files[0]);
-	axios.post("/api/account/avatar/upload", formData, {
-		headers: {
-			"Content-Type": "multipart/form-data",
-		},
-	}).then((res) => {
-		enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
-		if (res.data.status === 1) {
-			setOpenAvatarModifyDialog(false);
-			setAvatarProcessing(false);
-		}
-	});
-}
-
 const myname = Cookies.get("username");
 
 const UserPage = memo(({username}) => {
@@ -262,8 +248,13 @@ const UserPage = memo(({username}) => {
 	const [modifying, setModifying] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
 	const [resetPasswordOn, setResetPasswordOn] = useState(false);
+	
 	const [openAvatarModifyDialog, setOpenAvatarModifyDialog] = useState(false);
 	const [avatarProcessing, setAvatarProcessing] = useState(false);
+	
+	const [showAvatarCropper, setShowAvatarCropper] = useState(false);
+	const [avatarSrc, setAvatarSrc] = useState();
+	const avatarCropper = useRef(null);
 	
 	const queryClient = useQueryClient();
 	
@@ -313,8 +304,9 @@ const UserPage = memo(({username}) => {
 							accept="image/*"
 							hidden
 							onChange={(event) => {
-								setAvatarProcessing(true);
-								uploadAvatar(event, setOpenAvatarModifyDialog, setAvatarProcessing);
+								setAvatarSrc(URL.createObjectURL(event.target.files[0]));
+								setShowAvatarCropper(true);
+								event.target.value = null;
 							}}
 						/>
 						<Modal open={avatarProcessing}>
@@ -322,6 +314,51 @@ const UserPage = memo(({username}) => {
 								<CircularProgress size={50}/>
 							</Grid>
 						</Modal>
+						<Dialog open={showAvatarCropper} onClose={() => setShowAvatarCropper(false)}>
+							<DialogTitle sx={{pb: 0}}>
+								裁剪头像
+							</DialogTitle>
+							<DialogContent sx={{pt: "16px !important"}}>
+								<Cropper
+									ref={avatarCropper}
+									src={avatarSrc}
+									aspectRatio={1}
+									dragMode="move"
+									viewMode={2}
+									responsive={true}
+									autoCropArea={1}
+								/>
+							</DialogContent>
+							<DialogActions>
+								<Button onClick={() => {
+									setShowAvatarCropper(false);
+									setAvatarSrc(null);
+								}}>
+									取消
+								</Button>
+								<Button onClick={() => {
+									setShowAvatarCropper(false);
+									setAvatarProcessing(true);
+									avatarCropper.current.cropper.getCroppedCanvas().toBlob(blob => {
+										const formData = new FormData();
+										formData.append("avatar", new File([blob], "avatar.png", {type: "image/png"}));
+										axios.post("/api/account/avatar/upload", formData, {
+											headers: {
+												"Content-Type": "multipart/form-data",
+											},
+										}).then((res) => {
+											enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
+											if (res.data.status === 1) {
+												setOpenAvatarModifyDialog(false);
+												setAvatarProcessing(false);
+											}
+										});
+									});
+								}}>
+									上传
+								</Button>
+							</DialogActions>
+						</Dialog>
 						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container direction="column" justifyContent="center">
 							<Box display="flex" gap={0.5} alignItems="center" margin={0} flexShrink={1} flexWrap="nowrap" width="100%">
