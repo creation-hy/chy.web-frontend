@@ -85,7 +85,7 @@ export const getDesignTokens = (mode) => {
 			},
 		},
 		typography: {
-			fontFamily: "-apple-system, system-ui, Helvetica, Arial, PingFang SC, sans-serif",
+			fontFamily: "-apple-system, BlinkMacSystemFont, system-ui, Segoe UI, Roboto, Helvetica Neue, Arial, PingFang SC, Microsoft Yahei, sans-serif",
 		},
 		shape: {
 			borderRadius: 8,
