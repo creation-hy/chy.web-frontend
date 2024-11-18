@@ -54,7 +54,7 @@ import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
 import "cropperjs/dist/cropper.css";
 
-const News = memo(({username, displayName}) => {
+const News = memo(({username, displayName, avatarVersion}) => {
 	const {data} = useQuery({
 		queryKey: ["news", username],
 		queryFn: () => axios.get(`/api/user/${username}/chat/0`).then(res => res.data),
@@ -103,7 +103,7 @@ const News = memo(({username, displayName}) => {
 					sx={{my: 3}}
 				>
 					<IconButton sx={{mr: 1.5, p: 0}}>
-						<UserAvatar username={username} displayName={displayName}/>
+						<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 					</IconButton>
 					<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-start' spacing={0.7}>
 						<Paper
@@ -125,7 +125,8 @@ const News = memo(({username, displayName}) => {
 						{item.quote != null &&
 							<Chip
 								variant="outlined"
-								avatar={<UserAvatar username={item.quote.username} displayName={item.quote.displayName}/>}
+								avatar={<UserAvatar username={item.quote.username} displayName={item.quote.displayName}
+								                    avatarVersion={item.quote.avatarVersion}/>}
 								label={item.quote.displayName + ": " + item.quote.content}
 								clickable
 							/>
@@ -140,6 +141,7 @@ const News = memo(({username, displayName}) => {
 News.propTypes = {
 	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
+	avatarVersion: PropTypes.number.isRequired,
 }
 
 const Follows = memo(({username, type}) => {
@@ -182,7 +184,7 @@ const Follows = memo(({username, type}) => {
 				<ListItem key={item.username} ref={item === userList[userList.length - 1] ? lastUserRef : undefined} sx={{p: 0}}>
 					<ListItemButton onClick={() => navigate(`/user/${item.username}`)}>
 						<ListItemAvatar>
-							<UserAvatar username={item.username} displayName={item.displayName}/>
+							<UserAvatar username={item.username} displayName={item.displayName} avatarVersion={item.avatarVersion}/>
 						</ListItemAvatar>
 						<ListItemText
 							primary={
@@ -208,9 +210,9 @@ Follows.propTypes = {
 	type: PropTypes.string.isRequired,
 }
 
-const TabPanel = memo(({value, username, displayName}) => {
+const TabPanel = memo(({value, username, displayName, avatarVersion}) => {
 	if (value === 0) {
-		return <News username={username} displayName={displayName}/>;
+		return <News username={username} displayName={displayName} avatarVersion={avatarVersion}/>;
 	}
 	
 	if (value === 1) {
@@ -224,6 +226,7 @@ TabPanel.propTypes = {
 	value: PropTypes.number.isRequired,
 	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
+	avatarVersion: PropTypes.number.isRequired,
 }
 
 const doFollow = (username, setIsFollowing, queryClient) => {
@@ -293,10 +296,12 @@ const UserPage = memo(({username}) => {
 								onClick={() => setOpenAvatarModifyDialog(true)}
 								sx={{width: 100, height: 100}}
 							>
-								<UserAvatar username={data.username} displayName={data.displayName} width={100} height={100}/>
+								<UserAvatar username={data.username} displayName={data.displayName}
+								            avatarVersion={data.avatarVersion} width={100} height={100}/>
 							</IconButton>
 						) : (
-							<UserAvatar username={data.username} displayName={data.displayName} width={100} height={100}/>
+							<UserAvatar username={data.username} displayName={data.displayName}
+							            avatarVersion={data.avatarVersion} width={100} height={100}/>
 						)}
 						<input
 							type="file"
@@ -419,7 +424,7 @@ const UserPage = memo(({username}) => {
 					<Tab label="粉丝" data-option="follower" id="tab-follower"/>
 				</Tabs>
 			</Box>
-			<TabPanel value={value} username={data.username} displayName={data.displayName}/>
+			<TabPanel value={value} username={data.username} displayName={data.displayName} avatarVersion={data.avatarVersion}/>
 			<Dialog
 				open={modifying}
 				onClose={() => setModifying(false)}
