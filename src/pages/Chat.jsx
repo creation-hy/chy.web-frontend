@@ -83,7 +83,7 @@ const saveDraft = throttle((contact, content, setUsers) => {
 	uploadDraftThrottle(contact, content);
 }, 100);
 
-const UserItem = memo(({username, displayName, isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode}) => {
+const UserItem = memo(({username, displayName, avatarVersion, isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode}) => {
 	return (
 		<>
 			<ListItemAvatar>
@@ -120,7 +120,7 @@ const UserItem = memo(({username, displayName, isOnline, newMessageCount, lastMe
 							},
 						}}
 					>
-						<UserAvatar username={username} displayName={displayName}/>
+						<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 					</Badge>
 				</Badge>
 			</ListItemAvatar>
@@ -160,8 +160,9 @@ const UserItem = memo(({username, displayName, isOnline, newMessageCount, lastMe
 });
 
 UserItem.propTypes = {
-	username: PropTypes.string,
+	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
+	avatarVersion: PropTypes.number.isRequired,
 	isOnline: PropTypes.bool,
 	newMessageCount: PropTypes.number,
 	lastMessageTime: PropTypes.string,
@@ -170,7 +171,7 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-const Message = memo(({messageId, username, displayName, content, quote, setQuote}) => {
+const Message = memo(({messageId, username, displayName, avatarVersion, content, quote, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const navigate = useNavigate();
@@ -180,7 +181,7 @@ const Message = memo(({messageId, username, displayName, content, quote, setQuot
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
 			{!isMe && <IconButton sx={{mr: 1, p: 0}} onClick={() => navigate(`/user/${username}`)}>
-				<UserAvatar username={username} displayName={displayName}/>
+				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 			</IconButton>}
 			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
 				<Paper
@@ -209,7 +210,7 @@ const Message = memo(({messageId, username, displayName, content, quote, setQuot
 				{quote != null &&
 					<Chip
 						variant="outlined"
-						avatar={<UserAvatar username={quote.username} displayName={quote.displayName}/>}
+						avatar={<UserAvatar username={quote.username} displayName={quote.displayName} avatarVersion={quote.avatarVersion}/>}
 						label={quote.displayName + ": " + quote.content}
 						onClick={() => {
 							if (document.getElementById("message-" + quote.id))
@@ -219,7 +220,7 @@ const Message = memo(({messageId, username, displayName, content, quote, setQuot
 				}
 			</Grid>
 			{isMe && <IconButton sx={{ml: 1, p: 0}} onClick={() => navigate(`/user/${username}`)}>
-				<UserAvatar username={username} displayName={displayName}/>
+				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 			</IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
 				<DialogTitle>
@@ -260,6 +261,7 @@ const Message = memo(({messageId, username, displayName, content, quote, setQuot
 						id: messageId,
 						username: username,
 						displayName: displayName,
+						avatarVersion: avatarVersion,
 						content: content,
 					});
 				}}>
@@ -292,15 +294,16 @@ const Message = memo(({messageId, username, displayName, content, quote, setQuot
 });
 
 Message.propTypes = {
-	messageId: PropTypes.number,
-	username: PropTypes.string,
+	messageId: PropTypes.number.isRequired,
+	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
+	avatarVersion: PropTypes.number.isRequired,
 	content: PropTypes.string,
 	quote: PropTypes.object,
-	setQuote: PropTypes.func,
+	setQuote: PropTypes.func.isRequired,
 }
 
-const notify = (title, body, iconId) => {
+const notify = (title, body, iconId, avatarVersion) => {
 	try {
 		Notification.requestPermission().then((result) => {
 			if (result !== "granted") {
@@ -311,7 +314,7 @@ const notify = (title, body, iconId) => {
 			navigator.serviceWorker.ready.then((registration) => {
 				registration.showNotification(title, {
 					body: body,
-					icon: `/avatars/${iconId}.webp`,
+					icon: `/avatars/${iconId}.webp?v=${avatarVersion}`,
 				});
 			});
 		});
@@ -741,13 +744,15 @@ export default function Chat() {
 		}));
 	}, [quote]);
 	
-	const updateUserItem = useCallback((username, displayName, content, time, isCurrent, sender) => {
+	const updateUserItem = useCallback((username, displayName, avatarVersion, content, time, isCurrent, sender) => {
 		const userItem = usersVar.find(item => item.username === username);
+		
 		if (userItem) {
 			userItem.lastMessageText = content;
 			userItem.lastMessageTime = time;
 			if (sender !== myname && !isCurrent)
 				userItem.newMessageCount++;
+			userItem.avatarVersion = avatarVersion;
 			usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
 			setUsers([...usersVar]);
 		} else {
@@ -755,6 +760,7 @@ export default function Chat() {
 				usersVar = [{
 					username: username,
 					displayName: displayName,
+					avatarVersion: avatarVersion,
 					isOnline: res.data.result[0].isOnline,
 					lastMessageTime: time,
 					lastMessageText: content,
@@ -763,11 +769,13 @@ export default function Chat() {
 				setUsers([...usersVar]);
 			});
 		}
-		if (sender !== myname && !isCurrent && clientUserRef.current)
+		
+		if (sender !== myname && !isCurrent && clientUserRef.current) {
 			setClientUser({
 				...clientUserRef.current,
 				newMessageCount: clientUserRef.current.newMessageCount + 1,
 			});
+		}
 	}, [setClientUser]);
 	
 	const newMessage = useCallback((data) => {
@@ -779,12 +787,15 @@ export default function Chat() {
 		
 		const content = data.recipient === "ChatRoomSystem" ? data.senderDisplayName + ": " + data.content : data.content;
 		updateUserItem(data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipient : data.sender,
-			data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipientDisplayName : data.senderDisplayName, content, data.time, true, data.sender);
+			data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipientDisplayName : data.senderDisplayName,
+			data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipientAvatarVersion : data.senderAvatarVersion,
+			content, data.time, true, data.sender);
 		
 		messagesVar = [...messagesVar, {
 			id: data.id,
 			username: data.sender,
 			displayName: data.senderDisplayName,
+			avatarVersion: data.senderAvatarVersion,
 			content: data.content,
 			quote: data.quote,
 			time: data.time,
@@ -842,14 +853,15 @@ export default function Chat() {
 				newMessage(data);
 				if (settingsVar["allowNotification"] !== false && settingsVar["allowCurrentNotification"] !== false && data.sender !== myname)
 					notify("[私聊] " + data.sender + "说：",
-						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
 			} else {
 				updateUserItem(data.sender === myname ? data.recipient : data.sender,
 					data.sender === myname ? data.recipientDisplayName : data.senderDisplayName,
+					data.sender === myname ? data.recipientAvatarVersion : data.senderAvatarVersion,
 					data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && data.sender !== myname)
 					notify("[私聊] " + data.sender + "说：",
-						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
 			}
 		}, {"auto-delete": true});
 		
@@ -860,12 +872,13 @@ export default function Chat() {
 				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false &&
 					settingsVar["allowCurrentNotification"] !== false && data.sender !== myname)
 					notify("[公共] " + data.sender + "说：",
-						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
 			} else {
-				updateUserItem(data.recipient, data.recipientDisplayName, data.senderDisplayName + ": " + data.content, data.time, false, data.sender);
+				updateUserItem(data.recipient, data.recipientDisplayName, data.avatarVersion,
+					data.senderDisplayName + ": " + data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
 					notify("[公共] " + data.sender + "说：",
-						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender);
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
 			}
 		});
 		
@@ -1005,6 +1018,7 @@ export default function Chat() {
 							{users != null && <UserItem
 								username="ChatRoomSystem"
 								displayName="公共"
+								avatarVersion={1}
 								isOnline={false}
 								newMessageCount={users.find(item => item.username === "ChatRoomSystem").newMessageCount}
 								lastMessageTime={users.find(item => item.username === "ChatRoomSystem").lastMessageTime}
@@ -1025,6 +1039,7 @@ export default function Chat() {
 								<UserItem
 									username={user.username}
 									displayName={user.displayName}
+									avatarVersion={user.avatarVersion}
 									isOnline={user.isOnline}
 									newMessageCount={user.newMessageCount}
 									lastMessageTime={user.lastMessageTime}
@@ -1063,6 +1078,7 @@ export default function Chat() {
 									<UserItem
 										username={user.username}
 										displayName={`${user.displayName} (@${user.username})`}
+										avatarVersion={user.avatarVersion}
 										isOnline={user.isOnline}
 										newMessageCount={0}
 										lastMessageTime={user.lastMessageTime}
@@ -1149,6 +1165,7 @@ export default function Chat() {
 									messageId={message.id}
 									username={message.username}
 									displayName={message.displayName}
+									avatarVersion={message.avatarVersion}
 									content={message.content}
 									quote={message.quote}
 									timestamp={message.time}
@@ -1167,7 +1184,7 @@ export default function Chat() {
 					{quote != null &&
 						<Chip
 							variant="outlined"
-							avatar={<UserAvatar username={quote.username} displayName={quote.displayName}/>}
+							avatar={<UserAvatar username={quote.username} displayName={quote.displayName} avatarVersion={quote.avatarVersion}/>}
 							label={quote.displayName + ": " + quote.content}
 							clickable
 							onClick={() => document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"})}
