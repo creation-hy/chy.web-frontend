@@ -34,8 +34,7 @@ import {
 	PersonAddDisabledOutlined,
 	PersonAddOutlined,
 	Restore,
-	Upload,
-	Verified
+	Upload
 } from "@mui/icons-material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -53,7 +52,7 @@ import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import {useClientUser} from "src/components/ClientUser.jsx";
-import {UserAvatar} from "src/components/UserComponents.jsx";
+import {UserAvatar, UserBadge} from "src/components/UserComponents.jsx";
 
 const News = memo(({username, displayName, avatarVersion}) => {
 	const {data} = useQuery({
@@ -189,9 +188,12 @@ const Follows = memo(({username, type}) => {
 						</ListItemAvatar>
 						<ListItemText
 							primary={
-								<Typography fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis">
-									{item.displayName}
-								</Typography>
+								<Grid container alignItems="center" gap={0.25}>
+									<Typography fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis">
+										{item.displayName}
+									</Typography>
+									<UserBadge badge={item.badge} sx={{fontSize: 20}}/>
+								</Grid>
 							}
 							secondary={
 								<Typography fontSize={14} color="text.secondary" noWrap overflow="hidden" textOverflow="ellipsis">
@@ -390,7 +392,7 @@ const UserPage = memo(({username}) => {
 								<Typography variant="h5" fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis">
 									{data.displayName}
 								</Typography>
-								{!isLoading && data["verification"] && (<Verified color="primary"/>)}
+								<UserBadge badge={data.badge}/>
 							</Box>
 							<Typography color="text.secondary" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
 								@{data.username}

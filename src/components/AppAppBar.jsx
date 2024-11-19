@@ -27,7 +27,7 @@ import {useLocation, useNavigate} from "react-router";
 import PropTypes from "prop-types";
 import Button from "@mui/material/Button";
 import Cookies from "js-cookie";
-import {UserAvatar} from "src/components/UserComponents.jsx";
+import {UserAvatar, UserBadge} from "src/components/UserComponents.jsx";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -44,8 +44,7 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 }));
 
 const myName = Cookies.get("username");
-const myDisplayName = localStorage.getItem("myDisplayName");
-const myAvatarVersion = Number(localStorage.getItem("myAvatarVersion"));
+const myInformation = JSON.parse(localStorage.getItem("myInformation")) ?? {};
 
 const LeftBar = memo(({navigateCallback}) => {
 	const {clientUser, clientUserLoading} = useClientUser();
@@ -61,8 +60,10 @@ const LeftBar = memo(({navigateCallback}) => {
 	}, []);
 	
 	if (clientUser) {
-		localStorage.setItem("myDisplayName", clientUser.displayName);
-		localStorage.setItem("myAvatarVersion", clientUser.avatarVersion);
+		myInformation.displayName = clientUser.displayName;
+		myInformation.avatarVersion = clientUser.avatarVersion;
+		myInformation.badge = clientUser.badge;
+		localStorage.setItem("myInformation", JSON.stringify(myInformation));
 	}
 	
 	return (
@@ -81,11 +82,15 @@ const LeftBar = memo(({navigateCallback}) => {
 					) : (
 						<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
 							<IconButton sx={{width: 80, height: 80, mb: 0.75}} onClick={() => navigateAndCloseDrawer(`user/${myName}`)}>
-								<UserAvatar username={myName} displayName={myDisplayName} avatarVersion={myAvatarVersion} width={80} height={80}/>
+								<UserAvatar username={myName} displayName={myInformation.displayName}
+								            avatarVersion={myInformation.avatarVersion} width={80} height={80}/>
 							</IconButton>
-							<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
-								{myDisplayName ? myDisplayName : <Skeleton/>}
-							</Typography>
+							<Grid container alignItems="center" gap={0.25}>
+								<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
+									{myInformation.displayName ? myInformation.displayName : <Skeleton/>}
+								</Typography>
+								<UserBadge badge={myInformation.badge} sx={{fontSize: 20}}/>
+							</Grid>
 							<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
 								@{myName}
 							</Typography>
@@ -106,9 +111,12 @@ const LeftBar = memo(({navigateCallback}) => {
 							<UserAvatar username={clientUser.username} displayName={clientUser.displayName}
 							            avatarVersion={clientUser.avatarVersion} width={80} height={80}/>
 						</IconButton>
-						<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
-							{clientUser.displayName}
-						</Typography>
+						<Grid container alignItems="center" gap={0.25}>
+							<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
+								{clientUser.displayName}
+							</Typography>
+							<UserBadge badge={myInformation.badge} sx={{fontSize: 20}}/>
+						</Grid>
 						<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
 							@{clientUser.username}
 						</Typography>
