@@ -206,7 +206,7 @@ const MyRequests = () => {
 								${infoData.scheduler[0].toUpperCase()}${infoData.scheduler.slice(1)}`}<br/>
 					图片数量：{infoData.batchSize}
 					<Divider sx={{my: 1}}/>
-					正面描述：{infoData.positive}<br/><br/>
+					正面描述：{infoData.positive}<br/>
 					负面描述：{infoData.negative}
 				</DialogContent>}
 				<DialogActions>
@@ -734,7 +734,7 @@ const GeneratedResults = () => {
 							采样器：{`${samplerDisplayNameList[samplerList.indexOf(imagePreviewData.samplerName)]}
 								${imagePreviewData.scheduler[0].toUpperCase()}${imagePreviewData.scheduler.slice(1)}`}
 							<Divider sx={{my: 1}}/>
-							正面描述：{imagePreviewData.positive}<br/><br/>
+							正面描述：{imagePreviewData.positive}<br/>
 							负面描述：{imagePreviewData.negative}
 						</AccordionDetails>
 					</Accordion>
@@ -1180,9 +1180,15 @@ const Community = () => {
 										/>
 									}
 									<ImageListItemBar
-										title={<Typography fontWeight="bold" fontSize={18} overflow="hidden"
-										                   textOverflow="ellipsis">{item.displayName}</Typography>}
-										subtitle={<Typography fontSize={13} mt="-2px">{convertDateToLocaleOffsetString(item.firstPublicationDate)}</Typography>}
+										title={
+											<Grid container justifyContent="space-between" alignItems="center">
+												<SimpleUserItem username={item.username} displayName={item.displayName}
+												                avatarVersion={item.avatarVersion} disableNavigate/>
+												<Typography variant="caption">
+													{convertDateToLocaleOffsetString(item.firstPublicationDate)}
+												</Typography>
+											</Grid>
+										}
 										sx={{
 											borderBottomLeftRadius: "15px",
 											borderBottomRightRadius: "15px",
@@ -1355,19 +1361,45 @@ const Community = () => {
 								详细信息
 							</AccordionSummary>
 							<AccordionDetails sx={{maxHeight: "calc(40vh - 48px)", overflowY: "auto"}}>
-								<SimpleUserItem username={imagePreviewData.username} displayName={imagePreviewData.displayName} sx={{mb: 0.5}}/>
-								模型：{modelDisplayNameList[modelList.indexOf(imagePreviewData.modelName)]}<br/>
-								尺寸：{imagePreviewData.width}*{imagePreviewData.height}<br/>
-								生成时间：{convertDateToLocaleOffsetString(imagePreviewData.creationDate)}<br/>
-								首次公开时间：{convertDateToLocaleOffsetString(imagePreviewData.firstPublicationDate)}<br/>
-								迭代步数：{imagePreviewData.step}<br/>
-								CFG Scale：{imagePreviewData.cfg}<br/>
-								种子：{imagePreviewData.seed}<br/>
-								采样器：{`${samplerDisplayNameList[samplerList.indexOf(imagePreviewData.samplerName)]}
-								${imagePreviewData.scheduler[0].toUpperCase()}${imagePreviewData.scheduler.slice(1)}`}
+								<Grid container alignItems="center">
+									<Typography sx={{mt: -0.25}}>
+										作者：
+									</Typography>
+									<SimpleUserItem username={imagePreviewData.username} displayName={imagePreviewData.displayName}
+									                avatarVersion={imagePreviewData.avatarVersion}/>
+								</Grid>
+								<Typography>
+									模型：{modelDisplayNameList[modelList.indexOf(imagePreviewData.modelName)]}
+								</Typography>
+								<Typography>
+									尺寸：{imagePreviewData.width}*{imagePreviewData.height}
+								</Typography>
+								<Typography>
+									生成时间：{convertDateToLocaleOffsetString(imagePreviewData.creationDate)}
+								</Typography>
+								<Typography>
+									首次公开时间：{convertDateToLocaleOffsetString(imagePreviewData.firstPublicationDate)}
+								</Typography>
+								<Typography>
+									迭代步数：{imagePreviewData.step}
+								</Typography>
+								<Typography>
+									CFG Scale：{imagePreviewData.cfg}
+								</Typography>
+								<Typography>
+									种子：{imagePreviewData.seed}
+								</Typography>
+								<Typography>
+									采样器：{`${samplerDisplayNameList[samplerList.indexOf(imagePreviewData.samplerName)]}
+									${imagePreviewData.scheduler[0].toUpperCase()}${imagePreviewData.scheduler.slice(1)}`}
+								</Typography>
 								<Divider sx={{my: 1}}/>
-								正面描述：{imagePreviewData.positive}<br/><br/>
-								负面描述：{imagePreviewData.negative}
+								<Typography>
+									正面描述：{imagePreviewData.positive}
+								</Typography>
+								<Typography>
+									负面描述：{imagePreviewData.negative}
+								</Typography>
 							</AccordionDetails>
 						</Accordion>
 					</Grid>}
