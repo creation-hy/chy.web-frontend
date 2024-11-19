@@ -53,6 +53,7 @@ import {UserAvatar} from "src/components/UserAvatar.jsx";
 import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
 import "cropperjs/dist/cropper.css";
+import {useClientUser} from "src/components/ClientUser.jsx";
 
 const News = memo(({username, displayName, avatarVersion}) => {
 	const {data} = useQuery({
@@ -246,6 +247,7 @@ const myname = Cookies.get("username");
 
 const UserPage = memo(({username}) => {
 	const navigate = useNavigate();
+	const {clientUser, setClientUser} = useClientUser();
 	
 	const [value, setValue] = useState(0);
 	const [modifying, setModifying] = useState(false);
@@ -255,6 +257,7 @@ const UserPage = memo(({username}) => {
 	const [openAvatarModifyDialog, setOpenAvatarModifyDialog] = useState(false);
 	const [avatarProcessing, setAvatarProcessing] = useState(false);
 	
+	const [avatarVersion, setAvatarVersion] = useState(1);
 	const [showAvatarCropper, setShowAvatarCropper] = useState(false);
 	const [avatarSrc, setAvatarSrc] = useState();
 	const avatarCropper = useRef(null);
@@ -275,6 +278,7 @@ const UserPage = memo(({username}) => {
 			document.getElementById("tab-following").innerHTML = "关注(" + data["followingCount"] + ")";
 			document.getElementById("tab-follower").innerHTML = "粉丝(" + data["followerCount"] + ")";
 			setIsFollowing(data["alreadyFollowing"]);
+			setAvatarVersion(data.avatarVersion);
 		}
 	}, [data]);
 	
@@ -297,11 +301,11 @@ const UserPage = memo(({username}) => {
 								sx={{width: 100, height: 100}}
 							>
 								<UserAvatar username={data.username} displayName={data.displayName}
-								            avatarVersion={data.avatarVersion} width={100} height={100}/>
+								            avatarVersion={avatarVersion} width={100} height={100}/>
 							</IconButton>
 						) : (
 							<UserAvatar username={data.username} displayName={data.displayName}
-							            avatarVersion={data.avatarVersion} width={100} height={100}/>
+							            avatarVersion={avatarVersion} width={100} height={100}/>
 						)}
 						<input
 							type="file"
@@ -345,9 +349,14 @@ const UserPage = memo(({username}) => {
 									setShowAvatarCropper(false);
 									setAvatarProcessing(true);
 									avatarCropper.current.cropper.getCroppedCanvas().toBlob(blob => {
-										const formData = new FormData();
-										formData.append("avatar", new File([blob], "avatar.png", {type: "image/png"}));
-										axios.post("/api/account/avatar/upload", formData, {
+										const avatar = new File([blob], "avatar.png", {type: "image/png"});
+										
+										if (avatar.size > 20 * 1024 * 1024) {
+											enqueueSnackbar("头像大小不能超过20MB！", {variant: "error"});
+											setAvatarProcessing(false);
+										}
+										
+										axios.post("/api/account/avatar/upload", {avatar: avatar}, {
 											headers: {
 												"Content-Type": "multipart/form-data",
 											},
@@ -356,6 +365,17 @@ const UserPage = memo(({username}) => {
 											if (res.data.status === 1) {
 												setOpenAvatarModifyDialog(false);
 												setAvatarProcessing(false);
+												
+												setAvatarVersion(version => {
+													const newVersion = -(Math.abs(version) + 1);
+													
+													setClientUser({
+														...clientUser,
+														avatarVersion: newVersion,
+													});
+													
+													return newVersion;
+												});
 											}
 										});
 									});
@@ -424,7 +444,7 @@ const UserPage = memo(({username}) => {
 					<Tab label="粉丝" data-option="follower" id="tab-follower"/>
 				</Tabs>
 			</Box>
-			<TabPanel value={value} username={data.username} displayName={data.displayName} avatarVersion={data.avatarVersion}/>
+			<TabPanel value={value} username={data.username} displayName={data.displayName} avatarVersion={avatarVersion}/>
 			<Dialog
 				open={modifying}
 				onClose={() => setModifying(false)}
@@ -440,8 +460,9 @@ const UserPage = memo(({username}) => {
 						},
 					}).then(res => {
 						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-						if (res.data.status === 1)
+						if (res.data.status === 1) {
 							setTimeout(() => window.location.reload(), 500);
+						}
 					});
 					setModifying(false);
 				}}
@@ -521,11 +542,24 @@ const UserPage = memo(({username}) => {
 						onClick={() => {
 							setAvatarProcessing(true);
 							axios.post("/api/account/avatar/reset").then((res) => {
-								enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-								if (res.data.status === 1) {
-									setOpenAvatarModifyDialog(false);
-									setAvatarProcessing(false);
-								}
+								setTimeout(() => {
+									enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+									if (res.data.status === 1) {
+										setOpenAvatarModifyDialog(false);
+										setAvatarProcessing(false);
+										
+										setAvatarVersion(version => {
+											const newVersion = -(Math.abs(version) + 1);
+											
+											setClientUser({
+												...clientUser,
+												avatarVersion: newVersion,
+											});
+											
+											return newVersion;
+										});
+									}
+								}, 2000);
 							});
 						}}
 					>
