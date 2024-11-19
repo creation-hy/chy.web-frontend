@@ -13,7 +13,7 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import {Close, Leaderboard, PlayArrow, Replay, Stop} from "@mui/icons-material";
 import {DataGrid} from "@mui/x-data-grid";
-import {SimpleUserItem} from "src/components/UserItem.jsx";
+import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import IconButton from "@mui/material/IconButton";
 import Pagination from "@mui/material/Pagination";
 import {useQuery} from "@tanstack/react-query";

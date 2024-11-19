@@ -51,8 +51,8 @@ import {useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
-import {UserAvatar} from "src/components/UserAvatar.jsx";
 import {throttle} from "lodash";
+import {UserAvatar} from "src/components/UserComponents.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 

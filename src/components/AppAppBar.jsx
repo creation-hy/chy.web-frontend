@@ -21,13 +21,13 @@ import {
 } from "@mui/icons-material";
 import {useColorMode} from "src/components/ColorMode.jsx";
 import {useClientUser} from "src/components/ClientUser.jsx";
-import {UserAvatar} from "src/components/UserAvatar.jsx";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import {useLocation, useNavigate} from "react-router";
 import PropTypes from "prop-types";
 import Button from "@mui/material/Button";
 import Cookies from "js-cookie";
+import {UserAvatar} from "src/components/UserComponents.jsx";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',

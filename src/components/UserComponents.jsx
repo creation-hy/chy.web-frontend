@@ -1,10 +1,29 @@
 import Grid from "@mui/material/Grid2";
 import Link from "@mui/material/Link";
-import {UserAvatar} from "src/components/UserAvatar.jsx";
 import Typography from "@mui/material/Typography";
 import PropTypes from "prop-types";
 import {memo} from "react";
 import {useNavigate} from "react-router";
+import Avatar from "@mui/material/Avatar";
+
+export const UserAvatar = memo(({username, displayName, avatarVersion, width, height, ...props}) => {
+	return (
+		<Avatar
+			src={`/avatars/${username}.webp?v=${avatarVersion}`}
+			alt={displayName}
+			sx={{width: width, height: height}}
+			{...props}
+		/>
+	);
+});
+
+UserAvatar.propTypes = {
+	username: PropTypes.string.isRequired,
+	displayName: PropTypes.string,
+	avatarVersion: PropTypes.number.isRequired,
+	width: PropTypes.number,
+	height: PropTypes.number,
+}
 
 export const SimpleUserItem = memo(({username, displayName, avatarVersion, disableNavigate = false, ...props}) => {
 	const navigate = useNavigate();

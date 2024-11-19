@@ -49,11 +49,11 @@ import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
 import ResetPassword from "src/components/ResetPassword.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
-import {UserAvatar} from "src/components/UserAvatar.jsx";
 import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import {useClientUser} from "src/components/ClientUser.jsx";
+import {UserAvatar} from "src/components/UserComponents.jsx";
 
 const News = memo(({username, displayName, avatarVersion}) => {
 	const {data} = useQuery({

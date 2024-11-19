@@ -65,7 +65,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import DialogContent from "@mui/material/DialogContent";
 import {TransitionGroup} from "react-transition-group";
-import {SimpleUserItem} from "src/components/UserItem.jsx";
+import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import {isIOS} from "react-device-detect";
 import {useNavigate} from "react-router";
 

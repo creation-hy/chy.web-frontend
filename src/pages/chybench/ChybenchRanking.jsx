@@ -7,7 +7,7 @@ import {memo, useCallback, useMemo, useState} from "react";
 import axios from "axios";
 import {useQuery} from "@tanstack/react-query";
 import FormControl from "@mui/material/FormControl";
-import {SimpleUserItem} from "src/components/UserItem.jsx";
+import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import Cookies from "js-cookie";
 import Typography from "@mui/material/Typography";
 import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
