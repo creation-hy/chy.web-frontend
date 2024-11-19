@@ -16,7 +16,6 @@ import {
 	DrawOutlined,
 	ForumOutlined,
 	InfoOutlined,
-	LeaderboardOutlined,
 	LightMode,
 	SportsEsportsOutlined
 } from "@mui/icons-material";
@@ -166,12 +165,6 @@ const LeftBar = memo(({navigateCallback}) => {
 						<ArticleOutlined/>
 					</ListItemIcon>
 					<ListItemText primary="Blog"/>
-				</ListItemButton>
-				<ListItemButton onClick={() => navigateAndCloseDrawer("ranking")} selected={firstLevelLocation === "ranking"}>
-					<ListItemIcon>
-						<LeaderboardOutlined/>
-					</ListItemIcon>
-					<ListItemText primary="排行榜"/>
 				</ListItemButton>
 				<ListItemButton onClick={() => navigateAndCloseDrawer("about")} selected={firstLevelLocation === "about"}>
 					<ListItemIcon>

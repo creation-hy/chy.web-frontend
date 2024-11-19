@@ -11,7 +11,6 @@ import {MobileAppBar, PCAppBar} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
-import Ranking from "src/pages/Ranking.jsx";
 import Chybench from "src/pages/chybench/Chybench.jsx";
 import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
 import Error from "src/pages/Error.jsx";
@@ -69,7 +68,6 @@ const PageContainer = memo(() => {
 							<Route path="/login" element={<SignIn/>}/>
 							<Route path="/register" element={<SignUp/>}/>
 							<Route path="/user/:username" element={<User/>}/>
-							<Route path="/ranking" element={<Ranking/>}/>
 							<Route path="/ai-art" element={<AIArt/>}/>
 							<Route path="/chybench" element={<Chybench/>}/>
 							<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
