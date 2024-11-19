@@ -57,7 +57,8 @@ const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
 			flex: 1,
 			minWidth: 175,
 			renderCell: (params) => {
-				return <SimpleUserItem username={params.row.username} displayName={params.row.displayName} sx={{mr: 1}}/>
+				return <SimpleUserItem username={params.row.username} displayName={params.row.displayName}
+				                       avatarVersion={params.row.avatarVersion} sx={{mr: 1}}/>
 			}
 		},
 		{
