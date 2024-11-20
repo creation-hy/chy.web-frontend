@@ -37,15 +37,16 @@ export const UserBadge = memo(({badge, fontSize}) => {
 	} else if (badge === "User2") {
 		return <Verified color="warning" sx={{fontSize: fontSize}}/>;
 	} else if (badge === "Transgender") {
+		const uuid = crypto.randomUUID().toString();
 		return (
 			<SvgIcon sx={{fontSize: fontSize}}>
 				<defs>
-					<linearGradient id="transgender-badge-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+					<linearGradient id={`transgender-gradient-${uuid}`} x1="0%" y1="0%" x2="100%" y2="100%">
 						<stop offset="25%" style={{stopColor: '#f5a9b8', stopOpacity: 1}}/>
 						<stop offset="100%" style={{stopColor: '#5bcefa', stopOpacity: 1}}/>
 					</linearGradient>
 				</defs>
-				<Verified sx={{fill: 'url(#transgender-badge-gradient)'}}/>
+				<Verified sx={{fill: `url(#transgender-gradient-${uuid})`}}/>
 			</SvgIcon>
 		);
 	}
