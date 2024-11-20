@@ -1181,9 +1181,9 @@ const Community = () => {
 									}
 									<ImageListItemBar
 										title={
-											<Grid container justifyContent="space-between" alignItems="center">
+											<Grid container justifyContent="space-between" alignItems="center" wrap="nowrap" gap={0.25}>
 												<SimpleUserItem username={item.username} displayName={item.displayName}
-												                avatarVersion={item.avatarVersion} disableNavigate/>
+												                avatarVersion={item.avatarVersion} badge={item.badge} disableNavigate/>
 												<Typography variant="caption">
 													{convertDateToLocaleOffsetString(item.firstPublicationDate)}
 												</Typography>
@@ -1366,7 +1366,7 @@ const Community = () => {
 										作者：
 									</Typography>
 									<SimpleUserItem username={imagePreviewData.username} displayName={imagePreviewData.displayName}
-									                avatarVersion={imagePreviewData.avatarVersion}/>
+									                avatarVersion={imagePreviewData.avatarVersion} badge={imagePreviewData.badge}/>
 								</Grid>
 								<Typography>
 									模型：{modelDisplayNameList[modelList.indexOf(imagePreviewData.modelName)]}

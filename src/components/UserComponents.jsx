@@ -49,6 +49,7 @@ export const UserBadge = memo(({badge, fontSize}) => {
 			</SvgIcon>
 		);
 	}
+	return <Verified color="error" sx={{fontSize: fontSize}}/>;
 });
 
 UserBadge.propTypes = {
@@ -75,25 +76,28 @@ UsernameWithBadge.propTypes = {
 	size: PropTypes.number,
 }
 
-export const SimpleUserItem = memo(({username, displayName, avatarVersion, disableNavigate = false, ...props}) => {
+export const SimpleUserItem = memo(({username, displayName, avatarVersion, badge, disableNavigate = false, ...props}) => {
 	const navigate = useNavigate();
 	
 	return (
-		<Grid container wrap="nowrap" alignItems="center" spacing={1} height="100%" {...props}>
+		<Grid container wrap="nowrap" alignItems="center" gap={1} height="100%" {...props}>
 			<Link onClick={disableNavigate ? undefined : () => navigate(`/user/${username}`)} underline="none" sx={{cursor: "pointer"}}>
 				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 			</Link>
-			<Typography
-				fontWeight="bold"
-				maxWidth={150}
-				noWrap
-				overflow="hidden"
-				textOverflow="ellipsis"
-				onClick={disableNavigate ? undefined : () => navigate(`/user/${username}`)}
-				sx={{cursor: "pointer"}}
-			>
-				{displayName}
-			</Typography>
+			<Grid container alignItems="center" gap={0.25} wrap="nowrap">
+				<Typography
+					fontWeight="bold"
+					maxWidth={150}
+					noWrap
+					overflow="hidden"
+					textOverflow="ellipsis"
+					onClick={disableNavigate ? undefined : () => navigate(`/user/${username}`)}
+					sx={{cursor: "pointer"}}
+				>
+					{displayName}
+				</Typography>
+				<UserBadge badge={badge} fontSize={18}/>
+			</Grid>
 		</Grid>
 	);
 });
@@ -102,5 +106,6 @@ SimpleUserItem.propTypes = {
 	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
 	avatarVersion: PropTypes.number.isRequired,
+	badge: PropTypes.string,
 	disableNavigate: PropTypes.bool,
 }
