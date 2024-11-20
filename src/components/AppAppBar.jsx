@@ -27,7 +27,7 @@ import {useLocation, useNavigate} from "react-router";
 import PropTypes from "prop-types";
 import Button from "@mui/material/Button";
 import Cookies from "js-cookie";
-import {UserAvatar, UserBadge} from "src/components/UserComponents.jsx";
+import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -85,12 +85,10 @@ const LeftBar = memo(({navigateCallback}) => {
 								<UserAvatar username={myName} displayName={myInformation.displayName}
 								            avatarVersion={myInformation.avatarVersion} width={80} height={80}/>
 							</IconButton>
-							<Grid container alignItems="center" gap={0.25}>
-								<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
-									{myInformation.displayName ? myInformation.displayName : <Skeleton/>}
-								</Typography>
-								<UserBadge badge={myInformation.badge} sx={{fontSize: 20}}/>
-							</Grid>
+							<UsernameWithBadge
+								username={myInformation.displayName ? myInformation.displayName : <Skeleton/>}
+								badge={myInformation.badge}
+							/>
 							<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
 								@{myName}
 							</Typography>
@@ -111,12 +109,7 @@ const LeftBar = memo(({navigateCallback}) => {
 							<UserAvatar username={clientUser.username} displayName={clientUser.displayName}
 							            avatarVersion={clientUser.avatarVersion} width={80} height={80}/>
 						</IconButton>
-						<Grid container alignItems="center" gap={0.25}>
-							<Typography fontWeight="bold" noWrap maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
-								{clientUser.displayName}
-							</Typography>
-							<UserBadge badge={myInformation.badge} sx={{fontSize: 20}}/>
-						</Grid>
+						<UsernameWithBadge username={clientUser.displayName} badge={clientUser.badge}/>
 						<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
 							@{clientUser.username}
 						</Typography>

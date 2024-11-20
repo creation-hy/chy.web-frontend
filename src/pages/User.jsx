@@ -52,7 +52,7 @@ import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import {useClientUser} from "src/components/ClientUser.jsx";
-import {UserAvatar, UserBadge} from "src/components/UserComponents.jsx";
+import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 
 const News = memo(({username, displayName, avatarVersion}) => {
 	const {data} = useQuery({
@@ -188,12 +188,7 @@ const Follows = memo(({username, type}) => {
 						</ListItemAvatar>
 						<ListItemText
 							primary={
-								<Grid container alignItems="center" gap={0.25}>
-									<Typography fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis">
-										{item.displayName}
-									</Typography>
-									<UserBadge badge={item.badge} sx={{fontSize: 20}}/>
-								</Grid>
+								<UsernameWithBadge username={item.displayName} badge={item.badge}/>
 							}
 							secondary={
 								<Typography fontSize={14} color="text.secondary" noWrap overflow="hidden" textOverflow="ellipsis">
@@ -388,12 +383,7 @@ const UserPage = memo(({username}) => {
 						</Dialog>
 						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container direction="column" justifyContent="center">
-							<Box display="flex" gap={0.5} alignItems="center" margin={0} flexShrink={1} flexWrap="nowrap" width="100%">
-								<Typography variant="h5" fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis">
-									{data.displayName}
-								</Typography>
-								<UserBadge badge={data.badge}/>
-							</Box>
+							<UsernameWithBadge username={data.displayName} badge={data.badge} fontSize={20} size={22}/>
 							<Typography color="text.secondary" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
 								@{data.username}
 							</Typography>

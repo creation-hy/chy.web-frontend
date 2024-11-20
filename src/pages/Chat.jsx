@@ -52,7 +52,7 @@ import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
 import {throttle} from "lodash";
-import {UserAvatar} from "src/components/UserComponents.jsx";
+import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -83,7 +83,10 @@ const saveDraft = throttle((contact, content, setUsers) => {
 	uploadDraftThrottle(contact, content);
 }, 100);
 
-const UserItem = memo(({username, displayName, avatarVersion, isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode}) => {
+const UserItem = memo(({
+	                       username, displayName, avatarVersion, badge,
+	                       isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode
+                       }) => {
 	return (
 		<>
 			<ListItemAvatar>
@@ -132,14 +135,10 @@ const UserItem = memo(({username, displayName, avatarVersion, isOnline, newMessa
 						whiteSpace: "nowrap",
 						gap: 1,
 					}}>
-						<Typography sx={{
-							whiteSpace: "nowrap",
-							overflow: "hidden",
-							textOverflow: "ellipsis",
-							flexShrink: 1,
-						}}>
-							{displayNameNode ? displayNameNode : displayName}
-						</Typography>
+						<UsernameWithBadge
+							username={displayNameNode ? displayNameNode : displayName}
+							badge={badge}
+						/>
 						{lastMessageTime && <Typography variant="body2" color="textSecondary">
 							{convertDateToLocaleShortString(lastMessageTime)}
 						</Typography>}
@@ -163,6 +162,7 @@ UserItem.propTypes = {
 	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
 	avatarVersion: PropTypes.number.isRequired,
+	badge: PropTypes.string,
 	isOnline: PropTypes.bool,
 	newMessageCount: PropTypes.number,
 	lastMessageTime: PropTypes.string,
@@ -171,7 +171,7 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-const Message = memo(({messageId, username, displayName, avatarVersion, content, quote, setQuote}) => {
+const Message = memo(({messageId, username, displayName, avatarVersion, badge, content, quote, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const navigate = useNavigate();
@@ -224,7 +224,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, content,
 			</IconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
 				<DialogTitle>
-					{displayName} (@{username}):
+					<UsernameWithBadge username={displayName} badge={badge} fontSize={20} size={22}/>
 				</DialogTitle>
 				<DialogContent>
 					<ChatMarkdown>{content}</ChatMarkdown>
@@ -298,6 +298,7 @@ Message.propTypes = {
 	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
 	avatarVersion: PropTypes.number.isRequired,
+	badge: PropTypes.string,
 	content: PropTypes.string,
 	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
@@ -343,7 +344,7 @@ const ChatToolBar = memo(({inputField}) => {
 	const [onSettings, handleSettings] = useState(false);
 	const [settings, setSettings] = useState(settingsVar);
 	const settingItems = ["allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
-	const settingItemsDisplay = ["允许通知", "允许公共频道通知", "允许当前联系人通知", "显示消息内容"];
+	const settingItemsDisplay = ["允许通知", "允许公共频道通知", "允许当前联系人通知", "通知显示消息内容"];
 	
 	return (
 		<>
@@ -546,6 +547,7 @@ export default function Chat() {
 	const [logged, setLogged] = useState(null);
 	const [currentUser, setCurrentUser] = useState(null);
 	const [currentUserDisplayName, setCurrentUserDisplayName] = useState(null);
+	const [currentUserBadge, setCurrentUserBadge] = useState(null);
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
@@ -679,6 +681,7 @@ export default function Chat() {
 			if (!isCurrentUser) {
 				flushSync(() => {
 					setCurrentUserDisplayName(res.data.result.displayName);
+					setCurrentUserBadge(res.data.result.badge);
 					setLastOnline(res.data.result.isOnline || username === myname ? "在线" : (
 						res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
 				});
@@ -744,7 +747,7 @@ export default function Chat() {
 		}));
 	}, [quote]);
 	
-	const updateUserItem = useCallback((username, displayName, avatarVersion, content, time, isCurrent, sender) => {
+	const updateUserItem = useCallback((username, displayName, avatarVersion, badge, content, time, isCurrent, sender) => {
 		const userItem = usersVar.find(item => item.username === username);
 		
 		if (userItem) {
@@ -761,6 +764,7 @@ export default function Chat() {
 					username: username,
 					displayName: displayName,
 					avatarVersion: avatarVersion,
+					badge: badge,
 					isOnline: res.data.result[0].isOnline,
 					lastMessageTime: time,
 					lastMessageText: content,
@@ -789,6 +793,7 @@ export default function Chat() {
 		updateUserItem(data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipient : data.sender,
 			data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipientDisplayName : data.senderDisplayName,
 			data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipientAvatarVersion : data.senderAvatarVersion,
+			data.recipient === "ChatRoomSystem" || data.sender === myname ? data.recipientBadge : data.senderBadge,
 			content, data.time, true, data.sender);
 		
 		messagesVar = [...messagesVar, {
@@ -796,6 +801,7 @@ export default function Chat() {
 			username: data.sender,
 			displayName: data.senderDisplayName,
 			avatarVersion: data.senderAvatarVersion,
+			badge: data.senderBadge,
 			content: data.content,
 			quote: data.quote,
 			time: data.time,
@@ -858,6 +864,7 @@ export default function Chat() {
 				updateUserItem(data.sender === myname ? data.recipient : data.sender,
 					data.sender === myname ? data.recipientDisplayName : data.senderDisplayName,
 					data.sender === myname ? data.recipientAvatarVersion : data.senderAvatarVersion,
+					data.sender === myname ? data.recipientBadge : data.senderBadge,
 					data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && data.sender !== myname)
 					notify("[私聊] " + data.sender + "说：",
@@ -874,8 +881,8 @@ export default function Chat() {
 					notify("[公共] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
 			} else {
-				updateUserItem(data.recipient, data.recipientDisplayName, data.avatarVersion,
-					data.senderDisplayName + ": " + data.content, data.time, false, data.sender);
+				updateUserItem(data.recipient, data.recipientDisplayName, data.recipientAvatarVersion, data.recipientBadge,
+					data.data.senderDisplayName + ": " + data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
 					notify("[公共] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
@@ -1019,6 +1026,7 @@ export default function Chat() {
 								username="ChatRoomSystem"
 								displayName="公共"
 								avatarVersion={1}
+								badge={users.find(item => item.username === "ChatRoomSystem").badge}
 								isOnline={false}
 								newMessageCount={users.find(item => item.username === "ChatRoomSystem").newMessageCount}
 								lastMessageTime={users.find(item => item.username === "ChatRoomSystem").lastMessageTime}
@@ -1040,6 +1048,7 @@ export default function Chat() {
 									username={user.username}
 									displayName={user.displayName}
 									avatarVersion={user.avatarVersion}
+									badge={user.badge}
 									isOnline={user.isOnline}
 									newMessageCount={user.newMessageCount}
 									lastMessageTime={user.lastMessageTime}
@@ -1079,6 +1088,7 @@ export default function Chat() {
 										username={user.username}
 										displayName={`${user.displayName} (@${user.username})`}
 										avatarVersion={user.avatarVersion}
+										badge={user.badge}
 										isOnline={user.isOnline}
 										newMessageCount={0}
 										lastMessageTime={user.lastMessageTime}
@@ -1087,7 +1097,7 @@ export default function Chat() {
 										displayNameNode={
 											<>
 												{beforeHighlight}
-												<Typography component="span" color="primary">{highlight}</Typography>
+												<Typography component="span" color="primary" fontWeight="bold">{highlight}</Typography>
 												{afterHighlight}
 											</>
 										}
@@ -1112,15 +1122,14 @@ export default function Chat() {
 							document.getElementById("app-bar").style.display = "flex";
 							setCurrentUser(null);
 							setCurrentUserDisplayName(null);
+							setCurrentUserBadge(null);
 							currentUserVar = null;
 							navigate("/chat");
 						}}>
 							<ArrowBack/>
 						</IconButton>}
 						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"} sx={{flex: 1}}>
-							<Typography maxWidth="100%" overflow="hidden" textOverflow="ellipsis" fontWeight="bold" noWrap>
-								{currentUserDisplayName}
-							</Typography>
+							<UsernameWithBadge username={currentUserDisplayName} badge={currentUserBadge}/>
 							<Typography variant="body2" color="textSecondary" maxWidth="100%" noWrap overflow="hidden" textOverflow="ellipsis">
 								{lastOnline}
 							</Typography>
@@ -1166,6 +1175,7 @@ export default function Chat() {
 									username={message.username}
 									displayName={message.displayName}
 									avatarVersion={message.avatarVersion}
+									badge={message.badge}
 									content={message.content}
 									quote={message.quote}
 									timestamp={message.time}

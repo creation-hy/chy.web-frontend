@@ -27,18 +27,18 @@ UserAvatar.propTypes = {
 	height: PropTypes.number,
 }
 
-export const UserBadge = memo(({badge, ...props}) => {
+export const UserBadge = memo(({badge, fontSize}) => {
 	if (!badge) {
 		return null;
 	} else if (badge === "Official") {
-		return <Verified color="secondary" {...props}/>;
+		return <Verified color="secondary" sx={{fontSize: fontSize}}/>;
 	} else if (badge === "User1") {
-		return <Verified color="primary" {...props}/>;
+		return <Verified color="primary" sx={{fontSize: fontSize}}/>;
 	} else if (badge === "User2") {
-		return <Verified color="warning" {...props}/>;
+		return <Verified color="warning" sx={{fontSize: fontSize}}/>;
 	} else if (badge === "Transgender") {
 		return (
-			<SvgIcon {...props}>
+			<SvgIcon sx={{fontSize: fontSize}}>
 				<defs>
 					<linearGradient id="transgender-badge-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
 						<stop offset="25%" style={{stopColor: '#f5a9b8', stopOpacity: 1}}/>
@@ -53,6 +53,26 @@ export const UserBadge = memo(({badge, ...props}) => {
 
 UserBadge.propTypes = {
 	badge: PropTypes.string,
+	fontSize: PropTypes.number,
+}
+
+export const UsernameWithBadge = memo(({username, badge, fontWeight = "bold", fontSize, size = 18}) => {
+	return (
+		<Grid container alignItems="center" flexWrap="nowrap" gap={0.25}>
+			<Typography fontWeight={fontWeight} fontSize={fontSize} noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center">
+				{username}
+			</Typography>
+			<UserBadge badge={badge} fontSize={size}/>
+		</Grid>
+	);
+});
+
+UsernameWithBadge.propTypes = {
+	username: PropTypes.node,
+	badge: PropTypes.string,
+	fontWeight: PropTypes.string,
+	fontSize: PropTypes.number,
+	size: PropTypes.number,
 }
 
 export const SimpleUserItem = memo(({username, displayName, avatarVersion, disableNavigate = false, ...props}) => {
