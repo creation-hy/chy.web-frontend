@@ -361,7 +361,7 @@ const ChatToolBar = memo(({inputField}) => {
 				</DialogTitle>
 				<DialogContent>
 					<Grid container gap={1}>
-						<FormControl margin="dense" sx={{minWidth: 80}}>
+						<FormControl margin="dense" sx={{mb: 0, minWidth: 80}}>
 							<InputLabel id="font-style-label">样式</InputLabel>
 							<Select
 								labelId="font-style-label"
@@ -409,8 +409,10 @@ const ChatToolBar = memo(({inputField}) => {
 					添加链接
 				</DialogTitle>
 				<DialogContent>
-					<TextField label="链接地址" margin="dense" fullWidth inputRef={linkHrefRef}/>
-					<TextField label="显示文本" margin="dense" fullWidth inputRef={linkTextRef}/>
+					<Grid container gap={2}>
+						<TextField label="链接地址" sx={{mt: 1}} fullWidth inputRef={linkHrefRef}/>
+						<TextField label="显示文本" fullWidth inputRef={linkTextRef}/>
+					</Grid>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => handleAddLink(false)}>关闭</Button>
@@ -426,8 +428,10 @@ const ChatToolBar = memo(({inputField}) => {
 					添加图片
 				</DialogTitle>
 				<DialogContent>
-					<TextField label="图片地址" margin="dense" fullWidth inputRef={imageHrefRef}/>
-					<TextField label="替代文字" margin="dense" fullWidth inputRef={imageAltRef}/>
+					<Grid container gap={2}>
+						<TextField label="图片地址" sx={{mt: 1}} fullWidth inputRef={imageHrefRef}/>
+						<TextField label="替代文字" fullWidth inputRef={imageAltRef}/>
+					</Grid>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => handleAddImage(false)}>关闭</Button>
@@ -690,7 +694,7 @@ export default function Chat() {
 			}
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
-	}, [messageCardScrollTo, setClientUser]);
+	}, [messageCardScrollTo, setClientUser, isSmallScreen]);
 	
 	const [isContactsLoading, setIsContactsLoading] = useState(true);
 	
