@@ -190,6 +190,7 @@ export const PCAppBar = memo(() => {
 			sx={{
 				position: "relative",
 				height: "100%",
+				overflow: "auto",
 				width: 225,
 				borderRight: 1,
 				borderColor: theme => theme.palette.divider,
@@ -224,9 +225,15 @@ export const MobileAppBar = memo(() => {
 		<AppBar
 			position="sticky"
 			id="app-bar"
-			sx={{boxShadow: 0, backgroundColor: 'transparent', backgroundImage: 'none', top: 0, pt: 2, pb: 2}}
+			sx={{
+				boxShadow: 0,
+				backgroundColor: 'transparent',
+				backgroundImage: 'none',
+				top: 0,
+				py: 2,
+			}}
 		>
-			<Container maxWidth="lg">
+			<Container>
 				<StyledToolbar variant="dense" disableGutters sx={{justifyContent: "flex-end"}}>
 					<Grid container spacing={1} justify="center" alignItems="center">
 						<IconButton size="small" onClick={toggleColorMode}>
@@ -239,7 +246,7 @@ export const MobileAppBar = memo(() => {
 						</IconButton>
 					</Grid>
 					<SwipeableDrawer anchor="left" open={open} onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
-						<Box sx={{backgroundColor: 'background.default', minHeight: "100%", width: 225}}>
+						<Box sx={{height: "100%", overflow: "auto", width: 225}}>
 							<LeftBar navigateCallback={() => setOpen(false)}/>
 						</Box>
 					</SwipeableDrawer>
