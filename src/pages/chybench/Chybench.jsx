@@ -1,4 +1,4 @@
-import {browserName, fullBrowserVersion, isMobile, osName, osVersion} from "react-device-detect";
+import {browserName, fullBrowserVersion, osName, osVersion} from "react-device-detect";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import Select from "@mui/material/Select";
@@ -6,7 +6,7 @@ import Grid from "@mui/material/Grid2";
 import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import {InputLabel, LinearProgress, Switch} from "@mui/material";
+import {InputLabel, LinearProgress, Switch, useMediaQuery} from "@mui/material";
 import PropTypes from "prop-types";
 import {useState} from "react";
 import {Close, Leaderboard, PlayArrow} from "@mui/icons-material";
@@ -136,7 +136,6 @@ const sleep = (time) => {
 
 const memoryTest = (size) => {
 	let startTime = new Date().getTime();
-	// eslint-disable-next-line no-unused-vars
 	let result = [...new Array(size === 2 ? 5000000 : (size === 1 ? 10000000 : 50000000)).keys()];
 	let endTime = new Date().getTime();
 	return endTime - startTime;
@@ -186,6 +185,8 @@ const workerScript = URL.createObjectURL(new Blob([workerCode], {type: "applicat
 
 export default function Chybench() {
 	document.title = "Chybench - chy.web";
+	
+	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const [size, setSize] = useState(chybenchParams.size ?? 1);
 	const [rounds, setRounds] = useState(chybenchParams.rounds ?? 10);
@@ -352,7 +353,7 @@ export default function Chybench() {
 				open={showRanking}
 				fullWidth
 				maxWidth="xl"
-				fullScreen={isMobile}
+				fullScreen={isSmallScreen}
 				onClose={() => toggleRanking(false)}
 			>
 				<DialogContent>

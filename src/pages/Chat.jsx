@@ -1,6 +1,6 @@
 import {Fragment, memo, useCallback, useEffect, useRef, useState} from "react";
 import axios from "axios";
-import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, Zoom} from "@mui/material";
+import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
@@ -38,7 +38,6 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import {isMobile} from "react-device-detect";
 import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -175,6 +174,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const navigate = useNavigate();
+	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const isMe = username === myname;
 	
@@ -192,7 +192,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 						backgroundColor: isMe ? '#1976d2' : 'normal',
 						color: isMe ? 'white' : 'normal',
 						wordBreak: 'break-word',
-						userSelect: isMobile ? "none" : "auto",
+						userSelect: isSmallScreen ? "none" : "auto",
 						maxWidth: "100%",
 					}}
 					onContextMenu={(event) => {
@@ -542,6 +542,7 @@ export default function Chat() {
 	
 	const {username} = useParams();
 	const navigate = useNavigate();
+	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const [users, setUsers] = useState(null);
 	const [logged, setLogged] = useState(null);
@@ -642,7 +643,7 @@ export default function Chat() {
 			messagePageNumberCurrent.current = 0;
 		}
 		
-		if (isMobile) {
+		if (isSmallScreen) {
 			if (contactsComponent.current) {
 				contactsComponent.current.style.display = "none";
 			}
@@ -989,7 +990,8 @@ export default function Chat() {
 	
 	return (
 		<Grid container sx={{flex: 1, display: !users ? "none" : "flex", minHeight: 0}} gap={2}>
-			<Card variant="outlined" ref={contactsComponent} sx={{width: isMobile ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
+			<Card variant="outlined" ref={contactsComponent}
+			      sx={{width: isSmallScreen ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
 				<OutlinedInput
 					inputRef={userSearchField}
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
@@ -1108,11 +1110,11 @@ export default function Chat() {
 					</List>}
 				</Box>
 			</Card>
-			<Grid container ref={chatMainComponent} direction="column" sx={{flex: 1, height: "100%", display: isMobile ? "none" : "flex", pt: isMobile ? 2 : 0}}
-			      gap={1.5}>
+			<Grid container ref={chatMainComponent} direction="column"
+			      sx={{flex: 1, height: "100%", display: isSmallScreen ? "none" : "flex", pt: isSmallScreen ? 2 : 0}} gap={1.5}>
 				{Boolean(currentUser) && <Card variant="outlined" sx={{width: "100%"}}>
-					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isMobile ? 1 : 1.5} gap={1.5}>
-						{isMobile && <IconButton onClick={() => {
+					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isSmallScreen ? 1 : 1.5} gap={1.5}>
+						{isSmallScreen && <IconButton onClick={() => {
 							if (contactsComponent.current) {
 								contactsComponent.current.style.display = "flex";
 							}
@@ -1128,7 +1130,7 @@ export default function Chat() {
 						}}>
 							<ArrowBack/>
 						</IconButton>}
-						<Grid container direction="column" alignItems={isMobile ? "center" : "flex-start"} sx={{flex: 1}}>
+						<Grid container direction="column" alignItems={isSmallScreen ? "center" : "flex-start"} sx={{flex: 1}}>
 							<UsernameWithBadge username={currentUserDisplayName} badge={currentUserBadge}/>
 							<Typography variant="body2" color="textSecondary" maxWidth="100%" noWrap overflow="hidden" textOverflow="ellipsis">
 								{lastOnline}
@@ -1210,7 +1212,7 @@ export default function Chat() {
 							maxRows={10}
 							slotProps={{input: {style: {fontSize: 15, padding: 10}}}}
 							onKeyDown={(event) => {
-								if (!isMobile && event.keyCode === 13) {
+								if (!isSmallScreen && event.keyCode === 13) {
 									event.preventDefault();
 									if (event.metaKey || event.ctrlKey)
 										document.execCommand("insertLineBreak");
