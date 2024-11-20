@@ -1,4 +1,4 @@
-import {memo} from "react";
+import {forwardRef, memo} from "react";
 import {useNavigate} from "react-router";
 import PropTypes from "prop-types";
 import Link from "@mui/material/Link";
@@ -6,7 +6,8 @@ import {ButtonBase} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 
-export const NavigateLink = memo(({href, underline = "hover", color = "inherit", children, ...props}) => {
+export const NavigateLink = memo(forwardRef((
+	{href, underline = "hover", color = "inherit", children, ...props}, ref) => {
 	const navigate = useNavigate();
 	
 	return (
@@ -20,12 +21,13 @@ export const NavigateLink = memo(({href, underline = "hover", color = "inherit",
 			}}
 			underline={underline}
 			color={color}
+			ref={ref}
 			{...props}
 		>
 			{children}
 		</Link>
 	);
-});
+}));
 
 NavigateLink.propTypes = {
 	href: PropTypes.string,
@@ -34,7 +36,8 @@ NavigateLink.propTypes = {
 	children: PropTypes.node,
 }
 
-export const NavigateButton = memo(({href, children, ...props}) => {
+export const NavigateButton = memo(forwardRef((
+	{href, children, ...props}, ref) => {
 	const navigate = useNavigate();
 	
 	return (
@@ -46,19 +49,21 @@ export const NavigateButton = memo(({href, children, ...props}) => {
 					navigate(href);
 				}
 			}}
+			ref={ref}
 			{...props}
 		>
 			{children}
 		</Button>
 	);
-});
+}));
 
 NavigateButton.propTypes = {
 	href: PropTypes.string,
 	children: PropTypes.node,
 }
 
-export const NavigateButtonBase = memo(({href, children, ...props}) => {
+export const NavigateButtonBase = memo(forwardRef((
+	{href, children, ...props}, ref) => {
 	const navigate = useNavigate();
 	
 	return (
@@ -70,19 +75,21 @@ export const NavigateButtonBase = memo(({href, children, ...props}) => {
 					navigate(href);
 				}
 			}}
+			ref={ref}
 			{...props}
 		>
 			{children}
 		</ButtonBase>
 	);
-})
+}));
 
 NavigateButtonBase.propTypes = {
 	href: PropTypes.string,
 	children: PropTypes.node,
 }
 
-export const NavigateIconButton = memo(({href, children, ...props}) => {
+export const NavigateIconButton = memo(forwardRef((
+	{href, children, ...props}, ref) => {
 	const navigate = useNavigate();
 	
 	return (
@@ -94,12 +101,13 @@ export const NavigateIconButton = memo(({href, children, ...props}) => {
 					navigate(href);
 				}
 			}}
+			ref={ref}
 			{...props}
 		>
 			{children}
 		</IconButton>
 	);
-})
+}));
 
 NavigateIconButton.propTypes = {
 	href: PropTypes.string,

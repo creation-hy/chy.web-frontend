@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import {useNavigate, useParams} from "react-router";
+import {useParams} from "react-router";
 import {memo, useEffect, useMemo, useRef, useState} from "react";
 import {
 	Alert,
@@ -14,7 +14,8 @@ import {
 	Modal,
 	Paper,
 	Tab,
-	Tabs
+	Tabs,
+	Tooltip
 } from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
@@ -146,7 +147,6 @@ News.propTypes = {
 
 const Follows = memo(({username, type}) => {
 	const [userList, setUserList] = useState([]);
-	const navigate = useNavigate();
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -201,7 +201,7 @@ const Follows = memo(({username, type}) => {
 						}
 						secondary={
 							<NavigateLink href={`/user/${item.username}`} underline="none">
-								<Typography fontSize={14} color="textSecondary" noWrap overflow="hidden" textOverflow="ellipsis">
+								<Typography component="span" fontSize={14} color="textSecondary" noWrap overflow="hidden" textOverflow="ellipsis">
 									@{item.username}
 								</Typography>
 							</NavigateLink>
@@ -253,7 +253,6 @@ const doFollow = (username, setIsFollowing, queryClient) => {
 const myname = Cookies.get("username");
 
 const UserPage = memo(({username}) => {
-	const navigate = useNavigate();
 	const {clientUser, setClientUser} = useClientUser();
 	
 	const [value, setValue] = useState(0);
@@ -399,33 +398,53 @@ const UserPage = memo(({username}) => {
 							</Typography>
 							{data.username === myname ? (
 								<Box sx={{pt: "2px"}}>
-									<IconButton onClick={() => setModifying(true)}>
-										<EditOutlined/>
-									</IconButton>
-									<IconButton onClick={() => setResetPasswordOn(true)}>
-										<LockResetOutlined/>
-									</IconButton>
-									<NavigateIconButton href={`/chat/${data.username}`}>
-										<MailOutlined/>
-									</NavigateIconButton>
-									<IconButton
-										onClick={() => {
-											Cookies.remove("username");
-											Cookies.remove("user_token");
-											window.location.href = "/login";
-										}}
-									>
-										<LogoutOutlined/>
-									</IconButton>
+									<Tooltip title="修改信息">
+										<IconButton onClick={() => setModifying(true)}>
+											<EditOutlined/>
+										</IconButton>
+									</Tooltip>
+									<Tooltip title="重置密码">
+										<IconButton onClick={() => setResetPasswordOn(true)}>
+											<LockResetOutlined/>
+										</IconButton>
+									</Tooltip>
+									<Tooltip title="私信">
+										<NavigateIconButton href={`/chat/${data.username}`}>
+											<MailOutlined/>
+										</NavigateIconButton>
+									</Tooltip>
+									<Tooltip title="登出">
+										<IconButton
+											onClick={() => {
+												Cookies.remove("username");
+												Cookies.remove("user_token");
+												window.location.href = "/login";
+											}}
+										>
+											<LogoutOutlined/>
+										</IconButton>
+									</Tooltip>
 								</Box>
 							) : (
 								<Box flexShrink={0}>
-									<IconButton onClick={() => doFollow(data.username, setIsFollowing, queryClient)}>
-										{isFollowing == null ? null : (isFollowing ? <PersonAddDisabledOutlined/> : <PersonAddOutlined/>)}
-									</IconButton>
-									<NavigateIconButton href={`/chat/${data.username}`}>
-										<MailOutlined/>
-									</NavigateIconButton>
+									{isFollowing == null ? null : (isFollowing ? (
+										<Tooltip title="取消关注">
+											<IconButton onClick={() => doFollow(data.username, setIsFollowing, queryClient)}>
+												<PersonAddDisabledOutlined/>
+											</IconButton>
+										</Tooltip>
+									) : (
+										<Tooltip title="关注">
+											<IconButton onClick={() => doFollow(data.username, setIsFollowing, queryClient)}>
+												<PersonAddOutlined/>
+											</IconButton>
+										</Tooltip>
+									))}
+									<Tooltip title="私信">
+										<NavigateIconButton href={`/chat/${data.username}`}>
+											<MailOutlined/>
+										</NavigateIconButton>
+									</Tooltip>
 								</Box>
 							)}
 						</Grid>
