@@ -351,8 +351,7 @@ export default function Chybench() {
 			<Button variant="contained" startIcon={<Leaderboard/>} onClick={() => toggleRanking(true)}>排行榜</Button>
 			<Dialog
 				open={showRanking}
-				fullWidth
-				maxWidth="xl"
+				maxWidth={false}
 				fullScreen={isSmallScreen}
 				onClose={() => toggleRanking(false)}
 			>

@@ -102,8 +102,7 @@ const tableColumns = [
 	{
 		field: "displayName",
 		headerName: "用户",
-		flex: 1,
-		minWidth: 175,
+		width: 250,
 		renderCell: (params) => {
 			return <SimpleUserItem username={params.row.username} displayName={params.row.displayName}
 			                       avatarVersion={params.row.avatarVersion} badge={params.row.badge} sx={{mr: 1}}/>
@@ -129,14 +128,17 @@ const Ranking = memo(({showRanking, setShowRanking}) => {
 		queryFn: () => axios.get(`/api/minesweeper/ranking-count`).then(res => res.data),
 	});
 	
-	
 	const myItem = data && data.result ? data.result.find(item => item.username === myname) : undefined;
+	
+	if (!data) {
+		return null;
+	}
 	
 	return (
 		<Dialog
 			open={showRanking}
 			onClose={() => setShowRanking(false)}
-			fullWidth
+			maxWidth="xl"
 		>
 			<IconButton
 				onClick={() => setShowRanking(false)}

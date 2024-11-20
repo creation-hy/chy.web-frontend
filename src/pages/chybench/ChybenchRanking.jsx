@@ -18,13 +18,14 @@ import PropTypes from "prop-types";
 const myname = Cookies.get("username");
 
 const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
-	const {data, isLoading, error} = useQuery({
+	const {data} = useQuery({
 		queryKey: [rankingItem, rankingSize, pageNumber, "fetch"],
 		queryFn: () => axios.get(`/api/chybench/ranking/${rankingItem}/${rankingSize}/${pageNumber}`).then(res => res.data),
 	});
 	
-	if (isLoading || error)
+	if (!data) {
 		return null;
+	}
 	
 	const columns = [
 		{
@@ -54,8 +55,7 @@ const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
 		{
 			field: "displayName",
 			headerName: "用户",
-			flex: 1,
-			minWidth: 175,
+			width: 250,
 			renderCell: (params) => {
 				return <SimpleUserItem username={params.row.username} displayName={params.row.displayName}
 				                       avatarVersion={params.row.avatarVersion} badge={params.row.badge} sx={{mr: 1}}/>
@@ -68,8 +68,7 @@ const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
 		},
 		{
 			field: "gpuName",
-			minWidth: 200,
-			flex: 1,
+			width: 250,
 			headerName: "GPU型号",
 		},
 		{
