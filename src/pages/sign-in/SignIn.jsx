@@ -18,6 +18,7 @@ import {Tab, Tabs} from "@mui/material";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {LoadingButton} from "@mui/lab";
 import {useNavigate} from "react-router";
+import {NavigateLink} from "src/components/NavigateComponents.jsx";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -235,13 +236,14 @@ export default function SignIn() {
 				</LoadingButton>
 				<Typography sx={{textAlign: 'center'}}>
 					还没有账号？{' '}
-					<Link
-						onClick={() => navigate("/register")}
+					<NavigateLink
+						href="/register"
 						variant="body2"
-						sx={{alignSelf: 'center', cursor: "pointer"}}
+						underline="always"
+						color="primary"
 					>
 						注册
-					</Link>
+					</NavigateLink>
 				</Typography>
 			</Box>
 			<Divider>

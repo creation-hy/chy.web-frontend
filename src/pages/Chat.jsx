@@ -52,6 +52,7 @@ import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from 
 import SignUp from "src/pages/SignUp.jsx";
 import {throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
+import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -180,9 +181,9 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 	
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
-			{!isMe && <IconButton sx={{mr: 1, p: 0}} onClick={() => navigate(`/user/${username}`)}>
+			{!isMe && <NavigateIconButton sx={{mr: 1, p: 0}} href={`/user/${username}`}>
 				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
-			</IconButton>}
+			</NavigateIconButton>}
 			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
 				<Paper
 					elevation={3}
@@ -219,9 +220,9 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 					/>
 				}
 			</Grid>
-			{isMe && <IconButton sx={{ml: 1, p: 0}} onClick={() => navigate(`/user/${username}`)}>
+			{isMe && <NavigateIconButton sx={{ml: 1, p: 0}} href={`/user/${username}`}>
 				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
-			</IconButton>}
+			</NavigateIconButton>}
 			<Dialog open={onDialog} onClose={() => setOnDialog(false)}>
 				<DialogTitle>
 					<UsernameWithBadge username={displayName} badge={badge} fontSize={20} size={22}/>
@@ -1162,9 +1163,9 @@ export default function Chat() {
 							}}>
 								<CloudDownload/>
 							</IconButton>
-							<IconButton onClick={() => navigate(`/user/${currentUser}`)}>
+							<NavigateIconButton href={`/user/${currentUser}`}>
 								<MoreHoriz/>
-							</IconButton>
+							</NavigateIconButton>
 						</Box>
 					</Grid>
 				</Card>}

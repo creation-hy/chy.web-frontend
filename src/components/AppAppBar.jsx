@@ -6,7 +6,7 @@ import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Grid from "@mui/material/Grid2";
-import {Badge, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, SwipeableDrawer, useMediaQuery} from "@mui/material";
+import {Badge, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer, useMediaQuery} from "@mui/material";
 import {
 	AnalyticsOutlined,
 	ArticleOutlined,
@@ -27,7 +27,8 @@ import {useLocation, useNavigate} from "react-router";
 import PropTypes from "prop-types";
 import Button from "@mui/material/Button";
 import Cookies from "js-cookie";
-import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
+import {UserAvatar, UserBadge} from "src/components/UserComponents.jsx";
+import {NavigateLink} from "src/components/NavigateComponents.jsx";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -52,10 +53,13 @@ const LeftBar = memo(({navigateCallback}) => {
 	const firstLevelLocation = useLocation().pathname.split("/")[1];
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
-	const navigateAndCloseDrawer = useCallback((url) => {
-		navigate(url);
-		if (navigateCallback) {
-			navigateCallback();
+	const navigateAndCloseDrawer = useCallback((event, url) => {
+		if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
+			event.preventDefault();
+			navigate(url);
+			if (navigateCallback) {
+				navigateCallback();
+			}
 		}
 	}, []);
 	
@@ -72,23 +76,41 @@ const LeftBar = memo(({navigateCallback}) => {
 				{clientUserLoading ? (
 					(!myName ? (
 						<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
-							<Button variant="contained" onClick={() => navigateAndCloseDrawer("register")} sx={{mx: 2}}>
+							<Button
+								variant="contained"
+								href="/register"
+								onClick={(event) => navigateAndCloseDrawer(event, "/register")}
+								sx={{mx: 2}}
+							>
 								注册
 							</Button>
-							<Button variant="outlined" onClick={() => navigateAndCloseDrawer("login")} sx={{mx: 2}}>
+							<Button
+								variant="outlined"
+								href="/login"
+								onClick={(event) => navigateAndCloseDrawer(event, "/login")}
+								sx={{mx: 2}}
+							>
 								登录
 							</Button>
 						</Grid>
 					) : (
 						<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
-							<IconButton sx={{width: 80, height: 80, mb: 0.75}} onClick={() => navigateAndCloseDrawer(`user/${myName}`)}>
+							<IconButton
+								sx={{width: 80, height: 80, mb: 0.75}}
+								href={`/user/${myName}`}
+								onClick={(event) => navigateAndCloseDrawer(event, `/user/${myName}`)}
+							>
 								<UserAvatar username={myName} displayName={myInformation.displayName}
 								            avatarVersion={myInformation.avatarVersion} width={80} height={80}/>
 							</IconButton>
-							<UsernameWithBadge
-								username={myInformation.displayName ? myInformation.displayName : <Skeleton/>}
-								badge={myInformation.badge}
-							/>
+							<Grid container alignItems="center" flexWrap="nowrap" gap={0.25}>
+								<NavigateLink href={`/user/${myInformation.username}`}>
+									<Typography fontSize={18} fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center">
+										{myInformation.displayName}
+									</Typography>
+								</NavigateLink>
+								<UserBadge badge={myInformation.badge} fontSize={20}/>
+							</Grid>
 							<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
 								@{myName}
 							</Typography>
@@ -96,20 +118,41 @@ const LeftBar = memo(({navigateCallback}) => {
 					))
 				) : (!clientUser ? (
 					<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
-						<Button variant="contained" onClick={() => navigateAndCloseDrawer("register")} sx={{mx: 2}}>
+						<Button
+							variant="contained"
+							href="/register"
+							onClick={(event) => navigateAndCloseDrawer(event, "/register")}
+							sx={{mx: 2}}
+						>
 							注册
 						</Button>
-						<Button variant="outlined" onClick={() => navigateAndCloseDrawer("login")} sx={{mx: 2}}>
+						<Button
+							variant="outlined"
+							href="/login"
+							onClick={(event) => navigateAndCloseDrawer(event, "/login")}
+							sx={{mx: 2}}
+						>
 							登录
 						</Button>
 					</Grid>
 				) : (
 					<Grid container direction="column" sx={{ml: 2.5, mr: 2.5}}>
-						<IconButton sx={{width: 80, height: 80, mb: 0.75}} onClick={() => navigateAndCloseDrawer(`user/${clientUser.username}`)}>
+						<IconButton
+							sx={{width: 80, height: 80, mb: 0.75}}
+							href={`/user/${clientUser.username}`}
+							onClick={(event) => navigateAndCloseDrawer(event, `/user/${clientUser.username}`)}
+						>
 							<UserAvatar username={clientUser.username} displayName={clientUser.displayName}
 							            avatarVersion={clientUser.avatarVersion} width={80} height={80}/>
 						</IconButton>
-						<UsernameWithBadge username={clientUser.displayName} badge={clientUser.badge}/>
+						<Grid container alignItems="center" flexWrap="nowrap" gap={0.25}>
+							<NavigateLink href={`/user/${clientUser.username}`}>
+								<Typography fontSize={18} fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center">
+									{clientUser.displayName}
+								</Typography>
+							</NavigateLink>
+							<UserBadge badge={clientUser.badge} fontSize={20}/>
+						</Grid>
 						<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
 							@{clientUser.username}
 						</Typography>
@@ -117,7 +160,11 @@ const LeftBar = memo(({navigateCallback}) => {
 				))}
 			</Box>
 			<List sx={{width: "100%"}}>
-				<ListItemButton onClick={() => navigateAndCloseDrawer("")} selected={firstLevelLocation === "" || firstLevelLocation === "chat"}>
+				<ListItemButton
+					href="/"
+					onClick={(event) => navigateAndCloseDrawer(event, "/")}
+					selected={firstLevelLocation === "" || firstLevelLocation === "chat"}
+				>
 					<ListItemIcon>
 						<Badge badgeContent={clientUser ? clientUser.newMessageCount : 0} color="error">
 							<ChatBubbleOutline/>
@@ -125,7 +172,11 @@ const LeftBar = memo(({navigateCallback}) => {
 					</ListItemIcon>
 					<ListItemText primary="Chat"/>
 				</ListItemButton>
-				<ListItemButton onClick={() => navigateAndCloseDrawer("ai-art")} selected={firstLevelLocation === "ai-art"}>
+				<ListItemButton
+					href="/ai-art"
+					onClick={(event) => navigateAndCloseDrawer(event, "/ai-art")}
+					selected={firstLevelLocation === "ai-art"}
+				>
 					<ListItemIcon>
 						<DrawOutlined/>
 					</ListItemIcon>
@@ -143,13 +194,21 @@ const LeftBar = memo(({navigateCallback}) => {
 					</ListItemIcon>
 					<ListItemText primary="三国杀"/>
 				</ListItemButton>
-				<ListItemButton onClick={() => navigateAndCloseDrawer("minesweeper")} selected={firstLevelLocation === "minesweeper"}>
+				<ListItemButton
+					href="/minesweeper"
+					onClick={(event) => navigateAndCloseDrawer(event, "/minesweeper")}
+					selected={firstLevelLocation === "minesweeper"}
+				>
 					<ListItemIcon>
 						<SportsEsportsOutlined/>
 					</ListItemIcon>
 					<ListItemText primary="扫雷"/>
 				</ListItemButton>
-				<ListItemButton onClick={() => navigateAndCloseDrawer("chybench")} selected={firstLevelLocation === "chybench"}>
+				<ListItemButton
+					href="/chybench"
+					onClick={(event) => navigateAndCloseDrawer(event, "/chybench")}
+					selected={firstLevelLocation === "chybench"}
+				>
 					<ListItemIcon>
 						<AnalyticsOutlined/>
 					</ListItemIcon>
@@ -161,13 +220,21 @@ const LeftBar = memo(({navigateCallback}) => {
 					</ListItemIcon>
 					<ListItemText primary="BBS"/>
 				</ListItemButton>
-				<ListItemButton onClick={() => navigateAndCloseDrawer("blog")} selected={firstLevelLocation === "blog"}>
+				<ListItemButton
+					href="/blog"
+					onClick={(event) => navigateAndCloseDrawer(event, "/blog")}
+					selected={firstLevelLocation === "blog"}
+				>
 					<ListItemIcon>
 						<ArticleOutlined/>
 					</ListItemIcon>
 					<ListItemText primary="Blog"/>
 				</ListItemButton>
-				<ListItemButton onClick={() => navigateAndCloseDrawer("about")} selected={firstLevelLocation === "about"}>
+				<ListItemButton
+					href="/blog"
+					onClick={(event) => navigateAndCloseDrawer(event, "/about")}
+					selected={firstLevelLocation === "about"}
+				>
 					<ListItemIcon>
 						<InfoOutlined/>
 					</ListItemIcon>

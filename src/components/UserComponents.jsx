@@ -1,12 +1,11 @@
 import Grid from "@mui/material/Grid2";
-import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import PropTypes from "prop-types";
 import {memo} from "react";
-import {useNavigate} from "react-router";
 import Avatar from "@mui/material/Avatar";
 import {Verified} from "@mui/icons-material";
 import SvgIcon from "@mui/material/SvgIcon";
+import {NavigateButtonBase, NavigateLink} from "src/components/NavigateComponents.jsx";
 
 export const UserAvatar = memo(({username, displayName, avatarVersion, width, height, ...props}) => {
 	return (
@@ -78,25 +77,48 @@ UsernameWithBadge.propTypes = {
 }
 
 export const SimpleUserItem = memo(({username, displayName, avatarVersion, badge, disableNavigate = false, ...props}) => {
-	const navigate = useNavigate();
+	if (disableNavigate) {
+		return (
+			<Grid container wrap="nowrap" alignItems="center" gap={1} height="100%" {...props}>
+				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
+				<Grid container alignItems="center" gap={0.25} wrap="nowrap">
+					<Typography
+						fontWeight="bold"
+						maxWidth={150}
+						noWrap
+						overflow="hidden"
+						textOverflow="ellipsis"
+						sx={{cursor: "pointer"}}
+					>
+						{displayName}
+					</Typography>
+					<UserBadge badge={badge} fontSize={18}/>
+				</Grid>
+			</Grid>
+		);
+	}
 	
 	return (
 		<Grid container wrap="nowrap" alignItems="center" gap={1} height="100%" {...props}>
-			<Link onClick={disableNavigate ? undefined : () => navigate(`/user/${username}`)} underline="none" sx={{cursor: "pointer"}}>
+			<NavigateButtonBase
+				sx={{borderRadius: "50%"}}
+				href={disableNavigate ? undefined : `/user/${username}`}
+			>
 				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
-			</Link>
+			</NavigateButtonBase>
 			<Grid container alignItems="center" gap={0.25} wrap="nowrap">
-				<Typography
-					fontWeight="bold"
-					maxWidth={150}
-					noWrap
-					overflow="hidden"
-					textOverflow="ellipsis"
-					onClick={disableNavigate ? undefined : () => navigate(`/user/${username}`)}
-					sx={{cursor: "pointer"}}
-				>
-					{displayName}
-				</Typography>
+				<NavigateLink href={disableNavigate ? undefined : `/user/${username}`}>
+					<Typography
+						fontWeight="bold"
+						maxWidth={150}
+						noWrap
+						overflow="hidden"
+						textOverflow="ellipsis"
+						sx={{cursor: "pointer"}}
+					>
+						{displayName}
+					</Typography>
+				</NavigateLink>
 				<UserBadge badge={badge} fontSize={18}/>
 			</Grid>
 		</Grid>

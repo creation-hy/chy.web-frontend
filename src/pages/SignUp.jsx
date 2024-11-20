@@ -3,7 +3,6 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import MuiCard from '@mui/material/Card';
@@ -17,6 +16,7 @@ import Cookies from "js-cookie";
 import {LoadingButton} from "@mui/lab";
 import {useNavigate} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
+import {NavigateLink} from "src/components/NavigateComponents.jsx";
 
 const Card = styled(MuiCard)(({theme}) => ({
 	display: 'flex',
@@ -235,13 +235,14 @@ export default function SignUp() {
 				</LoadingButton>
 				<Typography sx={{textAlign: 'center'}}>
 					已经有账号了？{' '}
-					<Link
-						onClick={() => navigate("/login")}
+					<NavigateLink
+						href="/login"
 						variant="body2"
-						sx={{alignSelf: 'center', cursor: "pointer"}}
+						underline="always"
+						color="primary"
 					>
 						登录
-					</Link>
+					</NavigateLink>
 				</Typography>
 			</Box>
 			<Divider>

@@ -8,7 +8,6 @@ import {
 	List,
 	ListItem,
 	ListItemAvatar,
-	ListItemButton,
 	ListItemIcon,
 	ListItemText,
 	MenuList,
@@ -53,6 +52,7 @@ import {Cropper} from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
+import {NavigateButtonBase, NavigateIconButton, NavigateLink} from "src/components/NavigateComponents.jsx";
 
 const News = memo(({username, displayName, avatarVersion}) => {
 	const {data} = useQuery({
@@ -181,22 +181,32 @@ const Follows = memo(({username, type}) => {
 	return (
 		<List sx={{mt: -2}}>
 			{userList.map((item) => (
-				<ListItem key={item.username} ref={item === userList[userList.length - 1] ? lastUserRef : undefined} sx={{p: 0}}>
-					<ListItemButton onClick={() => navigate(`/user/${item.username}`)}>
-						<ListItemAvatar>
+				<ListItem
+					key={item.username}
+					ref={item === userList[userList.length - 1] ? lastUserRef : undefined}
+				>
+					<ListItemAvatar>
+						<NavigateButtonBase
+							sx={{borderRadius: "50%"}}
+							href={`/user/${item.username}`}
+						>
 							<UserAvatar username={item.username} displayName={item.displayName} avatarVersion={item.avatarVersion}/>
-						</ListItemAvatar>
-						<ListItemText
-							primary={
+						</NavigateButtonBase>
+					</ListItemAvatar>
+					<ListItemText
+						primary={
+							<NavigateLink href={`/user/${item.username}`}>
 								<UsernameWithBadge username={item.displayName} badge={item.badge}/>
-							}
-							secondary={
-								<Typography fontSize={14} color="text.secondary" noWrap overflow="hidden" textOverflow="ellipsis">
+							</NavigateLink>
+						}
+						secondary={
+							<NavigateLink href={`/user/${item.username}`} underline="none">
+								<Typography fontSize={14} color="textSecondary" noWrap overflow="hidden" textOverflow="ellipsis">
 									@{item.username}
 								</Typography>
-							}
-						/>
-					</ListItemButton>
+							</NavigateLink>
+						}
+					/>
 				</ListItem>
 			))}
 		</List>
@@ -395,9 +405,9 @@ const UserPage = memo(({username}) => {
 									<IconButton onClick={() => setResetPasswordOn(true)}>
 										<LockResetOutlined/>
 									</IconButton>
-									<IconButton onClick={() => navigate(`/chat/${data.username}`)}>
+									<NavigateIconButton href={`/chat/${data.username}`}>
 										<MailOutlined/>
-									</IconButton>
+									</NavigateIconButton>
 									<IconButton
 										onClick={() => {
 											Cookies.remove("username");
@@ -413,9 +423,9 @@ const UserPage = memo(({username}) => {
 									<IconButton onClick={() => doFollow(data.username, setIsFollowing, queryClient)}>
 										{isFollowing == null ? null : (isFollowing ? <PersonAddDisabledOutlined/> : <PersonAddOutlined/>)}
 									</IconButton>
-									<IconButton onClick={() => navigate(`/chat/${data.username}`)}>
+									<NavigateIconButton href={`/chat/${data.username}`}>
 										<MailOutlined/>
-									</IconButton>
+									</NavigateIconButton>
 								</Box>
 							)}
 						</Grid>
