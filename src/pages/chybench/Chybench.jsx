@@ -9,7 +9,7 @@ import Box from "@mui/material/Box";
 import {InputLabel, LinearProgress, Switch, useMediaQuery} from "@mui/material";
 import PropTypes from "prop-types";
 import {useState} from "react";
-import {Close, Leaderboard, PlayArrow} from "@mui/icons-material";
+import {Close, HourglassBottom, Leaderboard, PlayArrow} from "@mui/icons-material";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import FormControl from "@mui/material/FormControl";
@@ -17,6 +17,7 @@ import Dialog from "@mui/material/Dialog";
 import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
+import {LoadingButton} from "@mui/lab";
 
 function LinearProgressWithLabel(props) {
 	return (
@@ -195,6 +196,7 @@ export default function Chybench() {
 	const [gpuProgress, setGPUProgress] = useState(0);
 	const [memoryProgress, setMemoryProgress] = useState(0);
 	
+	const [running, setRunning] = useState(false);
 	const [showRanking, toggleRanking] = useState(false);
 	
 	const benchmark = async (size, rounds) => {
@@ -326,9 +328,17 @@ export default function Chybench() {
 						<MenuItem value={30}>深度</MenuItem>
 					</Select>
 				</FormControl>
-				<Button variant="contained" onClick={() => benchmark(size, rounds)}>
-					<PlayArrow/>
-				</Button>
+				<LoadingButton
+					variant="contained"
+					onClick={async () => {
+						setRunning(true);
+						await benchmark(size, rounds);
+						setRunning(false);
+					}}
+					disabled={running}
+				>
+					{running ? <HourglassBottom/> : <PlayArrow/>}
+				</LoadingButton>
 			</Grid>
 			<Grid container direction="column" spacing={3} sx={{width: "100%", maxWidth: 800}}>
 				<Box>
