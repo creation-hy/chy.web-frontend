@@ -67,7 +67,7 @@ import DialogContent from "@mui/material/DialogContent";
 import {TransitionGroup} from "react-transition-group";
 import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import {isIOS} from "react-device-detect";
-import {useNavigate} from "react-router";
+import {useNavigate, useParams} from "react-router";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -1062,7 +1062,7 @@ const Community = () => {
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
 	const [hoveredImage, setHoveredImage] = useState(null);
-	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("md"));
+	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("lg"));
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -1095,11 +1095,12 @@ const Community = () => {
 	
 	return (
 		<Grid container direction="column" alignItems="flex-end" wrap="nowrap" width="100%">
-			<Grid container spacing={1} sx={{mb: 1, mt: isSmallScreen ? 0 : -8}}>
+			<Grid container spacing={1} sx={{mt: isSmallScreen ? 0 : -7, mb: isSmallScreen ? 1 : 2}}>
 				<FormControl>
 					<InputLabel id="sort-method-label">排序规则</InputLabel>
 					<Select
 						variant="outlined"
+						size={isSmallScreen ? "medium" : "small"}
 						labelId="sort-method-label"
 						label="排序规则"
 						value={sortMethod}
@@ -1117,6 +1118,7 @@ const Community = () => {
 					<InputLabel id="view-range-label">查看范围</InputLabel>
 					<Select
 						variant="outlined"
+						size={isSmallScreen ? "medium" : "small"}
 						labelId="view-range-label"
 						label="查看范围"
 						value={viewRange}
@@ -1416,22 +1418,37 @@ const Community = () => {
 export default function AIArt() {
 	document.title = "AI绘图 - chy.web";
 	
-	const [menuValue, setMenuValue] = useState(Number(localStorage.getItem("aiArtPageIndex")) ?? 0);
+	const {tab} = useParams();
+	const navigate = useNavigate();
+	
+	const tabs = ["text-to-image", "requests", "works", "community"];
+	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
+	
+	useEffect(() => {
+		if (tabs.indexOf(tab) === -1) {
+			navigate(`/ai-art`);
+		}
+	}, []);
 	
 	return (
 		<Grid container direction="column" sx={{flex: 1}}>
 			<Box sx={{mb: 2}} maxWidth="100%">
-				<Tabs value={menuValue} onChange={(event, value) => {
-					setMenuValue(value);
-					localStorage.setItem("aiArtPageIndex", value.toString());
-				}} centered>
+				<Tabs
+					value={tabValue}
+					onChange={(event, value) => {
+						navigate(`/ai-art/${tabs[value]}`);
+						setTabValue(value);
+						localStorage.setItem("aiArtPageIndex", value.toString());
+					}}
+					centered
+				>
 					<Tab label="文生图"/>
 					<Tab label="我的请求"/>
 					<Tab label="我的作品"/>
 					<Tab label="创意工坊"/>
 				</Tabs>
 			</Box>
-			{menuValue === 0 ? <TextToImageUI/> : (menuValue === 1 ? <MyRequests/> : (menuValue === 2 ? <GeneratedResults/> : <Community/>))}
+			{tabValue === 0 ? <TextToImageUI/> : (tabValue === 1 ? <MyRequests/> : (tabValue === 2 ? <GeneratedResults/> : <Community/>))}
 		</Grid>
 	);
 }
