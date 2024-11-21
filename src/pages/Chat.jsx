@@ -341,19 +341,73 @@ const ChatToolBar = memo(({inputField}) => {
 	
 	const [onEmojiPicker, handleEmojiPicker] = useState(false);
 	
+	const cursorSelection = useRef([]);
+	
 	const [onSettings, handleSettings] = useState(false);
 	const [settings, setSettings] = useState(settingsVar);
 	const settingItems = ["allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
 	const settingItemsDisplay = ["允许通知", "允许公共频道通知", "允许当前联系人通知", "通知显示消息内容"];
 	
+	const updateCursorSelection = useCallback(() => {
+		cursorSelection.current = [inputField.current.selectionStart, inputField.current.selectionEnd];
+	}, []);
+	
+	const insertText = useCallback((text, closeDialog) => {
+		const start = cursorSelection.current[0], end = cursorSelection.current[1];
+		inputField.current.value = inputField.current.value.slice(0, start) + text + inputField.current.value.slice(end);
+		flushSync(closeDialog);
+		inputField.current.focus();
+		inputField.current.setSelectionRange(start + text.length, start + text.length);
+	}, []);
+	
 	return (
 		<>
 			<Box>
-				<IconButton size="large" onClick={() => handleSpecialFont(true)}><FontDownloadOutlined/></IconButton>
-				<IconButton size="large" onClick={() => handleAddLink(true)}><AddLinkOutlined/></IconButton>
-				<IconButton size="large" onClick={() => handleAddImage(true)}><AddPhotoAlternateOutlined/></IconButton>
-				<IconButton size="large" onClick={() => handleEmojiPicker(true)}><AddReactionOutlined/></IconButton>
-				<IconButton size="large" onClick={() => handleSettings(true)}><SettingsOutlined/></IconButton>
+				<IconButton
+					size="large"
+					onClick={() => {
+						updateCursorSelection();
+						handleSpecialFont(true);
+					}}
+				>
+					<FontDownloadOutlined/>
+				</IconButton>
+				<IconButton
+					size="large"
+					onClick={() => {
+						updateCursorSelection();
+						handleAddLink(true);
+					}}
+				>
+					<AddLinkOutlined/>
+				</IconButton>
+				<IconButton
+					size="large"
+					onClick={() => {
+						updateCursorSelection();
+						handleAddImage(true);
+					}}
+				>
+					<AddPhotoAlternateOutlined/>
+				</IconButton>
+				<IconButton
+					size="large"
+					onClick={() => {
+						updateCursorSelection();
+						handleEmojiPicker(true);
+					}}
+				>
+					<AddReactionOutlined/>
+				</IconButton>
+				<IconButton
+					size="large"
+					onClick={() => {
+						updateCursorSelection();
+						handleSettings(true);
+					}}
+				>
+					<SettingsOutlined/>
+				</IconButton>
 			</Box>
 			<Dialog open={onSpecialFont} onClose={() => handleSpecialFont(false)} fullWidth>
 				<DialogTitle>
@@ -387,21 +441,31 @@ const ChatToolBar = memo(({inputField}) => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => handleSpecialFont(false)}>关闭</Button>
-					<Button onClick={() => {
-						flushSync(() => handleSpecialFont(false));
-						if (fontStyle === '' && fontTextRef.current.value === '')
-							inputField.current.value += ' ';
-						else if (fontStyle.charAt(0) === '#') {
-							const lines = inputField.current.value.split('\n');
-							inputField.current.focus();
-							if (lines[lines.length - 1].trim() !== '')
+					<Button
+						onClick={() => {
+							if (fontStyle.length > 0 && fontStyle.charAt(0) === '#') {
+								let start = cursorSelection.current[0], end = cursorSelection.current[1], text = fontStyle + " " + fontTextRef.current.value;
+								
+								flushSync(() => handleSpecialFont(false));
+								inputField.current.focus();
+								
+								if (start > 0 && inputField.current.value[start - 1] !== "\n") {
+									document.execCommand("insertLineBreak");
+									start++;
+									end++;
+								}
+								
+								inputField.current.value = inputField.current.value.slice(0, start) + text + inputField.current.value.slice(end);
+								inputField.current.setSelectionRange(start + text.length, start + text.length);
+								
 								document.execCommand("insertLineBreak");
-							inputField.current.value += fontStyle + ' ' + fontTextRef.current.value;
-							document.execCommand("insertLineBreak");
-						} else
-							inputField.current.value += fontStyle + fontTextRef.current.value + fontStyle;
-						inputField.current.focus();
-					}}>确认</Button>
+							} else {
+								insertText(fontStyle + fontTextRef.current.value + fontStyle, () => handleSpecialFont(false));
+							}
+						}}
+					>
+						确认
+					</Button>
 				</DialogActions>
 			</Dialog>
 			<Dialog open={onAddLink} onClose={() => handleAddLink(false)} fullWidth>
@@ -416,11 +480,12 @@ const ChatToolBar = memo(({inputField}) => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => handleAddLink(false)}>关闭</Button>
-					<Button onClick={() => {
-						flushSync(() => handleAddLink(false));
-						inputField.current.value += "[" + linkTextRef.current.value + "](" + linkHrefRef.current.value + ")";
-						inputField.current.focus();
-					}}>确认</Button>
+					<Button
+						onClick={() => {
+							insertText("[" + linkTextRef.current.value + "](" + linkHrefRef.current.value + ")",
+								() => handleAddLink(false));
+						}}
+					>确认</Button>
 				</DialogActions>
 			</Dialog>
 			<Dialog open={onAddImage} onClose={() => handleAddImage(false)} fullWidth>
@@ -435,11 +500,14 @@ const ChatToolBar = memo(({inputField}) => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => handleAddImage(false)}>关闭</Button>
-					<Button onClick={() => {
-						inputField.current.value += "![" + imageAltRef.current.value + "](" + imageHrefRef.current.value + ")";
-						flushSync(() => handleAddImage(false));
-						inputField.current.focus();
-					}}>确认</Button>
+					<Button
+						onClick={() => {
+							insertText("![" + imageAltRef.current.value + "](" + imageHrefRef.current.value + ")",
+								() => handleAddImage(false));
+						}}
+					>
+						确认
+					</Button>
 				</DialogActions>
 			</Dialog>
 			<Dialog open={onEmojiPicker} onClose={() => handleEmojiPicker(false)} PaperProps={{sx: {borderRadius: "10px", margin: 0}}}>
@@ -447,9 +515,7 @@ const ChatToolBar = memo(({inputField}) => {
 					theme={binaryColorMode}
 					locale="zh"
 					onEmojiSelect={(emoji) => {
-						inputField.current.value += emoji.native;
-						flushSync(() => handleEmojiPicker(false));
-						inputField.current.focus();
+						insertText(emoji.native, () => handleEmojiPicker(false));
 					}}
 				/>
 			</Dialog>
