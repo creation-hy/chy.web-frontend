@@ -149,6 +149,8 @@ News.propTypes = {
 }
 
 const Follows = memo(({username, type}) => {
+	const [followingList, setFollowingList] = useState([]);
+	const [followersList, setFollowersList] = useState([]);
 	const [userList, setUserList] = useState([]);
 	
 	const pageNumberCurrent = useRef(0);
@@ -169,9 +171,25 @@ const Follows = memo(({username, type}) => {
 		axios.get(`/api/user/${username}/${type}/0`).then(res => {
 			pageNumberNew.current = 0;
 			pageNumberCurrent.current = 0;
-			setUserList([...res.data.result]);
+			if (type === "following") {
+				setFollowingList([...res.data.result]);
+			} else {
+				setFollowersList([...res.data.result]);
+			}
 		});
 	}, [username, type]);
+	
+	useEffect(() => {
+		if (type === "following") {
+			setUserList([...followingList]);
+		}
+	}, [followingList]);
+	
+	useEffect(() => {
+		if (type === "follower") {
+			setUserList([...followersList]);
+		}
+	}, [followersList]);
 	
 	useEffect(() => {
 		if (lastUserRef.current) {
