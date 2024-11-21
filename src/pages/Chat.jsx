@@ -174,7 +174,6 @@ UserItem.propTypes = {
 const Message = memo(({messageId, username, displayName, avatarVersion, badge, content, quote, setQuote}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
-	const navigate = useNavigate();
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const isMe = username === myname;
@@ -1044,10 +1043,10 @@ export default function Chat() {
 					</List>
 					<Divider/>
 					<List sx={{display: matchList ? "none" : "block"}}>
-						{users != null && users.map((user) => (user.username !== "ChatRoomSystem" &&
+						{users != null && users.map((user, userIndex) => (user.username !== "ChatRoomSystem" &&
 							<ListItemButton
 								key={user.username}
-								ref={user === users[users.length - 1] ? lastContactRef : undefined}
+								ref={userIndex === users.length - 1 ? lastContactRef : undefined}
 								onClick={() => navigate(`/chat/${user.username}`)}
 								selected={currentUser === user.username}
 							>
@@ -1066,7 +1065,7 @@ export default function Chat() {
 						))}
 					</List>
 					{matchList && <List>
-						{matchList.map((user) => {
+						{matchList.map((user, userIndex) => {
 							const displayNameIndex = user.displayName.toLowerCase().indexOf(userSearchField.current.value.toLowerCase());
 							const usernameIndex = user.username.toLowerCase().indexOf(userSearchField.current.value.toLowerCase());
 							const keyLength = userSearchField.current.value.length;
@@ -1087,7 +1086,7 @@ export default function Chat() {
 							return (
 								<ListItemButton
 									key={user.username}
-									ref={user === matchList[matchList.length - 1] ? lastUserFindingRef : undefined}
+									ref={userIndex === matchList.length - 1 ? lastUserFindingRef : undefined}
 									onClick={() => navigate(`/chat/${user.username}`)}
 									selected={currentUser === user.username}
 								>
@@ -1170,12 +1169,12 @@ export default function Chat() {
 					</Grid>
 				</Card>}
 				<Card variant="outlined" ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}}>
-					{messages.map((message, index) => {
+					{messages.map((message, messageIndex) => {
 						const currentDate = new Date(message.time);
-						const previousDate = new Date(!index ? 0 : messages[index - 1].time);
+						const previousDate = new Date(!messageIndex ? 0 : messages[messageIndex - 1].time);
 						const showTime = currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000;
 						return (
-							<Box ref={message === messages[0] ? lastMessageRef : undefined} key={message.id}>
+							<Box ref={messageIndex === 0 ? lastMessageRef : undefined} key={message.id}>
 								{showTime && <Grid container><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
 								<Message
 									messageId={message.id}

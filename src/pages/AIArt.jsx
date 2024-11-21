@@ -284,7 +284,7 @@ const GeneratedResults = () => {
 			pageLoadingObserver.current.disconnect();
 			pageLoadingObserver.current.observe(lastImageRef.current);
 		}
-	}, [imageList]);
+	}, [imageList, lastImageRef.current]);
 	
 	useEffect(() => {
 		if (data && data.status === 0) {
@@ -311,10 +311,10 @@ const GeneratedResults = () => {
 				className="my-masonry-grid"
 				columnClassName="my-masonry-grid_column"
 			>
-				{imageList.map((item) => (
+				{imageList.map((item, imageIndex) => (
 					<Grow in={true} key={item.imageId}>
 						<Box
-							ref={item === imageList[imageList.length - 1] ? lastImageRef : undefined}
+							ref={imageIndex === imageList.length - 1 ? lastImageRef : undefined}
 							sx={{position: "relative"}}
 							onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
 							onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
@@ -1088,7 +1088,7 @@ const Community = () => {
 			pageLoadingObserver.disconnect();
 			pageLoadingObserver.observe(lastImageRef.current);
 		}
-	}, [imageList, pageLoadingObserver]);
+	}, [imageList, lastImageRef.current, pageLoadingObserver]);
 	
 	if (isLoading || error || !imageList)
 		return null;
@@ -1136,16 +1136,20 @@ const Community = () => {
 			{imageList.length === 0 ? (
 				<Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>
 			) : (<>
-				<Masonry breakpointCols={{
-					default: 4,
-					1000: 3,
-					700: 2,
-					350: 1,
-				}} className="my-masonry-grid" columnClassName="my-masonry-grid_column">
-					{imageList.map((item) => (
+				<Masonry
+					breakpointCols={{
+						default: 4,
+						1000: 3,
+						700: 2,
+						350: 1,
+					}}
+					className="my-masonry-grid"
+					columnClassName="my-masonry-grid_column"
+				>
+					{imageList.map((item, imageIndex) => (
 						<Grow in={true} key={item.imageId}>
 							<ButtonBase
-								ref={item === imageList[imageList.length - 1] ? lastImageRef : undefined}
+								ref={imageIndex === imageList.length - 1 ? lastImageRef : undefined}
 								sx={{borderRadius: "15px", m: 0.5}}
 								onClick={() => {
 									setImagePreviewData(item);
