@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import {useParams} from "react-router";
-import {memo, useEffect, useMemo, useRef, useState} from "react";
+import {Fragment, memo, useEffect, useMemo, useRef, useState} from "react";
 import {
 	Alert,
 	CircularProgress,
@@ -52,8 +52,11 @@ import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import {useClientUser} from "src/components/ClientUser.jsx";
-import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
+import {UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateButtonBase, NavigateIconButton, NavigateLink} from "src/components/NavigateComponents.jsx";
+import Divider from "@mui/material/Divider";
+
+const myname = Cookies.get("username");
 
 const News = memo(({username, displayName, avatarVersion}) => {
 	const {data} = useQuery({
@@ -93,12 +96,12 @@ const News = memo(({username, displayName, avatarVersion}) => {
 	}, [chatList]);
 	
 	return (
-		<Box>
-			{chatList.map((item) => (
+		<Box sx={{mt: -0.5}}>
+			{chatList.map((chat, chatIndex) => (
 				<Grid
 					container
-					key={item.id}
-					ref={item === chatList[chatList.length - 1] ? lastMessageRef : undefined}
+					key={chat.id}
+					ref={chatIndex === chatList.length - 1 ? lastMessageRef : undefined}
 					justifyContent='flex-start'
 					alignItems="flex-start"
 					sx={{my: 3}}
@@ -117,18 +120,18 @@ const News = memo(({username, displayName, avatarVersion}) => {
 							}}
 						>
 							<Box sx={{fontSize: 15}}>
-								<ChatMarkdown>{item.content}</ChatMarkdown>
+								<ChatMarkdown>{chat.content}</ChatMarkdown>
 							</Box>
 							<Typography variant="caption" display="block" textAlign="right" mt={1}>
-								{convertDateToLocaleAbsoluteString(item.time)}
+								{convertDateToLocaleAbsoluteString(chat.time)}
 							</Typography>
 						</Paper>
-						{item.quote != null &&
+						{chat.quote != null &&
 							<Chip
 								variant="outlined"
-								avatar={<UserAvatar username={item.quote.username} displayName={item.quote.displayName}
-								                    avatarVersion={item.quote.avatarVersion}/>}
-								label={item.quote.displayName + ": " + item.quote.content}
+								avatar={<UserAvatar username={chat.quote.username} displayName={chat.quote.displayName}
+								                    avatarVersion={chat.quote.avatarVersion}/>}
+								label={chat.quote.displayName + ": " + chat.quote.content}
 								clickable
 							/>
 						}
@@ -179,35 +182,86 @@ const Follows = memo(({username, type}) => {
 	}, [userList]);
 	
 	return (
-		<List sx={{mt: -2}}>
-			{userList.map((item) => (
-				<ListItem
-					key={item.username}
-					ref={item === userList[userList.length - 1] ? lastUserRef : undefined}
-				>
-					<ListItemAvatar>
-						<NavigateButtonBase
-							sx={{borderRadius: "50%"}}
-							href={`/user/${item.username}`}
-						>
-							<UserAvatar username={item.username} displayName={item.displayName} avatarVersion={item.avatarVersion}/>
-						</NavigateButtonBase>
-					</ListItemAvatar>
-					<ListItemText
-						primary={
-							<NavigateLink href={`/user/${item.username}`}>
-								<UsernameWithBadge username={item.displayName} badge={item.badge}/>
-							</NavigateLink>
-						}
-						secondary={
-							<NavigateLink href={`/user/${item.username}`} underline="none">
-								<Typography component="span" fontSize={14} color="textSecondary" noWrap overflow="hidden" textOverflow="ellipsis">
-									@{item.username}
-								</Typography>
-							</NavigateLink>
-						}
-					/>
-				</ListItem>
+		<List sx={{pt: 0, mt: -1}}>
+			{userList.map((user, userIndex) => (
+				<Fragment key={user.username}>
+					{userIndex !== 0 && <Divider/>}
+					<ListItem ref={userIndex === userList.length - 1 ? lastUserRef : undefined} sx={{p: 2}}>
+						<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.25}}>
+							<NavigateButtonBase
+								sx={{borderRadius: "50%"}}
+								href={`/user/${user.username}`}
+							>
+								<UserAvatar username={user.username} displayName={user.displayName} avatarVersion={user.avatarVersion}/>
+							</NavigateButtonBase>
+						</ListItemAvatar>
+						<Grid container direction="column" sx={{flex: 1}} gap={0.25}>
+							<Grid container justifyContent="space-between">
+								<Grid container direction="column">
+									<Grid container alignItems="center" wrap="nowrap" gap={0.25}>
+										<NavigateLink href={`/user/${user.username}`} sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
+											<Typography fontWeight="bold" noWrap alignItems="center">
+												{user.displayName}
+											</Typography>
+										</NavigateLink>
+										<UserBadge badge={user.badge} fontSize={18}/>
+									</Grid>
+									<Typography
+										component="span"
+										fontSize={14}
+										color="textSecondary"
+										noWrap
+										overflow="hidden"
+										textOverflow="ellipsis"
+										maxWidth="100%"
+									>
+										<NavigateLink href={`/user/${user.username}`} underline="none">
+											@{user.username}
+										</NavigateLink>
+									</Typography>
+								</Grid>
+								<Button
+									variant={user.alreadyFollowing ? "outlined" : "contained"}
+									sx={{alignSelf: "flex-start", mt: 0.5, ml: 2, flexShrink: 0}}
+									disabled={user.username === myname}
+									onClick={() => {
+										axios.post("/api/user/" + user.username + "/follow").then(res => {
+											if (res.data.status === 1) {
+												setUserList(userList => userList.map(item => (
+													item.username !== user.username ? item : {
+														...item,
+														alreadyFollowing: true,
+													}
+												)));
+											} else if (res.data.status === 2) {
+												setUserList(userList => userList.map(item => (
+													item.username !== user.username ? item : {
+														...item,
+														alreadyFollowing: false,
+													}
+												)));
+											}
+										})
+									}}
+								>
+									{user.alreadyFollowing ? "取消关注" : "关注"}
+								</Button>
+							</Grid>
+							<Typography
+								component="span"
+								fontSize={14}
+								color="textPrimary"
+								maxHeight="6em"
+								overflow="hidden"
+								textOverflow="ellipsis"
+							>
+								<NavigateLink href={`/user/${user.username}`} underline="none">
+									{user.introduction}
+								</NavigateLink>
+							</Typography>
+						</Grid>
+					</ListItem>
+				</Fragment>
 			))}
 		</List>
 	);
@@ -249,8 +303,6 @@ const doFollow = (username, setIsFollowing, queryClient) => {
 		}
 	})
 };
-
-const myname = Cookies.get("username");
 
 const UserPage = memo(({username}) => {
 	const {clientUser, setClientUser} = useClientUser();
@@ -458,7 +510,7 @@ const UserPage = memo(({username}) => {
 					</Box>
 				</Grid>
 			</Card>
-			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2, mt: 2}}>
+			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 1, mt: 1}}>
 				<Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
 					<Tab label="动态" data-option="chat"/>
 					<Tab label="关注" data-option="following" id="tab-following"/>
