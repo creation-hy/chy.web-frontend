@@ -68,6 +68,7 @@ const PageContainer = memo(() => {
 							<Route path="/login" element={<SignIn/>}/>
 							<Route path="/register" element={<SignUp/>}/>
 							<Route path="/user/:username" element={<User/>}/>
+							<Route path="/user/:username/:tab" element={<User/>}/>
 							<Route path="/ai-art" element={<AIArt/>}/>
 							<Route path="/chybench" element={<Chybench/>}/>
 							<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>

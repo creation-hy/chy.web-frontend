@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import {useParams} from "react-router";
+import {useNavigate, useParams} from "react-router";
 import {Fragment, memo, useEffect, useMemo, useRef, useState} from "react";
 import {
 	Alert,
@@ -186,18 +186,18 @@ const Follows = memo(({username, type}) => {
 			{userList.map((user, userIndex) => (
 				<Fragment key={user.username}>
 					{userIndex !== 0 && <Divider/>}
-					<ListItem ref={userIndex === userList.length - 1 ? lastUserRef : undefined} sx={{p: 2}}>
-						<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.25}}>
-							<NavigateButtonBase
-								sx={{borderRadius: "50%"}}
-								href={`/user/${user.username}`}
-							>
-								<UserAvatar username={user.username} displayName={user.displayName} avatarVersion={user.avatarVersion}/>
-							</NavigateButtonBase>
-						</ListItemAvatar>
-						<Grid container direction="column" sx={{flex: 1}} gap={0.25}>
-							<Grid container justifyContent="space-between">
-								<Grid container direction="column">
+					<Box sx={{px: 2, py: 2.5}}>
+						<ListItem ref={userIndex === userList.length - 1 ? lastUserRef : undefined} sx={{p: 0}}>
+							<ListItemAvatar>
+								<NavigateButtonBase
+									href={`/user/${user.username}`}
+									sx={{borderRadius: "50%"}}
+								>
+									<UserAvatar username={user.username} displayName={user.displayName} avatarVersion={user.avatarVersion}/>
+								</NavigateButtonBase>
+							</ListItemAvatar>
+							<Grid container wrap="nowrap" justifyContent="space-between" alignItems="center" flex={1}>
+								<ListItemText sx={{m: 0}}>
 									<Grid container alignItems="center" wrap="nowrap" gap={0.25}>
 										<NavigateLink href={`/user/${user.username}`} sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
 											<Typography fontWeight="bold" noWrap alignItems="center">
@@ -207,7 +207,6 @@ const Follows = memo(({username, type}) => {
 										<UserBadge badge={user.badge} fontSize={18}/>
 									</Grid>
 									<Typography
-										component="span"
 										fontSize={14}
 										color="textSecondary"
 										noWrap
@@ -219,10 +218,10 @@ const Follows = memo(({username, type}) => {
 											@{user.username}
 										</NavigateLink>
 									</Typography>
-								</Grid>
+								</ListItemText>
 								<Button
 									variant={user.alreadyFollowing ? "outlined" : "contained"}
-									sx={{alignSelf: "flex-start", mt: 0.5, ml: 2, flexShrink: 0}}
+									sx={{ml: 2, flexShrink: 0}}
 									disabled={user.username === myname}
 									onClick={() => {
 										axios.post("/api/user/" + user.username + "/follow").then(res => {
@@ -247,6 +246,8 @@ const Follows = memo(({username, type}) => {
 									{user.alreadyFollowing ? "取消关注" : "关注"}
 								</Button>
 							</Grid>
+						</ListItem>
+						<Grid container sx={{ml: 7, mt: 0.25}}>
 							<Typography
 								component="span"
 								fontSize={14}
@@ -254,13 +255,18 @@ const Follows = memo(({username, type}) => {
 								maxHeight="6em"
 								overflow="hidden"
 								textOverflow="ellipsis"
+								sx={{
+									display: "-webkit-box",
+									WebkitBoxOrient: "vertical",
+									WebkitLineClamp: 4,
+								}}
 							>
 								<NavigateLink href={`/user/${user.username}`} underline="none">
 									{user.introduction}
 								</NavigateLink>
 							</Typography>
 						</Grid>
-					</ListItem>
+					</Box>
 				</Fragment>
 			))}
 		</List>
@@ -306,8 +312,14 @@ const doFollow = (username, setIsFollowing, queryClient) => {
 
 const UserPage = memo(({username}) => {
 	const {clientUser, setClientUser} = useClientUser();
+	const {tab} = useParams();
+	const navigate = useNavigate();
 	
-	const [value, setValue] = useState(0);
+	const tabs = [undefined, "following", "followers"];
+	const [tabValue, setTabValue] = useState(tabs.indexOf(tab));
+	const [followingCount, setFollowingCount] = useState(0);
+	const [followersCount, setFollowersCount] = useState(0);
+	
 	const [modifying, setModifying] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
 	const [resetPasswordOn, setResetPasswordOn] = useState(false);
@@ -322,29 +334,34 @@ const UserPage = memo(({username}) => {
 	
 	const queryClient = useQueryClient();
 	
-	const handleChange = (event, newValue) => {
-		setValue(newValue);
-	};
-	
-	const {data, isLoading} = useQuery({
+	const {data, isLoading, error} = useQuery({
 		queryKey: ["user-init", username],
 		queryFn: () => axios.get("/api/user/" + username + "/info").then(res => res.data),
 	});
 	
 	useEffect(() => {
 		if (data && data.username) {
-			document.getElementById("tab-following").innerHTML = "关注(" + data["followingCount"] + ")";
-			document.getElementById("tab-follower").innerHTML = "粉丝(" + data["followerCount"] + ")";
+			setFollowingCount(data["followingCount"]);
+			setFollowersCount(data["followerCount"]);
 			setIsFollowing(data["alreadyFollowing"]);
 			setAvatarVersion(data.avatarVersion);
 		}
 	}, [data]);
 	
-	if (isLoading)
-		return null;
+	useEffect(() => {
+		if (tabValue === -1) {
+			navigate(`/user/${username}`);
+			setTabValue(0);
+		}
+	}, [tabValue]);
 	
-	if (!data || !data.username)
+	if (isLoading || error) {
+		return null;
+	}
+	
+	if (!data || !data.username) {
 		return <Alert severity="error">用户不存在！</Alert>;
+	}
 	
 	document.title = `${data.displayName} (@${data.username}) 的主页 - chy.web`;
 	
@@ -505,19 +522,25 @@ const UserPage = memo(({username}) => {
 						注册于{convertDateToLocaleDateString(data.registrationTime)}<br/>
 						性别：{data.gender}
 					</Typography>
-					<Box id="introduction" sx={{fontSize: 15, maxWidth: "100%"}}>
+					<Box sx={{fontSize: 15, maxWidth: "100%"}}>
 						<ChatMarkdown>{data["introduction"]}</ChatMarkdown>
 					</Box>
 				</Grid>
 			</Card>
 			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 1, mt: 1}}>
-				<Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+				<Tabs
+					value={tabValue}
+					onChange={(event, newValue) => {
+						navigate(newValue === 0 ? `/user/${username}` : `/user/${username}/${tabs[newValue]}`);
+						setTabValue(newValue);
+					}}
+				>
 					<Tab label="动态" data-option="chat"/>
-					<Tab label="关注" data-option="following" id="tab-following"/>
-					<Tab label="粉丝" data-option="follower" id="tab-follower"/>
+					<Tab label={`关注(${followingCount})`} data-option="following"/>
+					<Tab label={`粉丝(${followersCount})`} data-option="follower"/>
 				</Tabs>
 			</Box>
-			<TabPanel value={value} username={data.username} displayName={data.displayName} avatarVersion={avatarVersion}/>
+			<TabPanel value={tabValue} username={data.username} displayName={data.displayName} avatarVersion={avatarVersion}/>
 			<Dialog
 				open={modifying}
 				onClose={() => setModifying(false)}
