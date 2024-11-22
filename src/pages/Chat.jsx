@@ -1262,7 +1262,7 @@ export default function Chat() {
 						</Fab>
 					</ScrollTop>}
 				</Card>
-				<Box sx={{width: "100%"}}>
+				{currentUser != null && <Box sx={{width: "100%"}}>
 					{quote != null &&
 						<Chip
 							variant="outlined"
@@ -1273,7 +1273,7 @@ export default function Chat() {
 							onDelete={() => setQuote(null)}
 						/>
 					}
-					{currentUser != null && <Card variant="outlined" sx={{maxWidth: "100%"}}>
+					<Card variant="outlined" sx={{maxWidth: "100%"}}>
 						<TextField
 							inputRef={messageInput}
 							placeholder="Message"
@@ -1303,8 +1303,8 @@ export default function Chat() {
 								<Send/>
 							</IconButton>
 						</Grid>
-					</Card>}
-				</Box>
+					</Card>
+				</Box>}
 			</Grid>
 		</Grid>
 	);
