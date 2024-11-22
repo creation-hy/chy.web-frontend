@@ -8,6 +8,7 @@ import {
 	DeleteOutlined,
 	DrawOutlined,
 	ExpandMoreOutlined,
+	FileDownloadOutlined,
 	HourglassBottomOutlined,
 	Info,
 	NavigateBefore,
@@ -27,6 +28,7 @@ import {
 	Accordion,
 	AccordionDetails,
 	AccordionSummary,
+	Backdrop,
 	Badge,
 	ButtonBase,
 	CircularProgress,
@@ -217,6 +219,15 @@ const MyRequests = () => {
 	);
 }
 
+const downloadImage = (id) => {
+	const a = document.createElement('a');
+	a.href = `/api/ai-art-results/${id}.webp`;
+	a.download = `${id}.webp`;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+}
+
 const GeneratedResults = () => {
 	const {data, isLoading, error} = useQuery({
 		queryKey: [`ai-art-results`],
@@ -235,8 +246,7 @@ const GeneratedResults = () => {
 	const [selectedImages, setSelectedImages] = useState(new Set());
 	const [showMultipleDeletingDialog, setShowMultipleDeletingDialog] = useState(false);
 	const [isMultipleDeleting, setIsMultipleDeleting] = useState(false);
-	const [makingPublic, setMakingPublic] = useState(false);
-	const [makingPrivate, setMakingPrivate] = useState(false);
+	const [isBusy, setIsBusy] = useState(false);
 	
 	const [hoveredImage, setHoveredImage] = useState(null);
 	const contextMenuTimeout = useRef(null);
@@ -430,6 +440,9 @@ const GeneratedResults = () => {
 					</Grow>
 				))}
 			</Masonry>
+			<Backdrop open={isBusy} sx={{zIndex: 8964}}>
+				<CircularProgress size={50}/>
+			</Backdrop>
 			<Drawer
 				anchor="top"
 				variant="persistent"
@@ -444,65 +457,77 @@ const GeneratedResults = () => {
 				}}
 			>
 				<Grid container padding={1} width="max-content">
-					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
-						setSelectedImages(new Set());
-					}}>
+					<IconButton
+						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
+						onClick={() => {
+							setSelectedImages(new Set());
+						}}
+					>
 						<Close fontSize="large"/>
 						<Typography fontSize={14}>取消</Typography>
 					</IconButton>
-					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
-						setShowMultipleDeletingDialog(true);
-					}}>
-						<DeleteOutlined fontSize="large"/>
-						<Typography fontSize={14}>删除</Typography>
-					</IconButton>
-					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
-						if (selectedImages.size !== imageList.length) {
-							setSelectedImages(new Set(imageList.map((item) => item.imageId)));
-						} else {
-							setSelectedImages(new Set());
-						}
-					}}>
+					<IconButton
+						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
+						onClick={() => {
+							if (selectedImages.size !== imageList.length) {
+								setSelectedImages(new Set(imageList.map((item) => item.imageId)));
+							} else {
+								setSelectedImages(new Set());
+							}
+						}}
+					>
 						<SelectAllOutlined fontSize="large"/>
 						<Typography fontSize={14}>{selectedImages.size === imageList.length && "取消"}全选</Typography>
 					</IconButton>
-					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
-						setMakingPublic(true);
-						axios.post("/api/ai-art/toggle-visibility", {idList: [...selectedImages], visibility: 1}, {
-							headers: {
-								"Content-Type": "application/json",
-							},
-						}).then(res => {
-							setMakingPublic(false);
-							if (res.data.status === 0) {
-								enqueueSnackbar(res.data.content, {variant: "error"});
-							} else if (res.data.status === 1) {
-								const succeededList = res.data.succeededList;
-								enqueueSnackbar(`成功公开了 ${succeededList.length} 张图片，失败了 ${selectedImages.size - succeededList.length} 张`, {variant: "info"});
-								for (const id of succeededList) {
-									setSelectedImages(selectedImages => {
-										selectedImages.delete(id);
-										return selectedImages;
-									});
+					<IconButton
+						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
+						onClick={() => {
+							setShowMultipleDeletingDialog(true);
+						}}
+					>
+						<DeleteOutlined fontSize="large"/>
+						<Typography fontSize={14}>删除</Typography>
+					</IconButton>
+					<IconButton
+						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
+						onClick={() => {
+							setIsBusy(true);
+							axios.post("/api/ai-art/toggle-visibility", {idList: [...selectedImages], visibility: 1}, {
+								headers: {
+									"Content-Type": "application/json",
+								},
+							}).then(res => {
+								setIsBusy(false);
+								if (res.data.status === 0) {
+									enqueueSnackbar(res.data.content, {variant: "error"});
+								} else if (res.data.status === 1) {
+									const succeededList = res.data.succeededList;
+									enqueueSnackbar(`成功公开了 ${succeededList.length} 张图片，失败了 ${selectedImages.size - succeededList.length} 张`, {variant: "info"});
+									for (const id of succeededList) {
+										setSelectedImages(selectedImages => {
+											selectedImages.delete(id);
+											return selectedImages;
+										});
+									}
+									setImageList(imageList => [...imageList].map(item => succeededList.includes(item.imageId) ? {
+										...item,
+										visibility: 1,
+									} : item));
 								}
-								setImageList(imageList => [...imageList].map(item => succeededList.includes(item.imageId) ? {
-									...item,
-									visibility: 1,
-								} : item));
-							}
-						});
-					}}>
-						{makingPublic ? <CircularProgress size={35}/> : <VisibilityOutlined fontSize="large"/>}
+							});
+						}}
+					>
+						<VisibilityOutlined fontSize="large"/>
 						<Typography fontSize={14}>公开</Typography>
 					</IconButton>
 					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
-						setMakingPrivate(true);
+						setIsBusy(true);
 						axios.post("/api/ai-art/toggle-visibility", {idList: [...selectedImages], visibility: 0}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
 						}).then(res => {
-							setMakingPrivate(false);
+							setIsBusy(false);
 							if (res.data.status === 0) {
 								enqueueSnackbar(res.data.content, {variant: "error"});
 							} else if (res.data.status === 1) {
@@ -521,8 +546,19 @@ const GeneratedResults = () => {
 							}
 						});
 					}}>
-						{makingPrivate ? <CircularProgress size={35}/> : <VisibilityOffOutlined fontSize="large"/>}
+						<VisibilityOffOutlined fontSize="large"/>
 						<Typography fontSize={14}>隐藏</Typography>
+					</IconButton>
+					<IconButton
+						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
+						onClick={() => {
+							for (const id of selectedImages) {
+								downloadImage(id);
+							}
+						}}
+					>
+						<FileDownloadOutlined fontSize="large"/>
+						<Typography fontSize={14}>下载</Typography>
 					</IconButton>
 				</Grid>
 			</Drawer>
@@ -569,14 +605,16 @@ const GeneratedResults = () => {
 				}}
 			>
 				{imagePreviewData != null && <Grid container direction="column" sx={{width: "100%", height: "100%"}} wrap="nowrap">
-					<Box sx={{
-						flex: 1,
-						display: "flex",
-						justifyContent: "center",
-						alignItems: "center",
-						overflow: "hidden",
-						position: "relative",
-					}}>
+					<Box
+						sx={{
+							flex: 1,
+							display: "flex",
+							justifyContent: "center",
+							alignItems: "center",
+							overflow: "hidden",
+							position: "relative",
+						}}
+					>
 						<Grow in={true}>
 							<img
 								src={`/api/ai-art-results/${imagePreviewData.imageId}.webp`}
@@ -601,48 +639,74 @@ const GeneratedResults = () => {
 						>
 							<Close/>
 						</IconButton>
-						{imageList[0].imageId !== imagePreviewData.imageId && <IconButton
-							onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) - 1])}
-							style={{
-								position: "absolute",
-								left: 10,
-								color: "white",
-								backgroundColor: "rgba(0, 0, 0, 0.5)",
-							}}
-						>
-							<NavigateBefore/>
-						</IconButton>}
-						{imageList[imageList.length - 1].imageId !== imagePreviewData.imageId && <IconButton
-							onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) + 1])}
-							style={{
-								position: "absolute",
-								right: 10,
-								color: "white",
-								backgroundColor: "rgba(0, 0, 0, 0.5)",
-							}}
-						>
-							<NavigateNext/>
-						</IconButton>}
-						<IconButton
-							onClick={() => {
-								setDeletingImageId(imagePreviewData.imageId);
-								setShowDeletingDialog(true);
-							}}
-							color="error"
-							style={{
+						{imageList[0].imageId !== imagePreviewData.imageId &&
+							<IconButton
+								onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) - 1])}
+								style={{
+									position: "absolute",
+									left: 10,
+									color: "white",
+									backgroundColor: "rgba(0, 0, 0, 0.5)",
+								}}
+							>
+								<NavigateBefore/>
+							</IconButton>
+						}
+						{imageList[imageList.length - 1].imageId !== imagePreviewData.imageId &&
+							<IconButton
+								onClick={() => setImagePreviewData(imageList[imageList.indexOf(imagePreviewData) + 1])}
+								style={{
+									position: "absolute",
+									right: 10,
+									color: "white",
+									backgroundColor: "rgba(0, 0, 0, 0.5)",
+								}}
+							>
+								<NavigateNext/>
+							</IconButton>
+						}
+						<Grid
+							container
+							gap={1}
+							sx={{
 								position: "absolute",
 								bottom: 10,
 								right: 10,
-								backgroundColor: "rgba(0, 0, 0, 0.5)",
 							}}
 						>
-							<DeleteOutlined/>
-						</IconButton>
-						<Grid container spacing={1} sx={{
-							position: "absolute",
-							bottom: 10,
-							left: 10,
-						}}>
+							<IconButton
+								onClick={() => {
+									downloadImage(imagePreviewData.imageId);
+								}}
+								style={{
+									color: "white",
+									backgroundColor: "rgba(0, 0, 0, 0.5)",
+								}}
+							>
+								<FileDownloadOutlined/>
+							</IconButton>
+							<IconButton
+								onClick={() => {
+									setDeletingImageId(imagePreviewData.imageId);
+									setShowDeletingDialog(true);
+								}}
+								color="error"
+								style={{
+									backgroundColor: "rgba(0, 0, 0, 0.5)",
+								}}
+							>
+								<DeleteOutlined/>
+							</IconButton>
+						</Grid>
+						<Grid
+							container
+							spacing={1}
+							sx={{
+								position: "absolute",
+								bottom: 10,
+								left: 10,
+							}}
+						>
 							<Badge
 								badgeContent={imagePreviewData.likes}
 								color="primary"
@@ -1281,11 +1345,26 @@ const Community = () => {
 									<NavigateNext/>
 								</IconButton>
 							}
-							<Grid container spacing={1} sx={{
-								position: "absolute",
-								bottom: 10,
-								right: 10,
-							}}>
+							<Grid
+								container
+								spacing={1}
+								sx={{
+									position: "absolute",
+									bottom: 10,
+									right: 10,
+								}}
+							>
+								<IconButton
+									onClick={() => {
+										downloadImage(imagePreviewData.imageId);
+									}}
+									style={{
+										color: "white",
+										backgroundColor: "rgba(0, 0, 0, 0.5)",
+									}}
+								>
+									<FileDownloadOutlined/>
+								</IconButton>
 								<Badge
 									badgeContent={imagePreviewData.likes}
 									color="primary"
