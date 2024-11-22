@@ -56,7 +56,7 @@ import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
-let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {};
+let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {useMarkdown: false};
 let usersVar = [], messagesVar = [];
 let socket, stomp;
 
@@ -171,7 +171,7 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-const Message = memo(({messageId, username, displayName, avatarVersion, badge, content, quote, setQuote}) => {
+const Message = memo(({messageId, username, displayName, avatarVersion, badge, content, quote, setQuote, useMarkdown}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -204,7 +204,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 					}}
 				>
 					<Box>
-						<ChatMarkdown>{content}</ChatMarkdown>
+						{useMarkdown ? <ChatMarkdown>{content}</ChatMarkdown> : content}
 					</Box>
 				</Paper>
 				{quote != null &&
@@ -227,7 +227,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 					<UsernameWithBadge username={displayName} badge={badge} fontSize={20} size={22}/>
 				</DialogTitle>
 				<DialogContent>
-					<ChatMarkdown>{content}</ChatMarkdown>
+					{useMarkdown ? <ChatMarkdown>{content}</ChatMarkdown> : content}
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>
@@ -302,6 +302,7 @@ Message.propTypes = {
 	content: PropTypes.string,
 	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
+	useMarkdown: PropTypes.bool,
 }
 
 const notify = (title, body, iconId, avatarVersion) => {
@@ -345,8 +346,8 @@ const ChatToolBar = memo(({inputField}) => {
 	
 	const [onSettings, handleSettings] = useState(false);
 	const [settings, setSettings] = useState(settingsVar);
-	const settingItems = ["allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
-	const settingItemsDisplay = ["允许通知", "允许公共频道通知", "允许当前联系人通知", "通知显示消息内容"];
+	const settingItems = ["useMarkdown", "allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
+	const settingItemsDisplay = ["启用Markdown+", "允许通知", "允许公共频道通知", "允许当前联系人通知", "通知显示消息内容"];
 	
 	const updateCursorSelection = useCallback(() => {
 		cursorSelection.current = [inputField.current.selectionStart, inputField.current.selectionEnd];
@@ -803,6 +804,7 @@ export default function Chat() {
 			recipient: currentUserVar,
 			content: content,
 			quoteId: quote == null ? null : quote.id,
+			useMarkdown: settingsVar.useMarkdown,
 		}));
 	}, [quote]);
 	
@@ -863,6 +865,7 @@ export default function Chat() {
 			badge: data.senderBadge,
 			content: data.content,
 			quote: data.quote,
+			useMarkdown: data.useMarkdown,
 			time: data.time,
 		}];
 		
@@ -1263,8 +1266,8 @@ export default function Chat() {
 									badge={message.badge}
 									content={message.content}
 									quote={message.quote}
-									timestamp={message.time}
 									setQuote={setQuote}
+									useMarkdown={message.useMarkdown}
 								/>
 							</Box>
 						);
