@@ -123,30 +123,29 @@ const optimizationPositiveTags = "masterpiece, best quality, Amazing, finely det
 const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers: 1.5), (long body: 1.3), (mutation, poorly drawn: 1.2) , black-white, bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated, anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers, lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body, fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts, heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand, missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs, fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears, fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears, heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers, one hand with more than 5 fingers, one hand with less than 5 fingers, one hand owith more than 5 digit, one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit, colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts, signature, 3D, 3D game, 3D game scene, 3D character, malformed feet, extra feet, bad feet, poorly drawn feet, fused feet, missing feet, extra shoes, bad shoes, fused shoes, more than two shoes, poorly drawn shoes, bad gloves, poorly drawn gloves, fused gloves, bad cum, poorly drawn cum, fused cum, bad hairs, poorly drawn hairs, fused hairs, big muscles, ugly, bad face, fused face, poorly drawn face, cloned face, big face, long face, bad eyes, fused eyes poorly drawn eyes, extra eyes, malformed limbs, "
 
 const MyRequests = () => {
-	const {data, isLoading, error} = useQuery({
-		queryKey: ["ai-art-request"],
-		queryFn: () => axios.get("/api/ai-art/request").then(res => res.data),
-		staleTime: 5,
-	});
-	
-	const [requestList, setRequestList] = useState([]);
+	const [requestList, setRequestList] = useState(undefined);
 	const [showInfo, setShowInfo] = useState(false);
 	const [infoData, setInfoData] = useState(null);
 	const [deletingId, setDeletingId] = useState(null);
 	const navigate = useNavigate();
 	
 	useEffect(() => {
-		if (data && data.result)
-			setRequestList(data.result);
-	}, [data]);
+		axios.get("/api/ai-art/request").then(res => {
+			if (res.data.status === 0) {
+				setRequestList(null);
+			} else {
+				setRequestList(res.data.result ?? []);
+			}
+		});
+	}, []);
 	
 	useEffect(() => {
-		if (data && data.status === 0) {
+		if (requestList === null) {
 			navigate("/register");
 		}
-	}, [data, navigate]);
+	}, [requestList, navigate]);
 	
-	if (isLoading || error) {
+	if (!requestList) {
 		return null;
 	}
 	
@@ -231,18 +230,12 @@ const downloadImage = (id) => {
 }
 
 const GeneratedResults = () => {
-	const {data, isLoading, error} = useQuery({
-		queryKey: [`ai-art-results`],
-		queryFn: () => axios.get(`/api/ai-art/result/0`).then(res => res.data),
-		staleTime: Infinity,
-	});
-	
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
 	const [showDeletingDialog, setShowDeletingDialog] = useState(false);
 	const [deletingImageId, setDeletingImageId] = useState(null);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [imageList, setImageList] = useState(null);
+	const [imageList, setImageList] = useState(undefined);
 	const navigate = useNavigate();
 	
 	const [selectedImages, setSelectedImages] = useState(new Set());
@@ -279,9 +272,14 @@ const GeneratedResults = () => {
 	};
 	
 	useEffect(() => {
-		if (data)
-			setImageList(data.result);
-	}, [data]);
+		axios.get(`/api/ai-art/result/0`).then(res => {
+			if (res.data.status === 0) {
+				setImageList(null);
+			} else {
+				setImageList(res.data.result ?? []);
+			}
+		});
+	}, []);
 	
 	useEffect(() => {
 		window.addEventListener("keydown", (event) => {
@@ -299,12 +297,12 @@ const GeneratedResults = () => {
 	}, [imageList, lastImageRef.current]);
 	
 	useEffect(() => {
-		if (data && data.status === 0) {
+		if (imageList === null) {
 			navigate("/register");
 		}
-	}, [data, navigate]);
+	}, [imageList, navigate]);
 	
-	if (isLoading || error || !imageList) {
+	if (!imageList) {
 		return null;
 	}
 	
