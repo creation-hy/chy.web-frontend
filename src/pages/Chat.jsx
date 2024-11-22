@@ -630,8 +630,6 @@ export default function Chat() {
 	const messageCard = useRef(null);
 	const messageInput = useRef(null);
 	const userSearchField = useRef(null);
-	const chatMainComponent = useRef(null);
-	const contactsComponent = useRef(null);
 	
 	const disconnectErrorBarKey = useRef(null);
 	
@@ -711,16 +709,6 @@ export default function Chat() {
 			setQuote(null);
 			messagePageNumberNew.current = 0;
 			messagePageNumberCurrent.current = 0;
-		}
-		
-		if (isSmallScreen) {
-			if (contactsComponent.current) {
-				contactsComponent.current.style.display = "none";
-			}
-			if (chatMainComponent.current) {
-				chatMainComponent.current.style.display = "flex";
-			}
-			document.getElementById("app-bar").style.display = "none";
 		}
 		
 		try {
@@ -1055,13 +1043,35 @@ export default function Chat() {
 		}
 	}, [users, isContactsLoading]);
 	
-	if (logged === false)
+	useEffect(() => {
+		if (!username) {
+			setCurrentUser(null);
+			setCurrentUserDisplayName(null);
+			setCurrentUserBadge(null);
+			currentUserVar = null;
+			setMessages([]);
+			messagesVar = [];
+		}
+		if (document.getElementById("app-bar")) {
+			document.getElementById("app-bar").style.display = username && isSmallScreen ? "none" : "flex";
+		}
+	}, [isSmallScreen, username]);
+	
+	if (logged === false) {
 		return <SignUp/>;
+	}
 	
 	return (
 		<Grid container sx={{flex: 1, display: !users ? "none" : "flex", minHeight: 0}} gap={2}>
-			<Card variant="outlined" ref={contactsComponent}
-			      sx={{width: isSmallScreen ? "100%" : 300, height: "100%", display: "flex", flexDirection: "column"}}>
+			<Card
+				variant="outlined"
+				sx={{
+					width: isSmallScreen ? "100%" : 300,
+					height: "100%",
+					display: username && isSmallScreen ? "none" : "flex",
+					flexDirection: "column",
+				}}
+			>
 				<OutlinedInput
 					inputRef={userSearchField}
 					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
@@ -1180,22 +1190,25 @@ export default function Chat() {
 					</List>}
 				</Box>
 			</Card>
-			<Grid container ref={chatMainComponent} direction="column"
-			      sx={{flex: 1, height: "100%", display: isSmallScreen ? "none" : "flex", pt: isSmallScreen ? 2 : 0}} gap={1.5}>
+			<Grid container
+			      direction="column"
+			      sx={{
+				      flex: 1,
+				      height: "100%",
+				      display: !username && isSmallScreen ? "none" : "flex",
+				      pt: isSmallScreen ? 2 : 0,
+			      }}
+			      gap={1.5}
+			>
 				{Boolean(currentUser) && <Card variant="outlined" sx={{width: "100%"}}>
 					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isSmallScreen ? 1 : 1.5} gap={1.5}>
 						{isSmallScreen && <IconButton onClick={() => {
-							if (contactsComponent.current) {
-								contactsComponent.current.style.display = "flex";
-							}
-							if (chatMainComponent.current) {
-								chatMainComponent.current.style.display = "none";
-							}
-							document.getElementById("app-bar").style.display = "flex";
 							setCurrentUser(null);
 							setCurrentUserDisplayName(null);
 							setCurrentUserBadge(null);
 							currentUserVar = null;
+							setMessages([]);
+							messagesVar = [];
 							navigate("/chat");
 						}}>
 							<ArrowBack/>
