@@ -7,7 +7,7 @@ import Chat from "src/pages/Chat.jsx";
 import User from "src/pages/User.jsx";
 import AIArt from "src/pages/AIArt.jsx";
 import Container from "@mui/material/Container";
-import {MobileAppBar, PCAppBar} from "src/components/AppAppBar.jsx";
+import {MobileAppBar, PCAppBarLeft, PCAppBarRight} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -26,7 +26,9 @@ import {KeyboardArrowUpOutlined} from "@mui/icons-material";
 
 const PageContainer = memo(() => {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
+	const isLG = useMediaQuery((theme) => theme.breakpoints.up("lg"));
 	const containerRef = useRef(null);
+	const scrollComponentRef = useRef(null);
 	
 	const [scrollTrigger, setScrollTrigger] = useState(false);
 	
@@ -40,15 +42,15 @@ const PageContainer = memo(() => {
 				setScrollTrigger(true);
 			else
 				setScrollTrigger(false);
+			scrollComponentRef.current.style.right = window.innerWidth - containerRef.current.clientWidth - containerRef.current.offsetLeft + 25 + "px";
 		});
 	}, []);
 	
 	return (
-		<Grid container width="100%" height="100%" overflow="hidden">
+		<Grid container width="100%" height="100%" overflow="hidden" justifyContent="center">
 			<BrowserRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
-				{!isSmallScreen && <PCAppBar/>}
-				<Box
-					ref={containerRef} display="flex" flexDirection="column" sx={{height: "100%", flex: 1, overflow: "auto"}}>
+				{!isSmallScreen && <PCAppBarLeft/>}
+				<Box ref={containerRef} display="flex" flexDirection="column" sx={{height: "100%", maxWidth: 1200, flex: 1, overflow: "auto"}}>
 					{isSmallScreen && <MobileAppBar/>}
 					<Container
 						maxWidth="lg"
@@ -82,9 +84,14 @@ const PageContainer = memo(() => {
 					</Container>
 					<Zoom in={scrollTrigger}>
 						<Box
+							ref={scrollComponentRef}
 							onClick={handleClick}
 							role="presentation"
-							sx={{position: 'fixed', bottom: 25, right: 25, zIndex: 1}}
+							sx={{
+								position: "absolute",
+								bottom: 25,
+								zIndex: 1
+							}}
 						>
 							<Fab size="small" aria-label="scroll back to top">
 								<KeyboardArrowUpOutlined/>
@@ -92,6 +99,7 @@ const PageContainer = memo(() => {
 						</Box>
 					</Zoom>
 				</Box>
+				{!isSmallScreen && isLG && <PCAppBarRight/>}
 			</BrowserRouter>
 		</Grid>
 	);

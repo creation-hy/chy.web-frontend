@@ -249,7 +249,7 @@ LeftBar.propTypes = {
 	navigateCallback: PropTypes.func,
 }
 
-export const PCAppBar = memo(() => {
+export const PCAppBarLeft = memo(() => {
 	const [colorMode, toggleColorMode] = useColorMode();
 	
 	return (
@@ -276,6 +276,23 @@ export const PCAppBar = memo(() => {
 			>
 				{colorMode === "auto" ? <AutoAwesome/> : (colorMode === "light" ? <LightMode/> : <DarkMode/>)}
 			</IconButton>
+		</Box>
+	);
+});
+
+export const PCAppBarRight = memo(() => {
+	return (
+		<Box
+			sx={{
+				position: "relative",
+				height: "100%",
+				overflow: "auto",
+				width: 225,
+				borderLeft: 1,
+				borderColor: theme => theme.palette.divider,
+				p: 2,
+			}}
+		>
 		</Box>
 	);
 });
