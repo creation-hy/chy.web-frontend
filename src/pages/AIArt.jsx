@@ -1504,10 +1504,11 @@ export default function AIArt() {
 	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
 	
 	useEffect(() => {
+		setTabValue(Math.max(tabs.indexOf(tab), 0));
 		if (tabs.indexOf(tab) === -1) {
 			navigate(`/ai-art`);
 		}
-	}, []);
+	}, [tab]);
 	
 	return (
 		<Grid container direction="column" sx={{flex: 1}}>

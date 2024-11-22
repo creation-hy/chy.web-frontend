@@ -334,7 +334,7 @@ const UserPage = memo(({username}) => {
 	const navigate = useNavigate();
 	
 	const tabs = [undefined, "following", "followers"];
-	const [tabValue, setTabValue] = useState(tabs.indexOf(tab));
+	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
 	const [followingCount, setFollowingCount] = useState(0);
 	const [followersCount, setFollowersCount] = useState(0);
 	
@@ -367,11 +367,11 @@ const UserPage = memo(({username}) => {
 	}, [data]);
 	
 	useEffect(() => {
-		if (tabValue === -1) {
+		setTabValue(Math.max(tabs.indexOf(tab), 0));
+		if (tabs.indexOf(tab) === -1) {
 			navigate(`/user/${username}`);
-			setTabValue(0);
 		}
-	}, [tabValue]);
+	}, [tab]);
 	
 	if (isLoading || error) {
 		return null;
