@@ -53,6 +53,7 @@ import SignUp from "src/pages/SignUp.jsx";
 import {throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
+import Link from "@mui/material/Link";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -361,6 +362,17 @@ const ChatToolBar = memo(({inputField}) => {
 		inputField.current.setSelectionRange(start + text.length, start + text.length);
 	}, []);
 	
+	const MarkdownChecker = memo(() => {
+		return settings.useMarkdown === false && (
+			<Typography color="error">
+				您还没有启用Markdown+，是否前往开启？
+				<Link onClick={() => handleSettings(true)} sx={{cursor: 'pointer'}}>
+					打开设置
+				</Link>
+			</Typography>
+		);
+	});
+	
 	return (
 		<>
 			<Box>
@@ -415,6 +427,7 @@ const ChatToolBar = memo(({inputField}) => {
 					添加特殊字体
 				</DialogTitle>
 				<DialogContent>
+					<MarkdownChecker/>
 					<Grid container gap={1}>
 						<FormControl margin="dense" sx={{mb: 0, minWidth: 80}}>
 							<InputLabel id="font-style-label">样式</InputLabel>
@@ -474,6 +487,7 @@ const ChatToolBar = memo(({inputField}) => {
 					添加链接
 				</DialogTitle>
 				<DialogContent>
+					<MarkdownChecker/>
 					<Grid container gap={2}>
 						<TextField label="链接地址" sx={{mt: 1}} fullWidth inputRef={linkHrefRef}/>
 						<TextField label="显示文本" fullWidth inputRef={linkTextRef}/>
@@ -494,6 +508,7 @@ const ChatToolBar = memo(({inputField}) => {
 					添加图片
 				</DialogTitle>
 				<DialogContent>
+					<MarkdownChecker/>
 					<Grid container gap={2}>
 						<TextField label="图片地址" sx={{mt: 1}} fullWidth inputRef={imageHrefRef}/>
 						<TextField label="替代文字" fullWidth inputRef={imageAltRef}/>
