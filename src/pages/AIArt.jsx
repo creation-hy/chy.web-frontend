@@ -11,6 +11,8 @@ import {
 	FileDownloadOutlined,
 	HourglassBottomOutlined,
 	Info,
+	Lock,
+	LockOpenOutlined,
 	NavigateBefore,
 	NavigateNext,
 	SelectAllOutlined,
@@ -674,29 +676,66 @@ const GeneratedResults = () => {
 								right: 10,
 							}}
 						>
-							<IconButton
-								onClick={() => {
-									downloadImage(imagePreviewData.imageId);
-								}}
-								style={{
-									color: "white",
-									backgroundColor: "rgba(0, 0, 0, 0.5)",
-								}}
-							>
-								<FileDownloadOutlined/>
-							</IconButton>
-							<IconButton
-								onClick={() => {
-									setDeletingImageId(imagePreviewData.imageId);
-									setShowDeletingDialog(true);
-								}}
-								color="error"
-								style={{
-									backgroundColor: "rgba(0, 0, 0, 0.5)",
-								}}
-							>
-								<DeleteOutlined/>
-							</IconButton>
+							{imagePreviewData.visibility === 1 && <Tooltip title={`${imagePreviewData.promptVisibility === 1 ? "隐藏" : "公开"}提示词`}>
+								<IconButton
+									onClick={() => {
+										const newVisibility = 1 - imagePreviewData.promptVisibility;
+										
+										axios.post("/api/ai-art/toggle-prompt-visibility", {
+											id: imagePreviewData.imageId,
+											visibility: newVisibility,
+										}, {
+											headers: {
+												"Content-Type": "application/json",
+											},
+										}).then(res => {
+											enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+											if (res.data.status === 1) {
+												const newImagePreviewData = {
+													...imagePreviewData,
+													promptVisibility: newVisibility,
+												};
+												setImagePreviewData(newImagePreviewData);
+												setImageList(imageList =>
+													imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+											}
+										});
+									}}
+									style={{
+										color: "white",
+										backgroundColor: "rgba(0, 0, 0, 0.5)",
+									}}
+								>
+									{imagePreviewData.promptVisibility === 1 ? <LockOpenOutlined/> : <Lock/>}
+								</IconButton>
+							</Tooltip>}
+							<Tooltip title="下载图片">
+								<IconButton
+									onClick={() => {
+										downloadImage(imagePreviewData.imageId);
+									}}
+									style={{
+										color: "white",
+										backgroundColor: "rgba(0, 0, 0, 0.5)",
+									}}
+								>
+									<FileDownloadOutlined/>
+								</IconButton>
+							</Tooltip>
+							<Tooltip title="删除图片">
+								<IconButton
+									onClick={() => {
+										setDeletingImageId(imagePreviewData.imageId);
+										setShowDeletingDialog(true);
+									}}
+									color="error"
+									style={{
+										backgroundColor: "rgba(0, 0, 0, 0.5)",
+									}}
+								>
+									<DeleteOutlined/>
+								</IconButton>
+							</Tooltip>
 						</Grid>
 						<Grid
 							container
@@ -707,80 +746,84 @@ const GeneratedResults = () => {
 								left: 10,
 							}}
 						>
-							<Badge
-								badgeContent={imagePreviewData.likes}
-								color="primary"
-								overlap="circular"
-							>
-								<IconButton
-									onClick={() => {
-										axios.post("/api/ai-art/community/toggle-liked", {imageId: imagePreviewData.imageId}, {
-											headers: {
-												"Content-Type": "application/json",
-											},
-										}).then(res => {
-											if (res.data.status === 0) {
-												enqueueSnackbar(res.data.content, {variant: "error"});
-											} else if (res.data.status === 1) {
-												const newImagePreviewData = {
-													...imagePreviewData,
-													imageId: imagePreviewData.imageId,
-													alreadyLiked: !imagePreviewData.alreadyLiked,
-													alreadyDisliked: false,
-													likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
-													dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
-												};
-												setImagePreviewData(newImagePreviewData);
-												setImageList(imageList =>
-													imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
-											}
-										});
-									}}
-									style={{
-										color: "white",
-										backgroundColor: "rgba(0, 0, 0, 0.5)",
-									}}
+							<Tooltip title="赞">
+								<Badge
+									badgeContent={imagePreviewData.likes}
+									color="primary"
+									overlap="circular"
 								>
-									{imagePreviewData.alreadyLiked ? <ThumbUpAlt/> : <ThumbUpOffAlt/>}
-								</IconButton>
-							</Badge>
-							<Badge
-								badgeContent={imagePreviewData.dislikes}
-								color="primary"
-								overlap="circular"
-							>
-								<IconButton
-									onClick={() => {
-										axios.post("/api/ai-art/community/toggle-disliked", {imageId: imagePreviewData.imageId}, {
-											headers: {
-												"Content-Type": "application/json",
-											},
-										}).then(res => {
-											if (res.data.status === 0) {
-												enqueueSnackbar(res.data.content, {variant: "error"});
-											} else if (res.data.status === 1) {
-												const newImagePreviewData = {
-													...imagePreviewData,
-													imageId: imagePreviewData.imageId,
-													alreadyDisliked: !imagePreviewData.alreadyDisliked,
-													alreadyLiked: false,
-													dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
-													likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
-												};
-												setImagePreviewData(newImagePreviewData);
-												setImageList(imageList =>
-													imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
-											}
-										});
-									}}
-									style={{
-										color: "white",
-										backgroundColor: "rgba(0, 0, 0, 0.5)",
-									}}
+									<IconButton
+										onClick={() => {
+											axios.post("/api/ai-art/community/toggle-liked", {imageId: imagePreviewData.imageId}, {
+												headers: {
+													"Content-Type": "application/json",
+												},
+											}).then(res => {
+												if (res.data.status === 0) {
+													enqueueSnackbar(res.data.content, {variant: "error"});
+												} else if (res.data.status === 1) {
+													const newImagePreviewData = {
+														...imagePreviewData,
+														imageId: imagePreviewData.imageId,
+														alreadyLiked: !imagePreviewData.alreadyLiked,
+														alreadyDisliked: false,
+														likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
+														dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
+													};
+													setImagePreviewData(newImagePreviewData);
+													setImageList(imageList =>
+														imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+												}
+											});
+										}}
+										style={{
+											color: "white",
+											backgroundColor: "rgba(0, 0, 0, 0.5)",
+										}}
+									>
+										{imagePreviewData.alreadyLiked ? <ThumbUpAlt/> : <ThumbUpOffAlt/>}
+									</IconButton>
+								</Badge>
+							</Tooltip>
+							<Tooltip title="踩">
+								<Badge
+									badgeContent={imagePreviewData.dislikes}
+									color="primary"
+									overlap="circular"
 								>
-									{imagePreviewData.alreadyDisliked ? <ThumbDownAlt/> : <ThumbDownOffAlt/>}
-								</IconButton>
-							</Badge>
+									<IconButton
+										onClick={() => {
+											axios.post("/api/ai-art/community/toggle-disliked", {imageId: imagePreviewData.imageId}, {
+												headers: {
+													"Content-Type": "application/json",
+												},
+											}).then(res => {
+												if (res.data.status === 0) {
+													enqueueSnackbar(res.data.content, {variant: "error"});
+												} else if (res.data.status === 1) {
+													const newImagePreviewData = {
+														...imagePreviewData,
+														imageId: imagePreviewData.imageId,
+														alreadyDisliked: !imagePreviewData.alreadyDisliked,
+														alreadyLiked: false,
+														dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
+														likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
+													};
+													setImagePreviewData(newImagePreviewData);
+													setImageList(imageList =>
+														imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+												}
+											});
+										}}
+										style={{
+											color: "white",
+											backgroundColor: "rgba(0, 0, 0, 0.5)",
+										}}
+									>
+										{imagePreviewData.alreadyDisliked ? <ThumbDownAlt/> : <ThumbDownOffAlt/>}
+									</IconButton>
+								</Badge>
+							</Tooltip>
 						</Grid>
 					</Box>
 					<Accordion variant="outlined" sx={{border: 0}} disableGutters>
@@ -1354,91 +1397,97 @@ const Community = () => {
 									right: 10,
 								}}
 							>
-								<IconButton
-									onClick={() => {
-										downloadImage(imagePreviewData.imageId);
-									}}
-									style={{
-										color: "white",
-										backgroundColor: "rgba(0, 0, 0, 0.5)",
-									}}
-								>
-									<FileDownloadOutlined/>
-								</IconButton>
-								<Badge
-									badgeContent={imagePreviewData.likes}
-									color="primary"
-									overlap="circular"
-								>
+								<Tooltip title="下载图片">
 									<IconButton
 										onClick={() => {
-											axios.post("/api/ai-art/community/toggle-liked", {imageId: imagePreviewData.imageId}, {
-												headers: {
-													"Content-Type": "application/json",
-												},
-											}).then(res => {
-												if (res.data.status === 0) {
-													enqueueSnackbar(res.data.content, {variant: "error"});
-												} else if (res.data.status === 1) {
-													const newImagePreviewData = {
-														...imagePreviewData,
-														imageId: imagePreviewData.imageId,
-														alreadyLiked: !imagePreviewData.alreadyLiked,
-														alreadyDisliked: false,
-														likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
-														dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
-													};
-													setImagePreviewData(newImagePreviewData);
-													setImageList(imageList =>
-														imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
-												}
-											});
+											downloadImage(imagePreviewData.imageId);
 										}}
 										style={{
 											color: "white",
 											backgroundColor: "rgba(0, 0, 0, 0.5)",
 										}}
 									>
-										{imagePreviewData.alreadyLiked ? <ThumbUpAlt/> : <ThumbUpOffAlt/>}
+										<FileDownloadOutlined/>
 									</IconButton>
-								</Badge>
-								<Badge
-									badgeContent={imagePreviewData.dislikes}
-									color="primary"
-									overlap="circular"
-								>
-									<IconButton
-										onClick={() => {
-											axios.post("/api/ai-art/community/toggle-disliked", {imageId: imagePreviewData.imageId}, {
-												headers: {
-													"Content-Type": "application/json",
-												},
-											}).then(res => {
-												if (res.data.status === 0) {
-													enqueueSnackbar(res.data.content, {variant: "error"});
-												} else if (res.data.status === 1) {
-													const newImagePreviewData = {
-														...imagePreviewData,
-														imageId: imagePreviewData.imageId,
-														alreadyDisliked: !imagePreviewData.alreadyDisliked,
-														alreadyLiked: false,
-														dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
-														likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
-													};
-													setImagePreviewData(newImagePreviewData);
-													setImageList(imageList =>
-														imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
-												}
-											});
-										}}
-										style={{
-											color: "white",
-											backgroundColor: "rgba(0, 0, 0, 0.5)",
-										}}
+								</Tooltip>
+								<Tooltip title="赞">
+									<Badge
+										badgeContent={imagePreviewData.likes}
+										color="primary"
+										overlap="circular"
 									>
-										{imagePreviewData.alreadyDisliked ? <ThumbDownAlt/> : <ThumbDownOffAlt/>}
-									</IconButton>
-								</Badge>
+										<IconButton
+											onClick={() => {
+												axios.post("/api/ai-art/community/toggle-liked", {imageId: imagePreviewData.imageId}, {
+													headers: {
+														"Content-Type": "application/json",
+													},
+												}).then(res => {
+													if (res.data.status === 0) {
+														enqueueSnackbar(res.data.content, {variant: "error"});
+													} else if (res.data.status === 1) {
+														const newImagePreviewData = {
+															...imagePreviewData,
+															imageId: imagePreviewData.imageId,
+															alreadyLiked: !imagePreviewData.alreadyLiked,
+															alreadyDisliked: false,
+															likes: imagePreviewData.likes + (imagePreviewData.alreadyLiked ? -1 : 1),
+															dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
+														};
+														setImagePreviewData(newImagePreviewData);
+														setImageList(imageList =>
+															imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+													}
+												});
+											}}
+											style={{
+												color: "white",
+												backgroundColor: "rgba(0, 0, 0, 0.5)",
+											}}
+										>
+											{imagePreviewData.alreadyLiked ? <ThumbUpAlt/> : <ThumbUpOffAlt/>}
+										</IconButton>
+									</Badge>
+								</Tooltip>
+								<Tooltip title="踩">
+									<Badge
+										badgeContent={imagePreviewData.dislikes}
+										color="primary"
+										overlap="circular"
+									>
+										<IconButton
+											onClick={() => {
+												axios.post("/api/ai-art/community/toggle-disliked", {imageId: imagePreviewData.imageId}, {
+													headers: {
+														"Content-Type": "application/json",
+													},
+												}).then(res => {
+													if (res.data.status === 0) {
+														enqueueSnackbar(res.data.content, {variant: "error"});
+													} else if (res.data.status === 1) {
+														const newImagePreviewData = {
+															...imagePreviewData,
+															imageId: imagePreviewData.imageId,
+															alreadyDisliked: !imagePreviewData.alreadyDisliked,
+															alreadyLiked: false,
+															dislikes: imagePreviewData.dislikes + (imagePreviewData.alreadyDisliked ? -1 : 1),
+															likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
+														};
+														setImagePreviewData(newImagePreviewData);
+														setImageList(imageList =>
+															imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+													}
+												});
+											}}
+											style={{
+												color: "white",
+												backgroundColor: "rgba(0, 0, 0, 0.5)",
+											}}
+										>
+											{imagePreviewData.alreadyDisliked ? <ThumbDownAlt/> : <ThumbDownOffAlt/>}
+										</IconButton>
+									</Badge>
+								</Tooltip>
 							</Grid>
 						</Box>
 						<Accordion variant="outlined" sx={{border: 0}} disableGutters>
