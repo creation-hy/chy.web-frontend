@@ -438,7 +438,7 @@ const GeneratedResults = () => {
 					sx: {
 						borderBottomLeftRadius: "15px",
 						borderBottomRightRadius: "15px",
-						maxWidth: 1152,
+						maxWidth: "max-content",
 						mx: "auto",
 					},
 				}}
