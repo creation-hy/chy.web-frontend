@@ -9,8 +9,9 @@ import {tomorrow, tomorrowNight} from "react-syntax-highlighter/dist/cjs/styles/
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import remarkBreaks from "remark-breaks";
 import {memo} from "react";
+import Typography from "@mui/material/Typography";
 
-export const ChatMarkdown = memo(({children, ...props}) => {
+export const ChatMarkdown = memo(({useMarkdown, children, ...props}) => {
 	if (!children)
 		children = "";
 	
@@ -22,7 +23,7 @@ export const ChatMarkdown = memo(({children, ...props}) => {
 	
 	const [binaryColorMode] = useBinaryColorMode();
 	
-	return (
+	return useMarkdown ? (
 		<Markdown
 			className="my-markdown"
 			remarkPlugins={[remarkGfm, remarkBreaks]}
@@ -87,9 +88,14 @@ export const ChatMarkdown = memo(({children, ...props}) => {
 		>
 			{md}
 		</Markdown>
-	)
+	) : (
+		<Typography whiteSpace="pre-wrap">
+			{children}
+		</Typography>
+	);
 });
 
 ChatMarkdown.propTypes = {
+	useMarkdown: PropTypes.bool,
 	children: PropTypes.string,
 }

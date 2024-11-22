@@ -205,7 +205,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 					}}
 				>
 					<Box>
-						{useMarkdown ? <ChatMarkdown>{content}</ChatMarkdown> : content}
+						<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
 					</Box>
 				</Paper>
 				{quote != null &&
@@ -228,7 +228,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 					<UsernameWithBadge username={displayName} badge={badge} fontSize={20} size={22}/>
 				</DialogTitle>
 				<DialogContent>
-					{useMarkdown ? <ChatMarkdown>{content}</ChatMarkdown> : content}
+					<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>

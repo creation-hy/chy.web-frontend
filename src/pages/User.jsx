@@ -120,7 +120,7 @@ const News = memo(({username, displayName, avatarVersion}) => {
 							}}
 						>
 							<Box sx={{fontSize: 15}}>
-								{chat.useMarkdown ? <ChatMarkdown>{chat.content}</ChatMarkdown> : chat.content}
+								<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
 							</Box>
 							<Typography variant="caption" display="block" textAlign="right" mt={1}>
 								{convertDateToLocaleAbsoluteString(chat.time)}
