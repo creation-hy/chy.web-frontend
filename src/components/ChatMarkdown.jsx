@@ -89,7 +89,7 @@ export const ChatMarkdown = memo(({useMarkdown, children, ...props}) => {
 			{md}
 		</Markdown>
 	) : (
-		<Typography whiteSpace="pre-wrap">
+		<Typography whiteSpace="pre-wrap" fontSize="inherit">
 			{children}
 		</Typography>
 	);

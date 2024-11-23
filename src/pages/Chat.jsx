@@ -204,7 +204,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 						});
 					}}
 				>
-					<Box>
+					<Box fontSize={15}>
 						<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
 					</Box>
 				</Paper>
