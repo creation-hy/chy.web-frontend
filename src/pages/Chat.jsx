@@ -1,22 +1,27 @@
 import {Fragment, memo, useCallback, useEffect, useRef, useState} from "react";
 import axios from "axios";
-import {Badge, Fab, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, useMediaQuery, Zoom} from "@mui/material";
+import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography"
 import {
+	AddLinkOutlined,
+	AddReactionOutlined,
 	ArrowBack,
 	ArrowDownward,
 	CloudDownload,
 	ContentCopyOutlined,
 	DeleteOutline,
+	FontDownloadOutlined,
 	FormatQuoteOutlined,
 	InsertDriveFileOutlined,
 	MoreHoriz,
 	SearchOutlined,
 	Send,
+	SettingsOutlined,
+	UploadFileOutlined,
 	VisibilityOutlined
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
@@ -37,6 +42,10 @@ import Button from "@mui/material/Button";
 import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
+import Picker from "@emoji-mart/react";
+import {useBinaryColorMode} from "src/components/ColorMode.jsx";
+import Select from "@mui/material/Select";
+import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
@@ -45,6 +54,7 @@ import SignUp from "src/pages/SignUp.jsx";
 import {throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
+import Link from "@mui/material/Link";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -163,9 +173,9 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-export const MessageFile = memo(({url, fileName, fileSize}) => {
+export const MessageFile = memo(({url, fileName, fileSize, ...props}) => {
 	return (
-		<Paper variant="outlined" sx={{maxWidth: "100%"}}>
+		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
 			<ListItemButton onClick={() => window.open(url)} sx={{borderRadius: "8px"}}>
 				<Grid container gap={1.5} wrap="nowrap" alignItems="center">
 					<InsertDriveFileOutlined fontSize="large"/>
@@ -175,7 +185,9 @@ export const MessageFile = memo(({url, fileName, fileSize}) => {
 								overflow="hidden"
 								textOverflow="ellipsis"
 								sx={{
-									maxHeight: "3em",
+									lineHeight: "21px",
+									wordWrap: "break-word",
+									maxHeight: "42px",
 									display: "-webkit-box",
 									WebkitLineClamp: 2,
 									WebkitBoxOrient: "vertical",
@@ -241,7 +253,18 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 						</Box>
 					</Paper>
 				) : (
-					<MessageFile url={file.url} fileName={file.fileName} fileSize={file.fileSize}/>
+					<MessageFile
+						url={file.url}
+						fileName={file.fileName}
+						fileSize={file.fileSize}
+						onContextMenu={(event) => {
+							event.preventDefault();
+							setContextMenu(contextMenu ? null : {
+								mouseX: event.clientX + 2,
+								mouseY: event.clientY - 6,
+							});
+						}}
+					/>
 				)}
 				{quote != null &&
 					<Chip
@@ -263,7 +286,16 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 					<UsernameWithBadge username={displayName} badge={badge} fontSize={20} size={22}/>
 				</DialogTitle>
 				<DialogContent>
-					<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
+					{type === 1 ? (
+						<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
+					) : (
+						<MessageFile
+							url={file.url}
+							fileName={file.fileName}
+							fileSize={file.fileSize}
+							onContextMenu={(event) => event.preventDefault()}
+						/>
+					)}
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>

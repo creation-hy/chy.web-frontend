@@ -126,7 +126,12 @@ const News = memo(({username, displayName, avatarVersion}) => {
 								{chat.type === 1 ? (
 									<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
 								) : (
-									<MessageFile url={chat.file.url} fileName={chat.file.fileName} fileSize={chat.file.fileSize}/>
+									<MessageFile
+										url={chat.file.url}
+										fileName={chat.file.fileName}
+										fileSize={chat.file.fileSize}
+										onContextMenu={(event) => event.preventDefault()}
+									/>
 								)}
 							</Box>
 							<Typography variant="caption" display="block" textAlign="right" mt={1} mr={chat.type === 1 ? undefined : "11px"}>
