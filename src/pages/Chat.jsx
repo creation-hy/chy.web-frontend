@@ -204,7 +204,7 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 						});
 					}}
 				>
-					<Box fontSize={15}>
+					<Box>
 						<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
 					</Box>
 				</Paper>
@@ -1311,7 +1311,7 @@ export default function Chat() {
 							multiline
 							fullWidth
 							maxRows={10}
-							slotProps={{input: {style: {fontSize: 15, padding: 10}}}}
+							slotProps={{input: {style: {padding: 10}}}}
 							onKeyDown={(event) => {
 								if (!isSmallScreen && event.keyCode === 13) {
 									event.preventDefault();
