@@ -55,6 +55,7 @@ import {throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
+import {LoadingButton} from "@mui/lab";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -407,6 +408,7 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 	const linkTextRef = useRef(null);
 	
 	const [showUploadFileConfirmation, setShowUploadFileConfirmation] = useState(false);
+	const [isFileUploading, setIsFileUploading] = useState(false);
 	const [file, setFile] = useState({name: "", size: 0});
 	
 	const [onEmojiPicker, handleEmojiPicker] = useState(false);
@@ -630,26 +632,32 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 					<Button onClick={() => setShowUploadFileConfirmation(false)}>
 						取消
 					</Button>
-					<Button onClick={() => {
-						setQuote(quote => {
-							axios.post("/api/chat/file/upload", {
-								file: file,
-								recipient: currentUserVar,
-								quoteId: quote?.id,
-							}, {
-								headers: {
-									"Content-Type": "multipart/form-data",
-								},
-							}).then(res => {
-								enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-								setShowUploadFileConfirmation(false);
+					<LoadingButton
+						loading={isFileUploading}
+						onClick={() => {
+							setIsFileUploading(true);
+							setQuote(quote => {
+								axios.post("/api/chat/file/upload", {
+									file: file,
+									recipient: currentUserVar,
+									quoteId: quote?.id,
+								}, {
+									headers: {
+										"Content-Type": "multipart/form-data",
+									},
+								}).then(res => {
+									enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+									if (res.data.status === 1) {
+										setShowUploadFileConfirmation(false);
+									}
+									setIsFileUploading(false);
+								});
+								return null;
 							});
-							
-							return null;
-						});
-					}}>
+						}}
+					>
 						确认
-					</Button>
+					</LoadingButton>
 				</DialogActions>
 			</Dialog>
 		</>
