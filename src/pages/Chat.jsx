@@ -1,27 +1,22 @@
 import {Fragment, memo, useCallback, useEffect, useRef, useState} from "react";
 import axios from "axios";
-import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, useMediaQuery, Zoom} from "@mui/material";
+import {Badge, Fab, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography"
 import {
-	AddLinkOutlined,
-	AddReactionOutlined,
 	ArrowBack,
 	ArrowDownward,
 	CloudDownload,
 	ContentCopyOutlined,
 	DeleteOutline,
-	FontDownloadOutlined,
 	FormatQuoteOutlined,
 	InsertDriveFileOutlined,
 	MoreHoriz,
 	SearchOutlined,
 	Send,
-	SettingsOutlined,
-	UploadFileOutlined,
 	VisibilityOutlined
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
@@ -42,10 +37,6 @@ import Button from "@mui/material/Button";
 import {closeSnackbar, enqueueSnackbar} from "notistack";
 import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
-import Picker from "@emoji-mart/react";
-import {useBinaryColorMode} from "src/components/ColorMode.jsx";
-import Select from "@mui/material/Select";
-import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
@@ -54,7 +45,6 @@ import SignUp from "src/pages/SignUp.jsx";
 import {throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
-import Link from "@mui/material/Link";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -373,7 +363,7 @@ const notify = (title, body, iconId, avatarVersion) => {
 	}
 };
 
-const ChatToolBar = memo(({inputField, quote}) => {
+const ChatToolBar = memo(({inputField, setQuote}) => {
 	const [binaryColorMode] = useBinaryColorMode();
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -446,16 +436,20 @@ const ChatToolBar = memo(({inputField, quote}) => {
 							if (event.target.files[0].size > 20 * 1024 * 1024) {
 								enqueueSnackbar("文件大小不能超过20MB！", {variant: "error"});
 							} else {
-								axios.post("/api/chat/file/upload", {
-									file: event.target.files[0],
-									recipient: currentUserVar,
-									quoteId: quote?.id,
-								}, {
-									headers: {
-										"Content-Type": "multipart/form-data",
-									},
-								}).then(res => {
-									enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+								setQuote(quote => {
+									axios.post("/api/chat/file/upload", {
+										file: event.target.files[0],
+										recipient: currentUserVar,
+										quoteId: quote?.id,
+									}, {
+										headers: {
+											"Content-Type": "multipart/form-data",
+										},
+									}).then(res => {
+										enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+									});
+									
+									return null;
 								});
 							}
 							event.target.value = null;
@@ -611,6 +605,7 @@ const ChatToolBar = memo(({inputField, quote}) => {
 
 ChatToolBar.propTypes = {
 	inputField: PropTypes.object.isRequired,
+	setQuote: PropTypes.func.isRequired,
 }
 
 const ScrollTop = memo(({children, messageCard}) => {
@@ -1367,7 +1362,7 @@ export default function Chat() {
 							onChange={(event) => saveDraft(currentUserVar, event.target.value, setUsers)}
 						/>
 						<Grid container justifyContent="space-between">
-							<ChatToolBar inputField={messageInput}/>
+							<ChatToolBar inputField={messageInput} setQuote={setQuote}/>
 							<Button variant="contained" startIcon={<Send/>} sx={{my: "auto", mr: 0.75}}>发送</Button>
 						</Grid>
 					</Card>
