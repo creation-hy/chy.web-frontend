@@ -8,7 +8,6 @@ import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography"
 import {
 	AddLinkOutlined,
-	AddPhotoAlternateOutlined,
 	AddReactionOutlined,
 	ArrowBack,
 	ArrowDownward,
@@ -17,10 +16,12 @@ import {
 	DeleteOutline,
 	FontDownloadOutlined,
 	FormatQuoteOutlined,
+	InsertDriveFileOutlined,
 	MoreHoriz,
 	SearchOutlined,
 	Send,
 	SettingsOutlined,
+	UploadFileOutlined,
 	VisibilityOutlined
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
@@ -172,7 +173,47 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-const Message = memo(({messageId, username, displayName, avatarVersion, badge, content, quote, setQuote, useMarkdown}) => {
+const MessageFile = memo(({url, fileName, fileSize}) => {
+	return (
+		<Paper variant="outlined" sx={{maxWidth: "100%"}}>
+			<ListItemButton onClick={() => window.open(url)} sx={{borderRadius: "8px"}}>
+				<Grid container gap={1.5} wrap="nowrap" alignItems="center">
+					<InsertDriveFileOutlined fontSize="large"/>
+					<ListItemText
+						primary={
+							<Typography
+								overflow="hidden"
+								textOverflow="ellipsis"
+								sx={{
+									maxHeight: "3em",
+									display: "-webkit-box",
+									WebkitLineClamp: 2,
+									WebkitBoxOrient: "vertical",
+								}}
+							>
+								{fileName}
+							</Typography>
+						}
+						secondary={
+							<Typography fontSize={14} color="textSecondary" overflow="hidden" textOverflow="ellipsis" noWrap>
+								{fileSize < 1024 ? `${fileSize} Bytes` :
+									(fileSize < 1024 * 1024 ? `${Math.round(fileSize / 1024)} KB` : `${Math.round(fileSize / 1024 / 1024)} MB`)}
+							</Typography>
+						}
+					/>
+				</Grid>
+			</ListItemButton>
+		</Paper>
+	)
+});
+
+MessageFile.propTypes = {
+	url: PropTypes.string.isRequired,
+	fileName: PropTypes.string.isRequired,
+	fileSize: PropTypes.number.isRequired,
+}
+
+const Message = memo(({messageId, type, username, displayName, avatarVersion, badge, content, file, quote, setQuote, useMarkdown}) => {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -185,29 +226,33 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 			</NavigateIconButton>}
 			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
-				<Paper
-					elevation={3}
-					sx={{
-						padding: '8px 11px',
-						borderRadius: '10px',
-						backgroundColor: isMe ? '#1976d2' : 'normal',
-						color: isMe ? 'white' : 'normal',
-						wordBreak: 'break-word',
-						userSelect: isSmallScreen ? "none" : "auto",
-						maxWidth: "100%",
-					}}
-					onContextMenu={(event) => {
-						event.preventDefault();
-						setContextMenu(contextMenu ? null : {
-							mouseX: event.clientX + 2,
-							mouseY: event.clientY - 6,
-						});
-					}}
-				>
-					<Box>
-						<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
-					</Box>
-				</Paper>
+				{type === 1 ? (
+					<Paper
+						elevation={3}
+						sx={{
+							padding: '8px 11px',
+							borderRadius: '10px',
+							backgroundColor: isMe ? '#1976d2' : 'normal',
+							color: isMe ? 'white' : 'normal',
+							wordBreak: 'break-word',
+							userSelect: isSmallScreen ? "none" : "auto",
+							maxWidth: "100%",
+						}}
+						onContextMenu={(event) => {
+							event.preventDefault();
+							setContextMenu(contextMenu ? null : {
+								mouseX: event.clientX + 2,
+								mouseY: event.clientY - 6,
+							});
+						}}
+					>
+						<Box>
+							<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
+						</Box>
+					</Paper>
+				) : (
+					<MessageFile url={file.url} fileName={file.fileName} fileSize={file.fileSize}/>
+				)}
 				{quote != null &&
 					<Chip
 						variant="outlined"
@@ -296,11 +341,13 @@ const Message = memo(({messageId, username, displayName, avatarVersion, badge, c
 
 Message.propTypes = {
 	messageId: PropTypes.number.isRequired,
+	type: PropTypes.number.isRequired,
 	username: PropTypes.string.isRequired,
 	displayName: PropTypes.string,
 	avatarVersion: PropTypes.number.isRequired,
 	badge: PropTypes.string,
 	content: PropTypes.string,
+	file: PropTypes.object,
 	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
 	useMarkdown: PropTypes.bool,
@@ -326,7 +373,7 @@ const notify = (title, body, iconId, avatarVersion) => {
 	}
 };
 
-const ChatToolBar = memo(({inputField}) => {
+const ChatToolBar = memo(({inputField, quote}) => {
 	const [binaryColorMode] = useBinaryColorMode();
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -336,10 +383,6 @@ const ChatToolBar = memo(({inputField}) => {
 	const [onAddLink, handleAddLink] = useState(false);
 	const linkHrefRef = useRef(null);
 	const linkTextRef = useRef(null);
-	
-	const [onAddImage, handleAddImage] = useState(false);
-	const imageHrefRef = useRef(null);
-	const imageAltRef = useRef(null);
 	
 	const [onEmojiPicker, handleEmojiPicker] = useState(false);
 	
@@ -377,7 +420,7 @@ const ChatToolBar = memo(({inputField}) => {
 		<>
 			<Box>
 				<IconButton
-					size="large"
+					sx={{m: 0.5}}
 					onClick={() => {
 						updateCursorSelection();
 						handleSpecialFont(true);
@@ -386,7 +429,7 @@ const ChatToolBar = memo(({inputField}) => {
 					<FontDownloadOutlined/>
 				</IconButton>
 				<IconButton
-					size="large"
+					sx={{m: 0.5}}
 					onClick={() => {
 						updateCursorSelection();
 						handleAddLink(true);
@@ -395,16 +438,35 @@ const ChatToolBar = memo(({inputField}) => {
 					<AddLinkOutlined/>
 				</IconButton>
 				<IconButton
-					size="large"
+					sx={{m: 0.5}}
 					onClick={() => {
-						updateCursorSelection();
-						handleAddImage(true);
+						const input = document.createElement("input");
+						input.type = "file";
+						input.onchange = (event) => {
+							if (event.target.files[0].size > 20 * 1024 * 1024) {
+								enqueueSnackbar("文件大小不能超过20MB！", {variant: "error"});
+							} else {
+								axios.post("/api/chat/file/upload", {
+									file: event.target.files[0],
+									recipient: currentUserVar,
+									quoteId: quote?.id,
+								}, {
+									headers: {
+										"Content-Type": "multipart/form-data",
+									},
+								}).then(res => {
+									enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+								});
+							}
+							event.target.value = null;
+						}
+						input.click();
 					}}
 				>
-					<AddPhotoAlternateOutlined/>
+					<UploadFileOutlined/>
 				</IconButton>
 				<IconButton
-					size="large"
+					sx={{m: 0.5}}
 					onClick={() => {
 						updateCursorSelection();
 						handleEmojiPicker(true);
@@ -413,7 +475,7 @@ const ChatToolBar = memo(({inputField}) => {
 					<AddReactionOutlined/>
 				</IconButton>
 				<IconButton
-					size="large"
+					sx={{m: 0.5}}
 					onClick={() => {
 						updateCursorSelection();
 						handleSettings(true);
@@ -501,29 +563,6 @@ const ChatToolBar = memo(({inputField}) => {
 								() => handleAddLink(false));
 						}}
 					>确认</Button>
-				</DialogActions>
-			</Dialog>
-			<Dialog open={onAddImage} onClose={() => handleAddImage(false)} fullWidth>
-				<DialogTitle>
-					添加图片
-				</DialogTitle>
-				<DialogContent>
-					<MarkdownChecker/>
-					<Grid container gap={2}>
-						<TextField label="图片地址" sx={{mt: 1}} fullWidth inputRef={imageHrefRef}/>
-						<TextField label="替代文字" fullWidth inputRef={imageAltRef}/>
-					</Grid>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => handleAddImage(false)}>关闭</Button>
-					<Button
-						onClick={() => {
-							insertText("![" + imageAltRef.current.value + "](" + imageHrefRef.current.value + ")",
-								() => handleAddImage(false));
-						}}
-					>
-						确认
-					</Button>
 				</DialogActions>
 			</Dialog>
 			<Dialog open={onEmojiPicker} onClose={() => handleEmojiPicker(false)} PaperProps={{sx: {borderRadius: "10px", margin: 0}}}>
@@ -818,7 +857,7 @@ export default function Chat() {
 		stomp.send("/app/chat.message", {}, JSON.stringify({
 			recipient: currentUserVar,
 			content: content,
-			quoteId: quote == null ? null : quote.id,
+			quoteId: quote?.id,
 			useMarkdown: settingsVar.useMarkdown,
 		}));
 	}, [quote]);
@@ -874,11 +913,13 @@ export default function Chat() {
 		
 		messagesVar = [...messagesVar, {
 			id: data.id,
+			type: data.type,
 			username: data.sender,
 			displayName: data.senderDisplayName,
 			avatarVersion: data.senderAvatarVersion,
 			badge: data.senderBadge,
 			content: data.content,
+			file: data.file,
 			quote: data.quote,
 			useMarkdown: data.useMarkdown,
 			time: data.time,
@@ -1275,11 +1316,13 @@ export default function Chat() {
 								{showTime && <Grid container><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
 								<Message
 									messageId={message.id}
+									type={message.type}
 									username={message.username}
 									displayName={message.displayName}
 									avatarVersion={message.avatarVersion}
 									badge={message.badge}
 									content={message.content}
+									file={message.file}
 									quote={message.quote}
 									setQuote={setQuote}
 									useMarkdown={message.useMarkdown}
@@ -1325,14 +1368,7 @@ export default function Chat() {
 						/>
 						<Grid container justifyContent="space-between">
 							<ChatToolBar inputField={messageInput}/>
-							<IconButton
-								size="large"
-								color="primary"
-								sx={{justifySelf: "flex-end"}}
-								onClick={sendMessage}
-							>
-								<Send/>
-							</IconButton>
+							<Button variant="contained" startIcon={<Send/>} sx={{my: "auto", mr: 0.75}}>发送</Button>
 						</Grid>
 					</Card>
 				</Box>}
