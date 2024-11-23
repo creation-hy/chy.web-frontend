@@ -173,7 +173,7 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-const MessageFile = memo(({url, fileName, fileSize}) => {
+export const MessageFile = memo(({url, fileName, fileSize}) => {
 	return (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}}>
 			<ListItemButton onClick={() => window.open(url)} sx={{borderRadius: "8px"}}>

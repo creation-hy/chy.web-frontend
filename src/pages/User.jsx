@@ -55,6 +55,7 @@ import {useClientUser} from "src/components/ClientUser.jsx";
 import {UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateButtonBase, NavigateIconButton, NavigateLink} from "src/components/NavigateComponents.jsx";
 import Divider from "@mui/material/Divider";
+import {MessageFile} from "src/pages/Chat.jsx";
 
 const myname = Cookies.get("username");
 
@@ -114,15 +115,21 @@ const News = memo(({username, displayName, avatarVersion}) => {
 							elevation={3}
 							sx={{
 								padding: '8px 11px',
+								px: chat.type === 1 ? undefined : 0,
+								pt: chat.type === 1 ? undefined : 0,
 								borderRadius: '10px',
 								wordBreak: 'break-word',
 								maxWidth: "100%",
 							}}
 						>
 							<Box sx={{fontSize: 15}}>
-								<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
+								{chat.type === 1 ? (
+									<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
+								) : (
+									<MessageFile url={chat.file.url} fileName={chat.file.fileName} fileSize={chat.file.fileSize}/>
+								)}
 							</Box>
-							<Typography variant="caption" display="block" textAlign="right" mt={1}>
+							<Typography variant="caption" display="block" textAlign="right" mt={1} mr={chat.type === 1 ? undefined : "11px"}>
 								{convertDateToLocaleAbsoluteString(chat.time)}
 							</Typography>
 						</Paper>
