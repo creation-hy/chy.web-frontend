@@ -1,4 +1,4 @@
-import {Fragment, memo, useCallback, useEffect, useRef, useState} from "react";
+import {Fragment, memo, useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
 import axios from "axios";
 import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
@@ -1158,7 +1158,7 @@ export default function Chat() {
 		}
 	}, [users, isContactsLoading]);
 	
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (!username) {
 			setCurrentUser(null);
 			setCurrentUserDisplayName(null);
