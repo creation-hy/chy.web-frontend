@@ -1424,7 +1424,7 @@ export default function Chat() {
 						/>
 						<Grid container justifyContent="space-between">
 							<ChatToolBar inputField={messageInput} setQuote={setQuote}/>
-							<Button variant="contained" startIcon={<Send/>} sx={{my: "auto", mr: 0.75}}>发送</Button>
+							<Button variant="contained" startIcon={<Send/>} sx={{my: "auto", mr: 0.75}} onClick={sendMessage}>发送</Button>
 						</Grid>
 					</Card>
 				</Box>}
