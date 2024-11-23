@@ -176,7 +176,7 @@ UserItem.propTypes = {
 export const MessageFile = memo(({url, fileName, fileSize, ...props}) => {
 	return (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
-			<ListItemButton onClick={() => window.open(url)} sx={{borderRadius: "8px"}}>
+			<ListItemButton onClick={!url ? undefined : () => window.open(url)} sx={{borderRadius: "8px"}}>
 				<Grid container gap={1.5} wrap="nowrap" alignItems="center">
 					<InsertDriveFileOutlined fontSize="large"/>
 					<ListItemText
@@ -210,7 +210,7 @@ export const MessageFile = memo(({url, fileName, fileSize, ...props}) => {
 });
 
 MessageFile.propTypes = {
-	url: PropTypes.string.isRequired,
+	url: PropTypes.string,
 	fileName: PropTypes.string.isRequired,
 	fileSize: PropTypes.number.isRequired,
 }
@@ -406,6 +406,9 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 	const linkHrefRef = useRef(null);
 	const linkTextRef = useRef(null);
 	
+	const [showUploadFileConfirmation, setShowUploadFileConfirmation] = useState(false);
+	const [file, setFile] = useState({name: "", size: 0});
+	
 	const [onEmojiPicker, handleEmojiPicker] = useState(false);
 	
 	const cursorSelection = useRef([]);
@@ -445,6 +448,34 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 					sx={{m: 0.5}}
 					onClick={() => {
 						updateCursorSelection();
+						handleEmojiPicker(true);
+					}}
+				>
+					<AddReactionOutlined/>
+				</IconButton>
+				<IconButton
+					sx={{m: 0.5}}
+					onClick={() => {
+						const input = document.createElement("input");
+						input.type = "file";
+						input.onchange = (event) => {
+							if (event.target.files[0].size > 20 * 1024 * 1024) {
+								enqueueSnackbar("文件大小不能超过20MB！", {variant: "error"});
+							} else {
+								setFile(event.target.files[0]);
+								setShowUploadFileConfirmation(true);
+							}
+							event.target.value = null;
+						}
+						input.click();
+					}}
+				>
+					<UploadFileOutlined/>
+				</IconButton>
+				<IconButton
+					sx={{m: 0.5}}
+					onClick={() => {
+						updateCursorSelection();
 						handleSpecialFont(true);
 					}}
 				>
@@ -458,47 +489,6 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 					}}
 				>
 					<AddLinkOutlined/>
-				</IconButton>
-				<IconButton
-					sx={{m: 0.5}}
-					onClick={() => {
-						const input = document.createElement("input");
-						input.type = "file";
-						input.onchange = (event) => {
-							if (event.target.files[0].size > 20 * 1024 * 1024) {
-								enqueueSnackbar("文件大小不能超过20MB！", {variant: "error"});
-							} else {
-								setQuote(quote => {
-									axios.post("/api/chat/file/upload", {
-										file: event.target.files[0],
-										recipient: currentUserVar,
-										quoteId: quote?.id,
-									}, {
-										headers: {
-											"Content-Type": "multipart/form-data",
-										},
-									}).then(res => {
-										enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-									});
-									
-									return null;
-								});
-							}
-							event.target.value = null;
-						}
-						input.click();
-					}}
-				>
-					<UploadFileOutlined/>
-				</IconButton>
-				<IconButton
-					sx={{m: 0.5}}
-					onClick={() => {
-						updateCursorSelection();
-						handleEmojiPicker(true);
-					}}
-				>
-					<AddReactionOutlined/>
 				</IconButton>
 				<IconButton
 					sx={{m: 0.5}}
@@ -629,6 +619,37 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => handleSettings(false)}>关闭</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog open={showUploadFileConfirmation} onClose={() => setShowUploadFileConfirmation(false)}>
+				<DialogTitle>要发送此文件吗？</DialogTitle>
+				<DialogContent>
+					<MessageFile fileName={file.name} fileSize={file.size}/>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setShowUploadFileConfirmation(false)}>
+						取消
+					</Button>
+					<Button onClick={() => {
+						setQuote(quote => {
+							axios.post("/api/chat/file/upload", {
+								file: file,
+								recipient: currentUserVar,
+								quoteId: quote?.id,
+							}, {
+								headers: {
+									"Content-Type": "multipart/form-data",
+								},
+							}).then(res => {
+								enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+								setShowUploadFileConfirmation(false);
+							});
+							
+							return null;
+						});
+					}}>
+						确认
+					</Button>
 				</DialogActions>
 			</Dialog>
 		</>
