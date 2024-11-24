@@ -389,7 +389,7 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 						引用
 					</Typography>
 				</MenuItem>
-				<MenuItem onClick={() => {
+				{username === myname && <MenuItem onClick={() => {
 					axios.post("/api/chat/delete-message", {id: messageId}, {
 						headers: {
 							"Content-Type": "application/json",
@@ -404,7 +404,7 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 					<Typography>
 						删除
 					</Typography>
-				</MenuItem>
+				</MenuItem>}
 			</Menu>
 		</Grid>
 	);
