@@ -1140,6 +1140,7 @@ export default function Chat() {
 			
 			if (item) {
 				item.content = "消息已撤回";
+				item.type = 1;
 				item.id = -item.id;
 				setMessages([...messagesVar]);
 			}
@@ -1159,6 +1160,7 @@ export default function Chat() {
 			const item = messagesVar.find(item => item.id === data.id);
 			if (item) {
 				item.content = "消息已撤回";
+				item.type = 1;
 				item.id = -item.id;
 				setMessages([...messagesVar]);
 			}
