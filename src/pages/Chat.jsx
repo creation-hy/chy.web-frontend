@@ -467,7 +467,7 @@ const notify = (title, body, iconId, avatarVersion) => {
 	}
 };
 
-const ChatToolBar = memo(({inputField, setQuote}) => {
+const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
 	const [binaryColorMode] = useBinaryColorMode();
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -514,6 +514,15 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 		);
 	});
 	
+	sendFile.current = useCallback((file) => {
+		if (file.size > 20 * 1024 * 1024) {
+			enqueueSnackbar("文件大小不能超过20MB！", {variant: "error"});
+		} else {
+			setFile(file);
+			setShowUploadFileConfirmation(true);
+		}
+	}, []);
+	
 	return (
 		<>
 			<Box>
@@ -532,12 +541,7 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 						const input = document.createElement("input");
 						input.type = "file";
 						input.onchange = (event) => {
-							if (event.target.files[0].size > 20 * 1024 * 1024) {
-								enqueueSnackbar("文件大小不能超过20MB！", {variant: "error"});
-							} else {
-								setFile(event.target.files[0]);
-								setShowUploadFileConfirmation(true);
-							}
+							sendFile.current(event.target.files[0]);
 							event.target.value = null;
 						}
 						input.click();
@@ -738,6 +742,7 @@ const ChatToolBar = memo(({inputField, setQuote}) => {
 ChatToolBar.propTypes = {
 	inputField: PropTypes.object.isRequired,
 	setQuote: PropTypes.func.isRequired,
+	sendFile: PropTypes.object.isRequired,
 }
 
 const ScrollTop = memo(({children, messageCard}) => {
@@ -808,6 +813,10 @@ export default function Chat() {
 	const [abortController, setAbortController] = useState(null);
 	const [showScrollTop, setShowScrollTop] = useState(false);
 	const [contactsVersion, setContactsVersion] = useState(1);
+	
+	const [isDragging, setIsDragging] = useState(false);
+	const sendFile = useRef(null);
+	const lastDragEntered = useRef(null);
 	
 	const messageCard = useRef(null);
 	const messageInput = useRef(null);
@@ -1484,6 +1493,10 @@ export default function Chat() {
 							fullWidth
 							maxRows={10}
 							slotProps={{input: {style: {padding: 10}}}}
+							sx={{
+								borderRadius: "8px",
+								backgroundColor: isDragging ? (theme) => theme.palette.divider : "normal",
+							}}
 							onKeyDown={(event) => {
 								if (!isSmallScreen && event.keyCode === 13) {
 									event.preventDefault();
@@ -1494,9 +1507,28 @@ export default function Chat() {
 								}
 							}}
 							onChange={(event) => saveDraft(currentUserVar, event.target.value, setUsers)}
+							onDragEnter={(event) => {
+								lastDragEntered.current = event.target;
+								setIsDragging(true);
+							}}
+							onDragLeave={(event) => {
+								if (event.target === lastDragEntered.current) {
+									setIsDragging(false);
+								}
+							}}
+							onDragOver={(event) => {
+								event.preventDefault();
+							}}
+							onDrop={(event) => {
+								event.preventDefault();
+								setIsDragging(false);
+								if (sendFile.current) {
+									sendFile.current(event.dataTransfer.files[0]);
+								}
+							}}
 						/>
 						<Grid container justifyContent="space-between">
-							<ChatToolBar inputField={messageInput} setQuote={setQuote}/>
+							<ChatToolBar inputField={messageInput} setQuote={setQuote} sendFile={sendFile}/>
 							<Button variant="contained" startIcon={<Send/>} sx={{my: "auto", mr: 0.75}} onClick={sendMessage}>发送</Button>
 						</Grid>
 					</Card>
