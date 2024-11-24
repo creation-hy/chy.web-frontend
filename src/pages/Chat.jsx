@@ -56,6 +56,7 @@ import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
 import {LoadingButton} from "@mui/lab";
+import {isIOS13} from "react-device-detect";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -221,6 +222,9 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 	const [onDialog, setOnDialog] = useState(false);
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
+	const contextMenuTimeout = useRef(null);
+	const isLongPress = useRef(false);
+	
 	const isMe = username === myname;
 	
 	return (
@@ -243,10 +247,33 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 						}}
 						onContextMenu={(event) => {
 							event.preventDefault();
-							setContextMenu(contextMenu ? null : {
-								mouseX: event.clientX + 2,
-								mouseY: event.clientY - 6,
-							});
+							if (!isIOS13) {
+								setContextMenu(contextMenu ? null : {
+									mouseX: event.clientX + 2,
+									mouseY: event.clientY - 6,
+								});
+							}
+						}}
+						onTouchStart={(event) => {
+							if (isIOS13 && !contextMenuTimeout.current) {
+								contextMenuTimeout.current = setTimeout(() => {
+									setContextMenu(contextMenu ? null : {
+										mouseX: event.changedTouches[0].clientX + 2,
+										mouseY: event.changedTouches[0].clientY - 6,
+									});
+									isLongPress.current = true;
+								}, 300);
+							}
+						}}
+						onTouchEnd={(event) => {
+							if (contextMenuTimeout.current) {
+								window.clearTimeout(contextMenuTimeout.current);
+								contextMenuTimeout.current = null;
+							}
+							if (isLongPress.current === true) {
+								event.preventDefault();
+								isLongPress.current = false;
+							}
 						}}
 					>
 						<Box>
@@ -264,6 +291,27 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 								mouseX: event.clientX + 2,
 								mouseY: event.clientY - 6,
 							});
+						}}
+						onTouchStart={(event) => {
+							if (isIOS13 && !contextMenuTimeout.current) {
+								contextMenuTimeout.current = setTimeout(() => {
+									setContextMenu(contextMenu ? null : {
+										mouseX: event.changedTouches[0].clientX + 2,
+										mouseY: event.changedTouches[0].clientY - 6,
+									});
+									isLongPress.current = true;
+								}, 300);
+							}
+						}}
+						onTouchEnd={(event) => {
+							if (contextMenuTimeout.current) {
+								window.clearTimeout(contextMenuTimeout.current);
+								contextMenuTimeout.current = null;
+							}
+							if (isLongPress.current === true) {
+								event.preventDefault();
+								isLongPress.current = false;
+							}
 						}}
 					/>
 				)}

@@ -70,7 +70,7 @@ import Button from "@mui/material/Button";
 import DialogContent from "@mui/material/DialogContent";
 import {TransitionGroup} from "react-transition-group";
 import {SimpleUserItem} from "src/components/UserComponents.jsx";
-import {isIOS} from "react-device-detect";
+import {isIOS13} from "react-device-detect";
 import {useNavigate, useParams} from "react-router";
 
 const modelList = [
@@ -245,6 +245,7 @@ const GeneratedResults = () => {
 	
 	const [hoveredImage, setHoveredImage] = useState(null);
 	const contextMenuTimeout = useRef(null);
+	const isLongPress = useRef(false);
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -340,20 +341,27 @@ const GeneratedResults = () => {
 									}
 								}}
 								onContextMenu={(event) => {
-									if (!isIOS) {
-										event.preventDefault();
+									event.preventDefault();
+									if (!isIOS13) {
 										toggleSelectImage(item.imageId);
 									}
 								}}
 								onTouchStart={() => {
-									if (isIOS && !contextMenuTimeout.current) {
-										contextMenuTimeout.current = setTimeout(() => toggleSelectImage(item.imageId), 300);
+									if (isIOS13 && !contextMenuTimeout.current) {
+										contextMenuTimeout.current = setTimeout(() => {
+											toggleSelectImage(item.imageId);
+											isLongPress.current = true;
+										}, 300);
 									}
 								}}
-								onTouchEnd={() => {
+								onTouchEnd={(event) => {
 									if (contextMenuTimeout.current) {
 										window.clearTimeout(contextMenuTimeout.current);
 										contextMenuTimeout.current = null;
+									}
+									if (isLongPress.current === true) {
+										event.preventDefault();
+										isLongPress.current = false;
 									}
 								}}
 							>

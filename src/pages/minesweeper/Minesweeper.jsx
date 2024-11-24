@@ -19,6 +19,7 @@ import Pagination from "@mui/material/Pagination";
 import {useQuery} from "@tanstack/react-query";
 import {flushSync} from "react-dom";
 import Cookies from "js-cookie";
+import {isIOS13} from "react-device-detect";
 
 let flippedCount = 0, passedTimeInterval;
 let startTime = 0, rows = 10, mines = 10;
@@ -189,6 +190,9 @@ export default function Minesweeper() {
 	const [inputRows, setInputRows] = useState(minesweeperSettings.rows);
 	const [inputMines, setInputMines] = useState(minesweeperSettings.mines);
 	
+	const contextMenuTimeout = useRef(null);
+	const isLongPress = useRef(false);
+	
 	const purge = (x, y) => {
 		const current = boxes.current[x][y];
 		if (current.getAttribute("data-opened") === "true")
@@ -233,6 +237,19 @@ export default function Minesweeper() {
 			else if (grid[x][y] === 6) current.style.color = "yellow";
 			else if (grid[x][y] === 7) current.style.color = "pink";
 			else current.style.color = "black";
+		}
+	}
+	
+	const toggleMark = (event) => {
+		if (event.target.getAttribute("data-opened") === "true") {
+			return;
+		}
+		if (event.target.innerHTML === "🚩") {
+			event.target.innerHTML = "❓";
+		} else if (event.target.innerHTML === "❓") {
+			event.target.innerHTML = " ";
+		} else {
+			event.target.innerHTML = "🚩";
 		}
 	}
 	
@@ -326,13 +343,31 @@ export default function Minesweeper() {
 										ml: colIndex ? "1px" : 0,
 										backgroundColor: "#c3c3c3",
 										borderRadius: "7%",
+										userSelect: "none",
 									}}
 									onContextMenu={(event) => {
 										event.preventDefault();
-										if (event.currentTarget.getAttribute("data-opened") === "true") return;
-										if (event.currentTarget.innerHTML === "🚩") event.currentTarget.innerHTML = "❓";
-										else if (event.currentTarget.innerHTML === "❓") event.currentTarget.innerHTML = " ";
-										else event.currentTarget.innerHTML = "🚩";
+										if (!isIOS13) {
+											toggleMark(event);
+										}
+									}}
+									onTouchStart={(event) => {
+										if (isIOS13 && !contextMenuTimeout.current) {
+											contextMenuTimeout.current = setTimeout(() => {
+												toggleMark(event);
+												isLongPress.current = true;
+											}, 300);
+										}
+									}}
+									onTouchEnd={(event) => {
+										if (contextMenuTimeout.current) {
+											window.clearTimeout(contextMenuTimeout.current);
+											contextMenuTimeout.current = null;
+										}
+										if (isLongPress.current === true) {
+											event.preventDefault();
+											isLongPress.current = false;
+										}
 									}}
 									onClick={(event) => {
 										const x = Number(event.currentTarget.getAttribute("data-row"));
@@ -340,8 +375,9 @@ export default function Minesweeper() {
 										if (grid[x][y] === -1) {
 											setGrid(null);
 											window.clearInterval(passedTimeInterval);
-										} else
+										} else {
 											purge(x, y);
+										}
 									}}
 								/>
 							))}
