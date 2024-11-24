@@ -467,7 +467,7 @@ const notify = (title, body, iconId, avatarVersion) => {
 	}
 };
 
-const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
+const ChatToolBar = memo(({inputField, quote, setQuote, sendFiles}) => {
 	const [binaryColorMode] = useBinaryColorMode();
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -480,7 +480,7 @@ const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
 	
 	const [showUploadFileConfirmation, setShowUploadFileConfirmation] = useState(false);
 	const [isFileUploading, setIsFileUploading] = useState(false);
-	const [file, setFile] = useState({name: "", size: 0});
+	const [files, setFiles] = useState([]);
 	
 	const [onEmojiPicker, handleEmojiPicker] = useState(false);
 	
@@ -514,13 +514,16 @@ const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
 		);
 	});
 	
-	sendFile.current = useCallback((file) => {
-		if (file.size > 20 * 1024 * 1024) {
-			enqueueSnackbar("文件大小不能超过20MB！", {variant: "error"});
-		} else {
-			setFile(file);
-			setShowUploadFileConfirmation(true);
+	sendFiles.current = useCallback((files) => {
+		for (const file of files) {
+			if (file.size > 20 * 1024 * 1024) {
+				enqueueSnackbar("文件大小不能超过20MB！", {variant: "error"});
+				return;
+			}
 		}
+		
+		setFiles(files);
+		setShowUploadFileConfirmation(true);
 	}, []);
 	
 	return (
@@ -540,8 +543,9 @@ const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
 					onClick={() => {
 						const input = document.createElement("input");
 						input.type = "file";
+						input.multiple = true;
 						input.onchange = (event) => {
-							sendFile.current(event.target.files[0]);
+							sendFiles.current(Array.from(event.target.files));
 							event.target.value = null;
 						}
 						input.click();
@@ -699,9 +703,13 @@ const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
 				</DialogActions>
 			</Dialog>
 			<Dialog open={showUploadFileConfirmation} onClose={() => setShowUploadFileConfirmation(false)}>
-				<DialogTitle>要发送此文件吗？</DialogTitle>
+				<DialogTitle>要发送这些文件吗？</DialogTitle>
 				<DialogContent>
-					<MessageFile fileName={file.name} fileSize={file.size}/>
+					<Grid container direction="column" gap={1}>
+						{files.map((file, index) => (
+							<MessageFile key={index} fileName={file.name} fileSize={file.size}/>
+						))}
+					</Grid>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setShowUploadFileConfirmation(false)}>
@@ -709,10 +717,14 @@ const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
 					</Button>
 					<LoadingButton
 						loading={isFileUploading}
-						onClick={() => {
+						onClick={async () => {
 							setIsFileUploading(true);
-							setQuote(quote => {
-								axios.post("/api/chat/file/upload", {
+							setQuote(null);
+							
+							let successCount = 0;
+							
+							for (const file of files) {
+								await axios.post("/api/chat/file/upload", {
 									file: file,
 									recipient: currentUserVar,
 									quoteId: quote?.id,
@@ -721,14 +733,18 @@ const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
 										"Content-Type": "multipart/form-data",
 									},
 								}).then(res => {
-									enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 									if (res.data.status === 1) {
-										setShowUploadFileConfirmation(false);
+										successCount++;
 									}
-									setIsFileUploading(false);
 								});
-								return null;
-							});
+							}
+							
+							if (successCount !== files.length) {
+								enqueueSnackbar(`发送成功 ${successCount} 个，失败 ${files.length - successCount} 个`, {variant: "info"});
+							}
+							
+							setShowUploadFileConfirmation(false);
+							setIsFileUploading(false);
 						}}
 					>
 						确认
@@ -741,8 +757,9 @@ const ChatToolBar = memo(({inputField, setQuote, sendFile}) => {
 
 ChatToolBar.propTypes = {
 	inputField: PropTypes.object.isRequired,
+	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
-	sendFile: PropTypes.object.isRequired,
+	sendFiles: PropTypes.object.isRequired,
 }
 
 const ScrollTop = memo(({children, messageCard}) => {
@@ -815,7 +832,7 @@ export default function Chat() {
 	const [contactsVersion, setContactsVersion] = useState(1);
 	
 	const [isDragging, setIsDragging] = useState(false);
-	const sendFile = useRef(null);
+	const sendFiles = useRef(null);
 	const lastDragEntered = useRef(null);
 	
 	const messageCard = useRef(null);
@@ -1522,13 +1539,21 @@ export default function Chat() {
 							onDrop={(event) => {
 								event.preventDefault();
 								setIsDragging(false);
-								if (sendFile.current) {
-									sendFile.current(event.dataTransfer.files[0]);
+								if (sendFiles.current) {
+									const files = [];
+									
+									for (const item of event.dataTransfer.items) {
+										if (item.webkitGetAsEntry().isFile) {
+											files.push(item.getAsFile());
+										}
+									}
+									
+									sendFiles.current(files);
 								}
 							}}
 						/>
 						<Grid container justifyContent="space-between">
-							<ChatToolBar inputField={messageInput} setQuote={setQuote} sendFile={sendFile}/>
+							<ChatToolBar inputField={messageInput} quote={quote} setQuote={setQuote} sendFiles={sendFiles}/>
 							<Button variant="contained" startIcon={<Send/>} sx={{my: "auto", mr: 0.75}} onClick={sendMessage}>发送</Button>
 						</Grid>
 					</Card>
