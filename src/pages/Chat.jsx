@@ -11,6 +11,7 @@ import {
 	AddReactionOutlined,
 	ArrowBack,
 	ArrowDownward,
+	BrokenImageOutlined,
 	CloudDownload,
 	ContentCopyOutlined,
 	DeleteOutline,
@@ -175,12 +176,23 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-export const MessageFile = memo(({url, fileName, fileSize, ...props}) => {
+export const MessageFile = memo(({url, fileName, fileSize, deleted, ...props}) => {
+	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
+	
 	return (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
-			<ListItemButton onClick={!url ? undefined : () => window.open(url)} sx={{borderRadius: "8px"}}>
+			<ListItemButton
+				sx={{borderRadius: "8px"}}
+				onClick={!url ? undefined : () => {
+					if (!deleted) {
+						window.open(url);
+					} else {
+						setShowBrokenDialog(true);
+					}
+				}}
+			>
 				<Grid container gap={1.5} wrap="nowrap" alignItems="center">
-					<InsertDriveFileOutlined fontSize="large"/>
+					{!deleted ? <InsertDriveFileOutlined fontSize="large"/> : <BrokenImageOutlined fontSize="large"/>}
 					<ListItemText
 						primary={
 							<Typography
@@ -207,6 +219,14 @@ export const MessageFile = memo(({url, fileName, fileSize, ...props}) => {
 					/>
 				</Grid>
 			</ListItemButton>
+			<Dialog open={showBrokenDialog} onClose={() => setShowBrokenDialog(false)}>
+				<DialogTitle>
+					文件已失效！
+				</DialogTitle>
+				<DialogActions>
+					<Button onClick={() => setShowBrokenDialog(false)}>关闭</Button>
+				</DialogActions>
+			</Dialog>
 		</Paper>
 	)
 });
@@ -215,6 +235,7 @@ MessageFile.propTypes = {
 	url: PropTypes.string,
 	fileName: PropTypes.string.isRequired,
 	fileSize: PropTypes.number.isRequired,
+	deleted: PropTypes.bool,
 }
 
 const Message = memo(({messageId, type, username, displayName, avatarVersion, badge, content, file, quote, setQuote, useMarkdown}) => {
@@ -285,6 +306,7 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 						url={file.url}
 						fileName={file.fileName}
 						fileSize={file.fileSize}
+						deleted={file.deleted}
 						onContextMenu={(event) => {
 							event.preventDefault();
 							setContextMenu(contextMenu ? null : {
@@ -342,6 +364,7 @@ const Message = memo(({messageId, type, username, displayName, avatarVersion, ba
 							url={file.url}
 							fileName={file.fileName}
 							fileSize={file.fileSize}
+							deleted={file.deleted}
 							onContextMenu={(event) => event.preventDefault()}
 						/>
 					)}
