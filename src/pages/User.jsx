@@ -553,7 +553,7 @@ const UserPage = memo(({username}) => {
 						性别：{data.gender}
 					</Typography>
 					<Box sx={{fontSize: 15, maxWidth: "100%"}}>
-						<ChatMarkdown>{data["introduction"]}</ChatMarkdown>
+						<ChatMarkdown useMarkdown={true}>{data["introduction"]}</ChatMarkdown>
 					</Box>
 				</Grid>
 			</Card>
