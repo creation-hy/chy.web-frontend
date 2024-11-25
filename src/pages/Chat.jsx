@@ -967,15 +967,35 @@ export default function Chat() {
 				setLogged(false);
 				return;
 			}
+			
 			setLogged(true);
 			contactPageNumberNew.current = 0;
 			contactPageNumberCurrent.current = 0;
 			contactFetchSuccess.current = true;
-			usersVar = res.data.result;
-			setUsers([...usersVar]);
 			setIsContactsLoading(false);
+			
+			if (!username || res.data.result.find(item => item.username === username)) {
+				usersVar = res.data.result;
+				setUsers([...usersVar]);
+			} else {
+				axios.get(`/api/user/find/0`, {params: {key: username}}).then(currentUserRes => {
+					const info = currentUserRes.data.result[0];
+					
+					usersVar = info.username === username ? [{
+						username: username,
+						displayName: info.displayName,
+						avatarVersion: info.avatarVersion,
+						badge: info.badge,
+						isOnline: info.isOnline,
+						lastMessageText: "\u00A0",
+						newMessageCount: 0,
+					}, ...res.data.result] : res.data.result;
+					
+					setUsers([...usersVar]);
+				});
+			}
 		});
-	}, [contactsVersion]);
+	}, [contactsVersion, username]);
 	
 	useEffect(() => {
 		if (!isContactsLoading) {
