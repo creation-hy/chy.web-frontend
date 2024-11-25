@@ -222,7 +222,7 @@ const MyRequests = () => {
 
 const downloadImage = (id) => {
 	const a = document.createElement('a');
-	a.href = `/api/ai-art-results/${id}.webp`;
+	a.href = `/api/ai-art-works/${id}.webp`;
 	a.download = `${id}.webp`;
 	document.body.appendChild(a);
 	a.click();
@@ -253,7 +253,7 @@ const GeneratedResults = () => {
 	const pageLoadingObserver = useRef(new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
 			pageNumberNew.current = pageNumberCurrent.current + 1;
-			axios.get(`/api/ai-art/result/${pageNumberNew.current}`).then(res => {
+			axios.get(`/api/ai-art/work/${pageNumberNew.current}`).then(res => {
 				if (res.data.result && res.data.result.length > 0)
 					setImageList(imageList => [...imageList, ...res.data.result]);
 			});
@@ -273,7 +273,7 @@ const GeneratedResults = () => {
 	};
 	
 	useEffect(() => {
-		axios.get(`/api/ai-art/result/0`).then(res => {
+		axios.get(`/api/ai-art/work/0`).then(res => {
 			if (res.data.status === 0) {
 				setImageList(null);
 			} else {
@@ -401,7 +401,7 @@ const GeneratedResults = () => {
 									}
 									<img
 										alt="Generated images"
-										src={`/api/ai-art-results/${item.imageId}.webp`}
+										src={`/api/ai-art-works/${item.imageId}.webp`}
 										style={{borderRadius: "15px", pointerEvents: "none"}}
 									/>
 									{hoveredImage === item.imageId &&
@@ -576,7 +576,7 @@ const GeneratedResults = () => {
 					<Button onClick={() => setShowMultipleDeletingDialog(false)}>取消</Button>
 					<LoadingButton color="error" loading={isMultipleDeleting} onClick={() => {
 						setIsMultipleDeleting(true);
-						axios.post("/api/ai-art/result/delete", {idList: [...selectedImages]}, {
+						axios.post("/api/ai-art/work/delete", {idList: [...selectedImages]}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
@@ -625,7 +625,7 @@ const GeneratedResults = () => {
 					>
 						<Grow in={true}>
 							<img
-								src={`/api/ai-art-results/${imagePreviewData.imageId}.webp`}
+								src={`/api/ai-art-works/${imagePreviewData.imageId}.webp`}
 								alt="Image preview"
 								style={{
 									width: "100%",
@@ -857,12 +857,12 @@ const GeneratedResults = () => {
 				<DialogTitle>
 					要删除这张图片吗？
 				</DialogTitle>
-				<img src={`/api/ai-art-results/${deletingImageId}.webp`} alt="Deleting Image"/>
+				<img src={`/api/ai-art-works/${deletingImageId}.webp`} alt="Deleting Image"/>
 				<DialogActions>
 					<Button onClick={() => setShowDeletingDialog(false)}>取消</Button>
 					<LoadingButton color="error" loading={isDeleting} onClick={() => {
 						setIsDeleting(true);
-						axios.post("/api/ai-art/result/delete", {idList: [deletingImageId]}, {
+						axios.post("/api/ai-art/work/delete", {idList: [deletingImageId]}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
@@ -1282,7 +1282,7 @@ const Community = () => {
 								>
 									<img
 										alt="Generated images"
-										src={`/api/ai-art-results/${item.imageId}.webp`}
+										src={`/api/ai-art-works/${item.imageId}.webp`}
 										style={{borderRadius: "15px", pointerEvents: "none"}}
 									/>
 									{hoveredImage === item.imageId &&
@@ -1346,7 +1346,7 @@ const Community = () => {
 						}}>
 							<Grow in={true}>
 								<img
-									src={`/api/ai-art-results/${imagePreviewData.imageId}.webp`}
+									src={`/api/ai-art-works/${imagePreviewData.imageId}.webp`}
 									alt="Image preview"
 									style={{
 										width: "100%",
