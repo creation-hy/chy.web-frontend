@@ -405,6 +405,7 @@ export default function Minesweeper() {
 						variant="contained"
 						startIcon={<Stop/>}
 						onClick={() => {
+							flippedCount = 0;
 							setGrid([]);
 							setIsGameStarted(false);
 							setElapsedTime("00:00:00");
