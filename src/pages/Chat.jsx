@@ -77,6 +77,10 @@ const uploadDraft = (contact, content) => {
 const uploadDraftThrottle = throttle(uploadDraft, 2000);
 
 const saveDraft = throttle((contact, content, setUsers) => {
+	if (content.length > 2000) {
+		return;
+	}
+	
 	setUsers(users => {
 		usersVar = users.map(user => (
 			user.username === contact ? ({
@@ -86,6 +90,7 @@ const saveDraft = throttle((contact, content, setUsers) => {
 		);
 		return usersVar;
 	});
+	
 	uploadDraftThrottle(contact, content);
 }, 100);
 
@@ -1031,19 +1036,29 @@ export default function Chat() {
 	}, []);
 	
 	const sendMessage = useCallback(() => {
-		const content = messageInput.current.value;
-		if (content.trim().length === 0)
+		const content = messageInput.current.value.trim();
+		
+		console.log(content.length);
+		
+		if (content.length === 0) {
 			return;
-		messageInput.current.focus();
-		document.execCommand("selectAll");
-		document.execCommand("delete");
-		setQuote(null);
-		stomp.send("/app/chat.message", {}, JSON.stringify({
-			recipient: currentUserVar,
-			content: content,
-			quoteId: quote?.id,
-			useMarkdown: settingsVar.useMarkdown,
-		}));
+		}
+		
+		if (content.length <= 2000) {
+			messageInput.current.focus();
+			document.execCommand("selectAll");
+			document.execCommand("delete");
+			setQuote(null);
+			
+			stomp.send("/app/chat.message", {}, JSON.stringify({
+				recipient: currentUserVar,
+				content: content,
+				quoteId: quote?.id,
+				useMarkdown: settingsVar.useMarkdown,
+			}));
+		} else {
+			enqueueSnackbar("消息长度不能超过 2000 字", {variant: "error"});
+		}
 	}, [quote]);
 	
 	const updateUserItem = useCallback((username, displayName, avatarVersion, badge, content, time, isCurrent, sender) => {
