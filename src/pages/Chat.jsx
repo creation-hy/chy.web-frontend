@@ -927,7 +927,13 @@ export default function Chat() {
 		}
 		
 		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
+			if (res.data.status === 0) {
+				navigate("/chat");
+				return;
+			}
+			
 			const userItem = usersVar.find(item => item.username === username);
+			
 			if (userItem) {
 				if (clientUserRef.current) {
 					setClientUser({
@@ -939,13 +945,16 @@ export default function Chat() {
 				setUsers([...usersVar]);
 				messageInput.current.value = userItem.draft ? userItem.draft : "";
 			}
+			
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
+			
 			if (res.data.result && res.data.result.message && res.data.result.message.length > 0 || pageNumber === 0) {
 				flushSync(() => {
 					messagesVar = pageNumber === 0 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
 					setMessages([...messagesVar]);
 				});
 			}
+			
 			if (!isCurrentUser) {
 				flushSync(() => {
 					setCurrentUserDisplayName(res.data.result.displayName);
@@ -955,6 +964,7 @@ export default function Chat() {
 				});
 				setShowScrollTop(true);
 			}
+			
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
 	}, [messageCardScrollTo, setClientUser, isSmallScreen]);
