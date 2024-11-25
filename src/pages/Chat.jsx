@@ -12,6 +12,7 @@ import {
 	ArrowBack,
 	ArrowDownward,
 	BrokenImageOutlined,
+	Cancel,
 	CloudDownload,
 	ContentCopyOutlined,
 	DeleteOutline,
@@ -1288,14 +1289,39 @@ export default function Chat() {
 			>
 				<OutlinedInput
 					inputRef={userSearchField}
-					startAdornment={<InputAdornment position="start"><SearchOutlined fontSize="small"/></InputAdornment>}
+					startAdornment={
+						<InputAdornment position="start">
+							<SearchOutlined fontSize="small"/>
+						</InputAdornment>
+					}
+					endAdornment={
+						<InputAdornment position="end">
+							{Boolean(matchList) && <Cancel
+								fontSize="small"
+								sx={{cursor: "pointer"}}
+								onClick={() => {
+									userSearchField.current.value = "";
+									setMatchList(null);
+								}}
+							/>}
+						</InputAdornment>
+					}
 					placeholder="搜索用户"
 					sx={{fontSize: 14}}
+					onFocus={() => {
+						if (!matchList)
+							setMatchList([]);
+					}}
+					onBlur={() => {
+						if (userSearchField.current.value === "") {
+							setMatchList(null);
+						}
+					}}
 					onChange={(event) => {
 						if (abortController)
 							abortController.abort();
 						if (event.target.value === "")
-							setMatchList(null);
+							setMatchList([]);
 						else {
 							const controller = new AbortController();
 							setAbortController(controller);
