@@ -48,7 +48,7 @@ const myName = Cookies.get("username");
 const myInformation = JSON.parse(localStorage.getItem("myInformation")) ?? {};
 
 const LeftBar = memo(({navigateCallback}) => {
-	const {clientUser, clientUserLoading} = useClientUser();
+	const {clientUser, isClientUserLoading} = useClientUser();
 	const navigate = useNavigate();
 	const firstLevelLocation = useLocation().pathname.split("/")[1];
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -73,7 +73,7 @@ const LeftBar = memo(({navigateCallback}) => {
 	return (
 		<>
 			<Box sx={{mt: 2.5, mb: 1}}>
-				{clientUserLoading ? (
+				{isClientUserLoading ? (
 					(!myName ? (
 						<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
 							<Button
