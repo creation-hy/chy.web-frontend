@@ -35,19 +35,49 @@ export const UserBadge = memo(({badge, fontSize}) => {
 		return <Verified color="primary" sx={{fontSize: fontSize}}/>;
 	} else if (badge === "User2") {
 		return <Verified color="warning" sx={{fontSize: fontSize}}/>;
-	} else if (badge === "Transgender") {
+	} else if (badge === "Transgender1") {
 		const uuid = crypto.randomUUID().toString();
 		return (
 			<SvgIcon sx={{fontSize: fontSize}}>
 				<defs>
-					<linearGradient id={`transgender-gradient-${uuid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+					<linearGradient id={`transgender-1-gradient-${uuid}`} x1="0%" y1="0%" x2="100%" y2="100%">
 						<stop offset="25%" style={{stopColor: '#f5a9b8', stopOpacity: 1}}/>
 						<stop offset="100%" style={{stopColor: '#5bcefa', stopOpacity: 1}}/>
 					</linearGradient>
 				</defs>
-				<Verified sx={{fill: `url(#transgender-gradient-${uuid})`}}/>
+				<Verified sx={{fill: `url(#transgender-1-gradient-${uuid})`}}/>
 			</SvgIcon>
 		);
+	} else if (badge === "Transgender2") {
+		const uuid = crypto.randomUUID().toString();
+		return (
+			<SvgIcon sx={{fontSize: fontSize}}>
+				<defs>
+					<linearGradient id={`transgender-2-gradient-${uuid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+						<stop offset="0%" style={{stopColor: '#5bcefa', stopOpacity: 1}}/>
+						<stop offset="75%" style={{stopColor: '#f5a9b8', stopOpacity: 1}}/>
+					</linearGradient>
+				</defs>
+				<Verified sx={{fill: `url(#transgender-2-gradient-${uuid})`}}/>
+			</SvgIcon>
+		);
+	} else if (badge === "Rainbow") {
+		const uuid = crypto.randomUUID().toString();
+		return (
+			<SvgIcon sx={{fontSize: fontSize}}>
+				<defs>
+					<linearGradient id={`rainbow-gradient-${uuid}`} x1="0%" y1="0%" x2="0%" y2="100%">
+						<stop offset="0%" style={{stopColor: "#FF0018"}}/>
+						<stop offset="16.7%" style={{stopColor: "#FFA52C"}}/>
+						<stop offset="33.4%" style={{stopColor: "#FFFF41"}}/>
+						<stop offset="50.1%" style={{stopColor: "#008018"}}/>
+						<stop offset="66.8%" style={{stopColor: "#0000F9"}}/>
+						<stop offset="83.5%" style={{stopColor: "#86007D"}}/>
+					</linearGradient>
+				</defs>
+				<Verified sx={{fill: `url(#rainbow-gradient-${uuid})`}}/>
+			</SvgIcon>
+		)
 	}
 	return <Verified color="error" sx={{fontSize: fontSize}}/>;
 });
