@@ -847,11 +847,7 @@ export default function Chat() {
 	
 	const disconnectErrorBarKey = useRef(null);
 	
-	const {clientUser, setClientUser, clientUserLoading} = useClientUser();
-	const clientUserRef = useRef(null);
-	
-	if (!clientUserLoading)
-		clientUserRef.current = clientUser;
+	const {setClientUser} = useClientUser();
 	
 	const messagePageNumberCurrent = useRef(0);
 	const messagePageNumberNew = useRef(0);
@@ -940,14 +936,13 @@ export default function Chat() {
 			const userItem = usersVar.find(item => item.username === username);
 			
 			if (userItem) {
-				if (clientUserRef.current) {
-					setClientUser({
-						...clientUserRef.current,
-						newMessageCount: Math.max(0, clientUserRef.current.newMessageCount - userItem.newMessageCount),
-					});
-				}
+				const currentMessageCount = userItem.newMessageCount;
+				setClientUser(clientUser => ({
+					...clientUser,
+					newMessageCount: Math.max(0, clientUser.newMessageCount - currentMessageCount),
+				}));
 				userItem.newMessageCount = 0;
-				setUsers([...usersVar]);
+				flushSync(() => setUsers([...usersVar]));
 				messageInput.current.value = userItem.draft ? userItem.draft : "";
 			}
 			
@@ -1038,8 +1033,6 @@ export default function Chat() {
 	const sendMessage = useCallback(() => {
 		const content = messageInput.current.value.trim();
 		
-		console.log(content.length);
-		
 		if (content.length === 0) {
 			return;
 		}
@@ -1088,11 +1081,11 @@ export default function Chat() {
 			});
 		}
 		
-		if (sender !== myname && !isCurrent && clientUserRef.current) {
-			setClientUser({
-				...clientUserRef.current,
-				newMessageCount: clientUserRef.current.newMessageCount + 1,
-			});
+		if (sender !== myname && !isCurrent) {
+			setClientUser(clientUser => ({
+				...clientUser,
+				newMessageCount: clientUser.newMessageCount + 1,
+			}));
 		}
 	}, [setClientUser]);
 	
