@@ -1449,7 +1449,7 @@ export default function Chat() {
 										avatarVersion={user.avatarVersion}
 										badge={user.badge}
 										isOnline={user.isOnline}
-										newMessageCount={0}
+										newMessageCount={user.newMessageCount}
 										lastMessageTime={user.lastMessageTime}
 										lastMessageText={user.lastMessageText || "\u00A0"}
 										draft={user.draft}
