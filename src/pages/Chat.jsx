@@ -936,13 +936,12 @@ export default function Chat() {
 			const userItem = usersVar.find(item => item.username === username);
 			
 			if (userItem) {
-				const currentMessageCount = userItem.newMessageCount;
 				setClientUser(clientUser => ({
 					...clientUser,
-					newMessageCount: Math.max(0, clientUser.newMessageCount - currentMessageCount),
+					newMessageCount: Math.max(0, clientUser.newMessageCount - userItem.newMessageCount),
 				}));
 				userItem.newMessageCount = 0;
-				flushSync(() => setUsers([...usersVar]));
+				setUsers([...usersVar]);
 				messageInput.current.value = userItem.draft ? userItem.draft : "";
 			}
 			
@@ -1005,7 +1004,7 @@ export default function Chat() {
 				});
 			}
 		});
-	}, [contactsVersion, username]);
+	}, [contactsVersion]);
 	
 	useEffect(() => {
 		if (!isContactsLoading) {
