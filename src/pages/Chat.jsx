@@ -1191,7 +1191,7 @@ export default function Chat() {
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
 			} else {
 				updateUserItem(data.recipient, data.recipientDisplayName, data.recipientAvatarVersion, data.recipientBadge,
-					data.data.senderDisplayName + ": " + data.content, data.time, false, data.sender);
+					data.senderDisplayName + ": " + data.content, data.time, false, data.sender);
 				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false && data.sender !== myname)
 					notify("[公共] " + data.sender + "说：",
 						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
