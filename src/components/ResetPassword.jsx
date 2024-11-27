@@ -13,7 +13,7 @@ import {enqueueSnackbar} from "notistack";
 import {LoadingButton} from "@mui/lab";
 import Cookies from "js-cookie";
 
-const ResetPassword = memo(({open, handleClose}) => {
+const ResetPassword = memo(function ResetPassword({open, handleClose}) {
 	const emailText = useRef(null);
 	const verificationText = useRef(null);
 	const passwordText = useRef(null);

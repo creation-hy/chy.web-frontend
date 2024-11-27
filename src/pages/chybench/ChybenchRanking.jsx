@@ -17,7 +17,7 @@ import PropTypes from "prop-types";
 
 const myname = Cookies.get("username");
 
-const RankingTable = memo(({rankingItem, rankingSize, pageNumber}) => {
+const RankingTable = memo(function RankingTable({rankingItem, rankingSize, pageNumber}) {
 	const {data} = useQuery({
 		queryKey: [rankingItem, rankingSize, pageNumber, "fetch"],
 		queryFn: () => axios.get(`/api/chybench/ranking/${rankingItem}/${rankingSize}/${pageNumber}`).then(res => res.data),

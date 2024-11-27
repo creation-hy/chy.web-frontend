@@ -11,7 +11,7 @@ import remarkBreaks from "remark-breaks";
 import {memo} from "react";
 import Typography from "@mui/material/Typography";
 
-export const ChatMarkdown = memo(({useMarkdown, children, ...props}) => {
+export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, ...props}) {
 	if (!children)
 		children = "";
 	

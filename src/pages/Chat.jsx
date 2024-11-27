@@ -1,4 +1,4 @@
-import {Fragment, memo, useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
+import {memo, useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
 import axios from "axios";
 import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
@@ -94,10 +94,10 @@ const saveDraft = throttle((contact, content, setUsers) => {
 	uploadDraftThrottle(contact, content);
 }, 100);
 
-const UserItem = memo(({
-	                       username, displayName, avatarVersion, badge,
-	                       isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode
-                       }) => {
+const UserItem = memo(function UserItem({
+	                                        username, displayName, avatarVersion, badge,
+	                                        isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode
+                                        }) {
 	return (
 		<>
 			<ListItemAvatar>
@@ -182,7 +182,7 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-export const MessageFile = memo(({url, fileName, fileSize, deleted, ...props}) => {
+export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, ...props}) {
 	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
 	
 	return (
@@ -244,7 +244,7 @@ MessageFile.propTypes = {
 	deleted: PropTypes.bool,
 }
 
-const Message = memo(({messageId, type, username, displayName, avatarVersion, badge, content, file, quote, setQuote, useMarkdown}) => {
+const Message = memo(function Message({messageId, type, username, displayName, avatarVersion, badge, content, file, quote, setQuote, useMarkdown}) {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -473,7 +473,7 @@ const notify = (title, body, iconId, avatarVersion) => {
 	}
 };
 
-const ChatToolBar = memo(({inputField, quote, setQuote, sendFiles}) => {
+const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, sendFiles}) {
 	const [binaryColorMode] = useBinaryColorMode();
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -499,7 +499,7 @@ const ChatToolBar = memo(({inputField, quote, setQuote, sendFiles}) => {
 	
 	const updateCursorSelection = useCallback(() => {
 		cursorSelection.current = [inputField.current.selectionStart, inputField.current.selectionEnd];
-	}, []);
+	}, [inputField]);
 	
 	const insertText = useCallback((text, closeDialog) => {
 		const start = cursorSelection.current[0], end = cursorSelection.current[1];
@@ -507,9 +507,9 @@ const ChatToolBar = memo(({inputField, quote, setQuote, sendFiles}) => {
 		flushSync(closeDialog);
 		inputField.current.focus();
 		inputField.current.setSelectionRange(start + text.length, start + text.length);
-	}, []);
+	}, [inputField]);
 	
-	const MarkdownChecker = memo(() => {
+	const MarkdownChecker = memo(function MarkdownChecker() {
 		return settings.useMarkdown === false && (
 			<Typography color="error">
 				您还没有启用Markdown+，是否前往开启？
@@ -768,7 +768,7 @@ ChatToolBar.propTypes = {
 	sendFiles: PropTypes.object.isRequired,
 }
 
-const ScrollTop = memo(({children, messageCard}) => {
+const ScrollTop = memo(function ScrollTop({children, messageCard}) {
 	const [trigger, setTrigger] = useState(false);
 	const [top, setTop] = useState(0);
 	const [left, setLeft] = useState(0);
@@ -966,7 +966,7 @@ export default function Chat() {
 			
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
-	}, [messageCardScrollTo, setClientUser, isSmallScreen]);
+	}, [messageCardScrollTo, navigate, setClientUser]);
 	
 	const [isContactsLoading, setIsContactsLoading] = useState(true);
 	
@@ -1014,7 +1014,7 @@ export default function Chat() {
 				getMessages(username, 0, true);
 			}
 		}
-	}, [isContactsLoading, username]);
+	}, [getMessages, isContactsLoading, username]);
 	
 	useEffect(() => {
 		return () => {

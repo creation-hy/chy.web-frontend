@@ -137,6 +137,7 @@ const sleep = (time) => {
 
 const memoryTest = (size) => {
 	let startTime = new Date().getTime();
+	// eslint-disable-next-line no-unused-vars
 	let result = [...new Array(size === 2 ? 5000000 : (size === 1 ? 10000000 : 50000000)).keys()];
 	let endTime = new Date().getTime();
 	return endTime - startTime;

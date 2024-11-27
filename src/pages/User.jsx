@@ -59,7 +59,7 @@ import {MessageFile} from "src/pages/Chat.jsx";
 
 const myname = Cookies.get("username");
 
-const News = memo(({username, displayName, avatarVersion}) => {
+const News = memo(function News({username, displayName, avatarVersion}) {
 	const {data} = useQuery({
 		queryKey: ["news", username],
 		queryFn: () => axios.get(`/api/user/${username}/chat/0`).then(res => res.data),
@@ -161,7 +161,7 @@ News.propTypes = {
 	avatarVersion: PropTypes.number.isRequired,
 }
 
-const Follows = memo(({username, type}) => {
+const Follows = memo(function Follows({username, type}) {
 	const [followingList, setFollowingList] = useState([]);
 	const [followersList, setFollowersList] = useState([]);
 	const [userList, setUserList] = useState([]);
@@ -210,7 +210,7 @@ const Follows = memo(({username, type}) => {
 			pageLoadingObserver.disconnect();
 			pageLoadingObserver.observe(lastUserRef.current);
 		}
-	}, [userList]);
+	}, [pageLoadingObserver, userList]);
 	
 	return (
 		<List sx={{pt: 0, mt: -1}}>
@@ -309,7 +309,7 @@ Follows.propTypes = {
 	type: PropTypes.string.isRequired,
 }
 
-const TabPanel = memo(({value, username, displayName, avatarVersion}) => {
+const TabPanel = memo(function TabPanel({value, username, displayName, avatarVersion}) {
 	if (value === 0) {
 		return <News username={username} displayName={displayName} avatarVersion={avatarVersion}/>;
 	}
@@ -341,7 +341,7 @@ const doFollow = (username, setIsFollowing, queryClient) => {
 	})
 };
 
-const UserPage = memo(({username}) => {
+const UserPage = memo(function UserPage({username}) {
 	const {clientUser, setClientUser} = useClientUser();
 	const {tab} = useParams();
 	const navigate = useNavigate();

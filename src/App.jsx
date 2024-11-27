@@ -24,7 +24,7 @@ import {Fab, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import {KeyboardArrowUpOutlined} from "@mui/icons-material";
 
-const PageContainer = memo(() => {
+const PageContainer = memo(function PageContainer() {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	const isLG = useMediaQuery((theme) => theme.breakpoints.up("lg"));
 	const containerRef = useRef(null);
@@ -48,7 +48,7 @@ const PageContainer = memo(() => {
 	
 	return (
 		<Grid container width="100%" height="100%" overflow="hidden" justifyContent="center">
-			<BrowserRouter future={{v7_startTransition: true, v7_relativeSplatPath: true}}>
+			<BrowserRouter>
 				{!isSmallScreen && <PCAppBarLeft/>}
 				<Box ref={containerRef} display="flex" flexDirection="column" sx={{height: "100%", maxWidth: 1200, flex: 1, overflow: "auto"}}>
 					{isSmallScreen && <MobileAppBar/>}

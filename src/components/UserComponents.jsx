@@ -7,7 +7,7 @@ import {Verified} from "@mui/icons-material";
 import SvgIcon from "@mui/material/SvgIcon";
 import {NavigateButtonBase, NavigateLink} from "src/components/NavigateComponents.jsx";
 
-export const UserAvatar = memo(({username, displayName, avatarVersion, width, height, ...props}) => {
+export const UserAvatar = memo(function UserAvatar({username, displayName, avatarVersion, width, height, ...props}) {
 	return (
 		<Avatar
 			src={`/avatars/${username}.webp?v=${avatarVersion}`}
@@ -26,7 +26,7 @@ UserAvatar.propTypes = {
 	height: PropTypes.number,
 }
 
-export const UserBadge = memo(({badge, fontSize}) => {
+export const UserBadge = memo(function UserBadge({badge, fontSize}) {
 	if (!badge) {
 		return null;
 	} else if (badge === "Official") {
@@ -87,7 +87,7 @@ UserBadge.propTypes = {
 	fontSize: PropTypes.number,
 }
 
-export const UsernameWithBadge = memo(({username, badge, fontWeight = "bold", fontSize, size = 18}) => {
+export const UsernameWithBadge = memo(function UsernameWithBadge({username, badge, fontWeight = "bold", fontSize, size = 18}) {
 	return (
 		<Grid container alignItems="center" flexWrap="nowrap" gap={0.25}>
 			<Typography fontWeight={fontWeight} fontSize={fontSize} noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center">
@@ -106,7 +106,7 @@ UsernameWithBadge.propTypes = {
 	size: PropTypes.number,
 }
 
-export const SimpleUserItem = memo(({username, displayName, avatarVersion, badge, disableNavigate = false, ...props}) => {
+export const SimpleUserItem = memo(function SimpleUserItem({username, displayName, avatarVersion, badge, disableNavigate = false, ...props}) {
 	if (disableNavigate) {
 		return (
 			<Grid container wrap="nowrap" alignItems="center" gap={1} height="100%" {...props}>

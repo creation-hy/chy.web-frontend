@@ -47,7 +47,7 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 const myName = Cookies.get("username");
 const myInformation = JSON.parse(localStorage.getItem("myInformation")) ?? {};
 
-const LeftBar = memo(({navigateCallback}) => {
+const LeftBar = memo(function LeftBar({navigateCallback}) {
 	const {clientUser, isClientUserLoading} = useClientUser();
 	const navigate = useNavigate();
 	const firstLevelLocation = useLocation().pathname.split("/")[1];
@@ -61,7 +61,7 @@ const LeftBar = memo(({navigateCallback}) => {
 				navigateCallback();
 			}
 		}
-	}, []);
+	}, [navigate, navigateCallback]);
 	
 	if (clientUser) {
 		myInformation.displayName = clientUser.displayName;
@@ -249,7 +249,7 @@ LeftBar.propTypes = {
 	navigateCallback: PropTypes.func,
 }
 
-export const PCAppBarLeft = memo(() => {
+export const PCAppBarLeft = memo(function PCAppBarLeft() {
 	const [colorMode, toggleColorMode] = useColorMode();
 	
 	return (
@@ -280,7 +280,7 @@ export const PCAppBarLeft = memo(() => {
 	);
 });
 
-export const PCAppBarRight = memo(() => {
+export const PCAppBarRight = memo(function PCAppBarRight() {
 	return (
 		<Box
 			sx={{
@@ -297,7 +297,7 @@ export const PCAppBarRight = memo(() => {
 	);
 });
 
-export const MobileAppBar = memo(() => {
+export const MobileAppBar = memo(function MobileAppBar() {
 	const [open, setOpen] = useState(false);
 	const [colorMode, toggleColorMode] = useColorMode();
 	

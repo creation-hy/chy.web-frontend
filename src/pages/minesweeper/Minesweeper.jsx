@@ -116,7 +116,7 @@ const tableColumns = [
 	},
 ];
 
-const Ranking = memo(({showRanking, setShowRanking}) => {
+const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 	const [pageNumber, setPageNumber] = useState(0);
 	
 	const {data} = useQuery({
