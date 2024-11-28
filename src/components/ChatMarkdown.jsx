@@ -1,7 +1,7 @@
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import PropTypes from "prop-types";
-import {List, ListItem, ListItemText, Paper, Table, TableBody, TableCell, TableContainer, TableRow} from "@mui/material";
+import {List, ListItem, Paper, Table, TableBody, TableCell, TableContainer, TableRow} from "@mui/material";
 import Link from "@mui/material/Link";
 import Divider from "@mui/material/Divider";
 import SyntaxHighlighter from "react-syntax-highlighter";
@@ -52,7 +52,7 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 				}}>{children}</List>),
 				li: ({children}) => (
 					<ListItem sx={{m: 0, p: 0}} disableGutters>
-						<ListItemText>{children}</ListItemText>
+						{children}
 					</ListItem>),
 				
 				code: ({className, children}) => {
