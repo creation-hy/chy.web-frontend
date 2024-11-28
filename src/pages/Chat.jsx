@@ -185,7 +185,9 @@ UserItem.propTypes = {
 export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, ...props}) {
 	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
 	
-	return (
+	return /\.(jpg|jpeg|jfif|pjepg|pjp|png|svg|webp|gif|avif|apng)$/i.test(fileName) && deleted === false ? (
+		<img src={url} alt={fileName} style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "4px"}}/>
+	) : (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
 			<ListItemButton
 				sx={{borderRadius: "8px"}}
@@ -895,12 +897,6 @@ export default function Chat() {
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
-		Promise.all(Array.prototype.slice.call(messageCard.current.getElementsByTagName("img")).map(img => new Promise(resolve => {
-			img.addEventListener("load", () => resolve(img));
-			img.addEventListener("error", () => resolve(img));
-		}))).then(() => {
-			messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
-		});
 	}, []);
 	
 	const getMessages = useCallback((username, pageNumber = 0, doRefresh = false) => {
