@@ -1,6 +1,20 @@
 import {memo, useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
 import axios from "axios";
-import {Badge, Fab, InputLabel, List, ListItemAvatar, ListItemButton, ListItemIcon, ListItemText, Paper, Switch, useMediaQuery, Zoom} from "@mui/material";
+import {
+	Badge,
+	Fab,
+	InputLabel,
+	List,
+	ListItemAvatar,
+	ListItemButton,
+	ListItemIcon,
+	ListItemText,
+	MenuList,
+	Paper,
+	Switch,
+	useMediaQuery,
+	Zoom
+} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
@@ -16,6 +30,7 @@ import {
 	CloudDownload,
 	ContentCopyOutlined,
 	DeleteOutline,
+	Filter,
 	FontDownloadOutlined,
 	FormatQuoteOutlined,
 	InsertDriveFileOutlined,
@@ -58,7 +73,7 @@ import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
 import {LoadingButton} from "@mui/lab";
-import {isIOS13} from "react-device-detect";
+import {isIOS13, isMobile} from "react-device-detect";
 
 const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 
@@ -494,6 +509,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	
 	const [showUploadFileConfirmation, setShowUploadFileConfirmation] = useState(false);
 	const [isFileUploading, setIsFileUploading] = useState(false);
+	const [showFileTypeSelector, setShowFileTypeSelector] = useState(false);
 	const [files, setFiles] = useState([]);
 	
 	const [onEmojiPicker, handleEmojiPicker] = useState(false);
@@ -555,14 +571,18 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 				<IconButton
 					sx={{m: 0.5}}
 					onClick={() => {
-						const input = document.createElement("input");
-						input.type = "file";
-						input.multiple = true;
-						input.onchange = (event) => {
-							sendFiles.current(Array.from(event.target.files));
-							event.target.value = null;
+						if (isMobile) {
+							setShowFileTypeSelector(true);
+						} else {
+							const input = document.createElement("input");
+							input.type = "file";
+							input.multiple = true;
+							input.onchange = (event) => {
+								sendFiles.current(Array.from(event.target.files));
+								event.target.value = null;
+							}
+							input.click();
 						}
-						input.click();
 					}}
 				>
 					<UploadFileOutlined/>
@@ -595,6 +615,49 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 					<SettingsOutlined/>
 				</IconButton>
 			</Box>
+			<Dialog open={showFileTypeSelector} onClose={() => setShowFileTypeSelector(false)}>
+				<MenuList>
+					<MenuItem
+						sx={{height: 48}}
+						onClick={() => {
+							const input = document.createElement("input");
+							input.type = "file";
+							input.accept = "image/*,video/*";
+							input.multiple = true;
+							input.onchange = (event) => {
+								sendFiles.current(Array.from(event.target.files));
+								event.target.value = null;
+								setShowFileTypeSelector(false);
+							}
+							input.click();
+						}}
+					>
+						<ListItemIcon>
+							<Filter/>
+						</ListItemIcon>
+						<ListItemText>上传图片/视频</ListItemText>
+					</MenuItem>
+					<MenuItem
+						sx={{height: 48}}
+						onClick={() => {
+							const input = document.createElement("input");
+							input.type = "file";
+							input.multiple = true;
+							input.onchange = (event) => {
+								sendFiles.current(Array.from(event.target.files));
+								event.target.value = null;
+								setShowFileTypeSelector(false);
+							}
+							input.click();
+						}}
+					>
+						<ListItemIcon>
+							<UploadFileOutlined/>
+						</ListItemIcon>
+						<ListItemText>上传文件</ListItemText>
+					</MenuItem>
+				</MenuList>
+			</Dialog>
 			<Dialog open={onSpecialFont} onClose={() => handleSpecialFont(false)} fullWidth>
 				<DialogTitle>
 					添加特殊字体
