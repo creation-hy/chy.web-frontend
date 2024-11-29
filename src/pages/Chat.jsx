@@ -185,7 +185,7 @@ UserItem.propTypes = {
 export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, ...props}) {
 	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
 	
-	return /\.(jpg|jpeg|jfif|pjepg|pjp|png|svg|webp|gif|avif|apng)$/i.test(fileName) && deleted === false ? (
+	return /\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng)$/i.test(fileName) && deleted === false ? (
 		<img src={url} alt={fileName} style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "4px"}}/>
 	) : (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
@@ -897,6 +897,12 @@ export default function Chat() {
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
+		Array.from(messageCard.current.getElementsByTagName("img")).map(img => {
+			const resizeObserver = new ResizeObserver(() => {
+				messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
+			});
+			resizeObserver.observe(img);
+		});
 	}, []);
 	
 	const getMessages = useCallback((username, pageNumber = 0, doRefresh = false) => {
