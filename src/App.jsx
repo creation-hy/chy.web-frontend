@@ -7,7 +7,7 @@ import Chat from "src/pages/Chat.jsx";
 import User from "src/pages/User.jsx";
 import AIArt from "src/pages/AIArt.jsx";
 import Container from "@mui/material/Container";
-import {MobileAppBar, PCAppBarLeft, PCAppBarRight} from "src/components/AppAppBar.jsx";
+import {MobileAppBar, PCAppBarLeft} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -26,7 +26,6 @@ import {KeyboardArrowUpOutlined} from "@mui/icons-material";
 
 const PageContainer = memo(function PageContainer() {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
-	const isLG = useMediaQuery((theme) => theme.breakpoints.up("lg"));
 	const containerRef = useRef(null);
 	const scrollComponentRef = useRef(null);
 	
@@ -99,7 +98,6 @@ const PageContainer = memo(function PageContainer() {
 						</Box>
 					</Zoom>
 				</Box>
-				{!isSmallScreen && isLG && <PCAppBarRight/>}
 			</BrowserRouter>
 		</Grid>
 	);
