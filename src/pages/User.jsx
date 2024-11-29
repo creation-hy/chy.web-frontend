@@ -27,7 +27,7 @@ import Grid from "@mui/material/Grid2";
 import Cookies from "js-cookie";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
-import {useQuery, useQueryClient} from "@tanstack/react-query";
+import {useQuery} from "@tanstack/react-query";
 import {
 	EditOutlined,
 	LockResetOutlined,
@@ -331,17 +331,15 @@ TabPanel.propTypes = {
 	avatarVersion: PropTypes.number.isRequired,
 }
 
-const doFollow = (username, setIsFollowing, queryClient) => {
-	axios.post("/api/user/" + username + "/follow").then(res => {
+const doFollow = (username, setIsFollowing) => {
+	return axios.post("/api/user/" + username + "/follow").then(res => {
 		enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
 		if (res.data.status === 1) {
 			setIsFollowing(true);
-			queryClient.invalidateQueries({queryKey: ["follower"]});
 		} else if (res.data.status === 2) {
 			setIsFollowing(false);
-			queryClient.invalidateQueries({queryKey: ["follower"]});
 		}
-	})
+	});
 };
 
 const UserPage = memo(function UserPage({username}) {
@@ -371,12 +369,16 @@ const UserPage = memo(function UserPage({username}) {
 	const [avatarSrc, setAvatarSrc] = useState();
 	const avatarCropper = useRef(null);
 	
-	const queryClient = useQueryClient();
+	const [data, setData] = useState(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [dataVersion, setDataVersion] = useState(0);
 	
-	const {data, isLoading, error} = useQuery({
-		queryKey: ["user-init", username],
-		queryFn: () => axios.get("/api/user/" + username + "/info").then(res => res.data),
-	});
+	useEffect(() => {
+		axios.get(`/api/user/${username}/info`).then(res => {
+			setData(res.data);
+			setIsLoading(false);
+		});
+	}, [username, dataVersion]);
 	
 	useLayoutEffect(() => {
 		if (data && data.username) {
@@ -396,7 +398,7 @@ const UserPage = memo(function UserPage({username}) {
 		}
 	}, [tab]);
 	
-	if (isLoading || error) {
+	if (isLoading) {
 		return null;
 	}
 	
@@ -544,13 +546,21 @@ const UserPage = memo(function UserPage({username}) {
 								<Box flexShrink={0}>
 									{isFollowing == null ? null : (isFollowing ? (
 										<Tooltip title="取消关注">
-											<IconButton onClick={() => doFollow(data.username, setIsFollowing, queryClient)}>
+											<IconButton onClick={() => {
+												doFollow(data.username, setIsFollowing).then(() => {
+													setDataVersion(version => version + 1);
+												});
+											}}>
 												<PersonAddDisabledOutlined/>
 											</IconButton>
 										</Tooltip>
 									) : (
 										<Tooltip title="关注">
-											<IconButton onClick={() => doFollow(data.username, setIsFollowing, queryClient)}>
+											<IconButton onClick={() => {
+												doFollow(data.username, setIsFollowing).then(() => {
+													setDataVersion(version => version + 1);
+												});
+											}}>
 												<PersonAddOutlined/>
 											</IconButton>
 										</Tooltip>
@@ -667,20 +677,19 @@ const UserPage = memo(function UserPage({username}) {
 				<DialogTitle>
 					管理徽章
 				</DialogTitle>
-				<DialogContent sx={{pb: 0}}>
+				<DialogContent sx={{pb: 1}}>
 					<Grid container spacing={2}>
 						{supportedBadges.map((item) => (
-							<Grid
-								key={item.id}
-								size={isSmallScreen ? 6 : 4}
-								sx={{
-									height: 90,
-									border: myBadge === item.id ? 2 : 0,
-									borderColor: theme => theme.palette.primary.main,
-									borderRadius: 1,
-								}}
-							>
-								<Tooltip title={item.info}>
+							<Tooltip key={item.id} title={item.info}>
+								<Grid
+									size={isSmallScreen ? 6 : 4}
+									sx={{
+										height: 90,
+										border: myBadge === item.id ? 2 : 0,
+										borderColor: theme => theme.palette.primary.main,
+										borderRadius: 1,
+									}}
+								>
 									<ButtonBase
 										sx={{
 											borderRadius: myBadge === item.id ? 0 : 1,
@@ -700,6 +709,7 @@ const UserPage = memo(function UserPage({username}) {
 															...clientUser,
 															badge: item.id,
 														}));
+														setIsManagingBadges(false);
 													}
 												});
 											}
@@ -716,8 +726,8 @@ const UserPage = memo(function UserPage({username}) {
 											<Typography color={myLevel >= item.levelRequirement ? "textPrimary" : "textDisabled"}>{item.name}</Typography>
 										</Grid>
 									</ButtonBase>
-								</Tooltip>
-							</Grid>
+								</Grid>
+							</Tooltip>
 						))}
 					</Grid>
 				</DialogContent>
