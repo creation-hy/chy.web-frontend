@@ -200,12 +200,14 @@ UserItem.propTypes = {
 export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, ...props}) {
 	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
 	
-	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng)$/i.test(fileName) && deleted === false) {
-		return <img src={url} alt={fileName} style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "4px"}}/>;
+	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng|bmp)$/i.test(fileName) && deleted === false) {
+		return <img src={url} alt={fileName}
+		            style={{maxWidth: "min(100%, 300px)", maxHeight: "min(100%, 300px)", objectFit: "contain", borderRadius: "4px"}} {...props} />;
 	}
 	
 	if (/\.(mp4|webm|ogg|ogv)$/i.test(fileName) && deleted === false) {
-		return <video src={url} controls style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "4px"}}/>;
+		return <video src={url} controls
+		              style={{maxWidth: "min(100%, 300px)", maxHeight: "min(100%, 300px)", objectFit: "contain", borderRadius: "4px"}} {...props} />;
 	}
 	
 	return (
