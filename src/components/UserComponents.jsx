@@ -26,15 +26,30 @@ UserAvatar.propTypes = {
 	height: PropTypes.number,
 }
 
+export const supportedBadges = [
+	{id: "User0", name: "0级用户", info: "最普通的认证。0级后解锁。", levelRequirement: 0},
+	{id: "User1", name: "1级用户", info: "高人一等。1级后解锁。", levelRequirement: 1},
+	{id: "User2", name: "2级用户", info: "遥遥领先！2级后解锁。", levelRequirement: 2},
+	{id: "User3", name: "3级用户", info: "我们继续领先！3级后解锁。", levelRequirement: 3},
+	{id: "Transgender1", name: "蓝粉渐变1", info: "骄傲徽章！2级后解锁。", levelRequirement: 2},
+	{id: "Transgender2", name: "蓝粉渐变2", info: "骄傲徽章！2级后解锁。", levelRequirement: 2},
+	{id: "Rainbow", name: "彩虹", info: "骄傲徽章！2级后解锁。", levelRequirement: 2},
+	{id: "Official", name: "官方认证", info: "属于官方账号的最权威认证。普通用户无法解锁。", levelRequirement: 4},
+];
+
 export const UserBadge = memo(function UserBadge({badge, fontSize}) {
 	if (!badge) {
 		return null;
 	} else if (badge === "Official") {
 		return <Verified color="secondary" sx={{fontSize: fontSize}}/>;
+	} else if (badge === "User0") {
+		return <Verified sx={{color: theme => theme.palette.text.disabled, fontSize: fontSize}}/>;
 	} else if (badge === "User1") {
-		return <Verified color="primary" sx={{fontSize: fontSize}}/>;
+		return <Verified color="info" sx={{fontSize: fontSize}}/>;
 	} else if (badge === "User2") {
 		return <Verified color="warning" sx={{fontSize: fontSize}}/>;
+	} else if (badge === "User3") {
+		return <Verified color="error" sx={{fontSize: fontSize}}/>;
 	} else if (badge === "Transgender1") {
 		const uuid = crypto.randomUUID().toString();
 		return (
@@ -79,7 +94,8 @@ export const UserBadge = memo(function UserBadge({badge, fontSize}) {
 			</SvgIcon>
 		)
 	}
-	return <Verified color="error" sx={{fontSize: fontSize}}/>;
+	
+	return null;
 });
 
 UserBadge.propTypes = {

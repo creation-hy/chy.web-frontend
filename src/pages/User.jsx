@@ -1,8 +1,9 @@
 import Box from "@mui/material/Box";
 import {useNavigate, useParams} from "react-router";
-import {Fragment, memo, useEffect, useMemo, useRef, useState} from "react";
+import {Fragment, memo, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import {
 	Alert,
+	ButtonBase,
 	CircularProgress,
 	InputLabel,
 	List,
@@ -15,7 +16,8 @@ import {
 	Paper,
 	Tab,
 	Tabs,
-	Tooltip
+	Tooltip,
+	useMediaQuery
 } from "@mui/material";
 import axios from "axios";
 import Card from "@mui/material/Card";
@@ -34,7 +36,8 @@ import {
 	PersonAddDisabledOutlined,
 	PersonAddOutlined,
 	Restore,
-	Upload
+	Upload,
+	VerifiedOutlined
 } from "@mui/icons-material";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -52,7 +55,7 @@ import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import {useClientUser} from "src/components/ClientUser.jsx";
-import {UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserComponents.jsx";
+import {supportedBadges, UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateButtonBase, NavigateIconButton, NavigateLink} from "src/components/NavigateComponents.jsx";
 import Divider from "@mui/material/Divider";
 import {MessageFile} from "src/pages/Chat.jsx";
@@ -345,6 +348,7 @@ const UserPage = memo(function UserPage({username}) {
 	const {clientUser, setClientUser} = useClientUser();
 	const {tab} = useParams();
 	const navigate = useNavigate();
+	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const tabs = [undefined, "following", "followers"];
 	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
@@ -354,6 +358,10 @@ const UserPage = memo(function UserPage({username}) {
 	const [modifying, setModifying] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
 	const [resetPasswordOn, setResetPasswordOn] = useState(false);
+	
+	const [isManagingBadges, setIsManagingBadges] = useState(false);
+	const [myBadge, setMyBadge] = useState(null);
+	const [myLevel, setMyLevel] = useState(0);
 	
 	const [openAvatarModifyDialog, setOpenAvatarModifyDialog] = useState(false);
 	const [avatarProcessing, setAvatarProcessing] = useState(false);
@@ -370,12 +378,14 @@ const UserPage = memo(function UserPage({username}) {
 		queryFn: () => axios.get("/api/user/" + username + "/info").then(res => res.data),
 	});
 	
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (data && data.username) {
 			setFollowingCount(data["followingCount"]);
 			setFollowersCount(data["followerCount"]);
 			setIsFollowing(data["alreadyFollowing"]);
 			setAvatarVersion(data.avatarVersion);
+			setMyBadge(data.badge);
+			setMyLevel(data.level);
 		}
 	}, [data]);
 	
@@ -399,7 +409,7 @@ const UserPage = memo(function UserPage({username}) {
 	return (
 		<Box maxWidth="md" alignSelf="center" width="100%">
 			<Card sx={{p: 2}}>
-				<Grid container direction="column" gap={0.5}>
+				<Grid container direction="column" gap={0.5} overflow="auto">
 					<Grid container alignItems="center" gap={1.5} wrap="nowrap" width="100%" sx={{mb: 0.5}}>
 						{data.username === myname ? (
 							<IconButton
@@ -492,15 +502,20 @@ const UserPage = memo(function UserPage({username}) {
 						</Dialog>
 						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container direction="column" justifyContent="center">
-							<UsernameWithBadge username={data.displayName} badge={data.badge} fontSize={20} size={22}/>
+							<UsernameWithBadge username={data.displayName} badge={myBadge} fontSize={20} size={22}/>
 							<Typography color="text.secondary" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
 								@{data.username}
 							</Typography>
 							{data.username === myname ? (
-								<Box sx={{pt: "2px"}}>
+								<Box sx={{pt: "2px"}} whiteSpace="nowrap">
 									<Tooltip title="修改信息">
 										<IconButton onClick={() => setModifying(true)}>
 											<EditOutlined/>
+										</IconButton>
+									</Tooltip>
+									<Tooltip title="管理徽章">
+										<IconButton onClick={() => setIsManagingBadges(true)}>
+											<VerifiedOutlined/>
 										</IconButton>
 									</Tooltip>
 									<Tooltip title="重置密码">
@@ -646,6 +661,68 @@ const UserPage = memo(function UserPage({username}) {
 				<DialogActions>
 					<Button type="button" onClick={() => setModifying(false)}>关闭</Button>
 					<Button type="submit">确认</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog open={isManagingBadges} onClose={() => setIsManagingBadges(false)}>
+				<DialogTitle>
+					管理徽章
+				</DialogTitle>
+				<DialogContent sx={{pb: 0}}>
+					<Grid container spacing={2}>
+						{supportedBadges.map((item) => (
+							<Grid
+								key={item.id}
+								size={isSmallScreen ? 6 : 4}
+								sx={{
+									height: 90,
+									border: myBadge === item.id ? 2 : 0,
+									borderColor: theme => theme.palette.primary.main,
+									borderRadius: 1,
+								}}
+							>
+								<Tooltip title={item.info}>
+									<ButtonBase
+										sx={{
+											borderRadius: myBadge === item.id ? 0 : 1,
+											width: "100%",
+											height: "100%",
+										}}
+										onClick={() => {
+											if (myLevel >= item.levelRequirement && myBadge !== item.id) {
+												axios.post("/api/account/badge/modify", {badge: item.id}, {
+													headers: {
+														"Content-Type": "application/json",
+													},
+												}).then(res => {
+													if (res.data.status === 1) {
+														setMyBadge(item.id);
+														setClientUser(clientUser => ({
+															...clientUser,
+															badge: item.id,
+														}));
+													}
+												});
+											}
+										}}
+									>
+										<Grid
+											container
+											direction="column"
+											gap={0.5}
+											alignItems="center"
+											padding={1}
+										>
+											<UserBadge badge={item.id} fontSize={35}/>
+											<Typography color={myLevel >= item.levelRequirement ? "textPrimary" : "textDisabled"}>{item.name}</Typography>
+										</Grid>
+									</ButtonBase>
+								</Tooltip>
+							</Grid>
+						))}
+					</Grid>
+				</DialogContent>
+				<DialogActions>
+					<Button type="button" onClick={() => setIsManagingBadges(false)}>关闭</Button>
 				</DialogActions>
 			</Dialog>
 			<Dialog
