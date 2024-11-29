@@ -29,6 +29,7 @@ import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
 import {
+	BlockSharp,
 	EditOutlined,
 	LockResetOutlined,
 	LogoutOutlined,
@@ -722,7 +723,8 @@ const UserPage = memo(function UserPage({username}) {
 											alignItems="center"
 											padding={1}
 										>
-											<UserBadge badge={item.id} fontSize={35}/>
+											{item.id ? <UserBadge badge={item.id} fontSize={35}/> :
+												<BlockSharp sx={{color: theme => theme.palette.text.disabled, fontSize: 35}}/>}
 											<Typography color={myLevel >= item.levelRequirement ? "textPrimary" : "textDisabled"}>{item.name}</Typography>
 										</Grid>
 									</ButtonBase>

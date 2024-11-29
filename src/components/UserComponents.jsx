@@ -27,6 +27,7 @@ UserAvatar.propTypes = {
 }
 
 export const supportedBadges = [
+	{id: null, name: "隐藏徽章", info: "关闭徽章功能。", levelRequirement: 0},
 	{id: "User0", name: "0级用户", info: "最普通的认证。0级后解锁。", levelRequirement: 0},
 	{id: "User1", name: "1级用户", info: "高人一等。1级后解锁。", levelRequirement: 1},
 	{id: "User2", name: "2级用户", info: "遥遥领先！2级后解锁。", levelRequirement: 2},
