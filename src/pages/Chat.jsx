@@ -185,9 +185,15 @@ UserItem.propTypes = {
 export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, ...props}) {
 	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
 	
-	return /\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng)$/i.test(fileName) && deleted === false ? (
-		<img src={url} alt={fileName} style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "4px"}}/>
-	) : (
+	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng)$/i.test(fileName) && deleted === false) {
+		return <img src={url} alt={fileName} style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "4px"}}/>;
+	}
+	
+	if (/\.(mp4|webm|ogg|ogv)$/i.test(fileName) && deleted === false) {
+		return <video src={url} controls style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "4px"}}/>;
+	}
+	
+	return (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
 			<ListItemButton
 				sx={{borderRadius: "8px"}}
@@ -897,11 +903,11 @@ export default function Chat() {
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
-		Array.from(messageCard.current.getElementsByTagName("img")).map(img => {
+		[...messageCard.current.getElementsByTagName("img"), ...messageCard.current.getElementsByTagName("video")].map(element => {
 			const resizeObserver = new ResizeObserver(() => {
 				messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
 			});
-			resizeObserver.observe(img);
+			resizeObserver.observe(element);
 		});
 	}, []);
 	
