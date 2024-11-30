@@ -6,6 +6,7 @@ import {
 	ButtonBase,
 	CircularProgress,
 	InputLabel,
+	LinearProgress,
 	List,
 	ListItem,
 	ListItemAvatar,
@@ -343,6 +344,8 @@ const doFollow = (username, setIsFollowing) => {
 	});
 };
 
+const levelThresholds = [0, 50, 300, 1000, 3650, 10000, 1e9, 1e9];
+
 const UserPage = memo(function UserPage({username}) {
 	const {clientUser, setClientUser} = useClientUser();
 	const {tab} = useParams();
@@ -360,7 +363,6 @@ const UserPage = memo(function UserPage({username}) {
 	
 	const [isManagingBadges, setIsManagingBadges] = useState(false);
 	const [myBadge, setMyBadge] = useState(null);
-	const [myLevel, setMyLevel] = useState(0);
 	
 	const [openAvatarModifyDialog, setOpenAvatarModifyDialog] = useState(false);
 	const [avatarProcessing, setAvatarProcessing] = useState(false);
@@ -388,7 +390,6 @@ const UserPage = memo(function UserPage({username}) {
 			setIsFollowing(data["alreadyFollowing"]);
 			setAvatarVersion(data.avatarVersion);
 			setMyBadge(data.badge);
-			setMyLevel(data.level);
 		}
 	}, [data]);
 	
@@ -412,7 +413,7 @@ const UserPage = memo(function UserPage({username}) {
 	return (
 		<Box maxWidth="md" alignSelf="center" width="100%">
 			<Card sx={{p: 2}}>
-				<Grid container direction="column" gap={0.5} overflow="auto">
+				<Grid container direction="column" gap={0.5}>
 					<Grid container alignItems="center" gap={1.5} wrap="nowrap" width="100%" sx={{mb: 0.5}}>
 						{data.username === myname ? (
 							<IconButton
@@ -505,12 +506,21 @@ const UserPage = memo(function UserPage({username}) {
 						</Dialog>
 						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container direction="column" justifyContent="center">
-							<UsernameWithBadge username={data.displayName} badge={myBadge} fontSize={20} size={22}/>
+							<Grid container alignItems="center" wrap="nowrap" maxWidth="100%">
+								<UsernameWithBadge username={data.displayName} badge={myBadge} fontSize={20} size={22}/>
+								<Box ml={1.5} mb={0.5}>
+									<Typography fontWeight={"bold"} fontSize={14}>
+										V{data.level}
+									</Typography>
+									<LinearProgress variant="determinate" value={data.experience * 100 / levelThresholds[data.level + 1]}
+									                sx={{width: 60, borderRadius: 1}}/>
+								</Box>
+							</Grid>
 							<Typography color="text.secondary" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
 								@{data.username}
 							</Typography>
 							{data.username === myname ? (
-								<Box sx={{pt: "2px"}} whiteSpace="nowrap">
+								<Box sx={{pt: "2px"}}>
 									<Tooltip title="修改信息">
 										<IconButton onClick={() => setModifying(true)}>
 											<EditOutlined/>
@@ -698,7 +708,7 @@ const UserPage = memo(function UserPage({username}) {
 											height: "100%",
 										}}
 										onClick={() => {
-											if (myLevel >= item.levelRequirement && myBadge !== item.id) {
+											if (data.level >= item.levelRequirement && myBadge !== item.id) {
 												axios.post("/api/account/badge/modify", {badge: item.id}, {
 													headers: {
 														"Content-Type": "application/json",
@@ -725,7 +735,7 @@ const UserPage = memo(function UserPage({username}) {
 										>
 											{item.id ? <UserBadge badge={item.id} fontSize={35}/> :
 												<BlockSharp sx={{color: theme => theme.palette.text.disabled, fontSize: 35}}/>}
-											<Typography color={myLevel >= item.levelRequirement ? "textPrimary" : "textDisabled"}>{item.name}</Typography>
+											<Typography color={data.level >= item.levelRequirement ? "textPrimary" : "textDisabled"}>{item.name}</Typography>
 										</Grid>
 									</ButtonBase>
 								</Grid>
