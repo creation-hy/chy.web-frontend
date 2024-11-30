@@ -311,29 +311,24 @@ export const PCAppBarLeft = memo(function PCAppBarLeft() {
 	);
 });
 
-export const PCAppBarRight = memo(function PCAppBarRight() {
-	return (
-		<Box
-			sx={{
-				position: "relative",
-				height: "100%",
-				overflow: "auto",
-				width: 225,
-				borderLeft: 1,
-				borderColor: theme => theme.palette.divider,
-				p: 2,
-			}}
-		>
-		</Box>
-	);
-});
-
 export const MobileAppBar = memo(function MobileAppBar() {
 	const [open, setOpen] = useState(false);
+	const {clientUser, isClientUserLoading} = useClientUser();
 	
 	const toggleDrawer = (newOpen) => () => {
 		setOpen(newOpen);
 	};
+	
+	if (clientUser) {
+		myInformation.displayName = clientUser.displayName;
+		myInformation.avatarVersion = clientUser.avatarVersion;
+		myInformation.badge = clientUser.badge;
+		myInformation.lastCheckInTime = clientUser.lastCheckInTime;
+		localStorage.setItem("myInformation", JSON.stringify(myInformation));
+	} else if (!isClientUserLoading) {
+		myInformation = {};
+		localStorage.setItem("myInformation", JSON.stringify(myInformation));
+	}
 	
 	return (
 		<AppBar
