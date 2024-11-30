@@ -344,7 +344,7 @@ const doFollow = (username, setIsFollowing) => {
 	});
 };
 
-const levelThresholds = [0, 50, 300, 1000, 3650, 10000, 1e9, 1e10];
+const LEVEL_THRESHOLDS = [0, 50, 300, 1000, 3650, 10000, 50000, 350000, 1e9];
 
 const UserPage = memo(function UserPage({username}) {
 	const {clientUser, setClientUser} = useClientUser();
@@ -508,12 +508,17 @@ const UserPage = memo(function UserPage({username}) {
 						<Grid container direction="column" justifyContent="center">
 							<Grid container alignItems="center" wrap="nowrap" maxWidth="100%">
 								<UsernameWithBadge username={data.displayName} badge={myBadge} fontSize={20} size={22}/>
-								<Box ml={1.5} mb={0.5}>
-									<Typography fontWeight={"bold"} fontSize={14}>
-										V{data.level}
-									</Typography>
-									<LinearProgress variant="determinate" value={data.experience * 100 / levelThresholds[data.level + 1]}
-									                sx={{width: 60, borderRadius: 1}}/>
+								<Box ml={1.5} mb={0.5} width="max-content" minWidth={60}>
+									<Grid container alignItems="center" justifyContent="space-between" gap={1} wrap={"nowrap"}>
+										<Typography fontWeight={"bold"} fontSize={14}>
+											V{data.level}
+										</Typography>
+										{data.level <= 6 && <Typography fontSize={12} overflow={"hidden"} textOverflow={"ellipsis"}>
+											{data.experience}/{LEVEL_THRESHOLDS[data.level + 1]}
+										</Typography>}
+									</Grid>
+									<LinearProgress variant="determinate" value={data.experience * 100 / LEVEL_THRESHOLDS[data.level + 1]}
+									                sx={{width: "100%", borderRadius: 1}}/>
 								</Box>
 							</Grid>
 							<Typography color="text.secondary" sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
