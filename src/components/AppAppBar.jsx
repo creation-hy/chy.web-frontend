@@ -14,6 +14,7 @@ import {
 	ChatBubbleOutline,
 	DarkMode,
 	DrawOutlined,
+	EventAvailable,
 	ForumOutlined,
 	InfoOutlined,
 	LightMode,
@@ -283,7 +284,9 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 						});
 					}}
 				>
-					<CalendarMonth/>
+					{isClientUserLoading && myInformation.lastCheckInTime && new Date(myInformation.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ||
+					!isClientUserLoading && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ?
+						<EventAvailable/> : <CalendarMonth/>}
 				</IconButton>}
 			</Grid>
 		</>
