@@ -264,7 +264,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 				>
 					{colorMode === "auto" ? <AutoAwesome/> : (colorMode === "light" ? <LightMode/> : <DarkMode/>)}
 				</IconButton>
-				{isClientUserLoading || clientUser && <IconButton
+				{myName && <IconButton
 					color={isClientUserLoading && myInformation.lastCheckInTime && new Date(myInformation.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ||
 					!isClientUserLoading && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ? "success" : "warning"}
 					onClick={() => {
