@@ -27,15 +27,16 @@ UserAvatar.propTypes = {
 }
 
 export const supportedBadges = [
-	{id: null, name: "隐藏徽章", info: "关闭徽章功能。", levelRequirement: 0},
-	{id: "User0", name: "0级用户", info: "最普通的认证。0级后解锁。", levelRequirement: 0},
-	{id: "User1", name: "1级用户", info: "高人一等。1级后解锁。", levelRequirement: 1},
-	{id: "User2", name: "2级用户", info: "遥遥领先！2级后解锁。", levelRequirement: 2},
-	{id: "User3", name: "3级用户", info: "我们继续领先！3级后解锁。", levelRequirement: 3},
-	{id: "Transgender1", name: "蓝粉渐变1", info: "骄傲徽章！2级后解锁。", levelRequirement: 2},
-	{id: "Transgender2", name: "蓝粉渐变2", info: "骄傲徽章！2级后解锁。", levelRequirement: 2},
-	{id: "Rainbow", name: "彩虹", info: "骄傲徽章！2级后解锁。", levelRequirement: 2},
-	{id: "Official", name: "官方认证", info: "属于官方账号的最权威认证。普通用户无法解锁。", levelRequirement: 4},
+	{id: null, name: "隐藏徽章", levelRequirement: 0},
+	{id: "User1", name: "普通认证", levelRequirement: 1},
+	{id: "User2", name: "高人一等", levelRequirement: 2},
+	{id: "User3", name: "遥遥领先", levelRequirement: 3},
+	{id: "User4", name: "继续领先", levelRequirement: 4},
+	{id: "User5", name: "至尊认证", levelRequirement: 5},
+	{id: "Transgender1", name: "蓝粉渐变1", levelRequirement: 3},
+	{id: "Transgender2", name: "蓝粉渐变2", levelRequirement: 3},
+	{id: "Rainbow", name: "彩虹", levelRequirement: 3},
+	{id: "Official", name: "官方认证", levelRequirement: 10},
 ];
 
 export const UserBadge = memo(function UserBadge({badge, fontSize}) {
@@ -43,13 +44,15 @@ export const UserBadge = memo(function UserBadge({badge, fontSize}) {
 		return null;
 	} else if (badge === "Official") {
 		return <Verified color="secondary" sx={{fontSize: fontSize}}/>;
-	} else if (badge === "User0") {
-		return <Verified sx={{color: theme => theme.palette.text.disabled, fontSize: fontSize}}/>;
 	} else if (badge === "User1") {
-		return <Verified color="info" sx={{fontSize: fontSize}}/>;
+		return <Verified sx={{color: theme => theme.palette.text.disabled, fontSize: fontSize}}/>;
 	} else if (badge === "User2") {
-		return <Verified color="warning" sx={{fontSize: fontSize}}/>;
+		return <Verified sx={{color: theme => theme.palette.success.light, fontSize: fontSize}}/>;
 	} else if (badge === "User3") {
+		return <Verified color="info" sx={{fontSize: fontSize}}/>;
+	} else if (badge === "User4") {
+		return <Verified color="warning" sx={{fontSize: fontSize}}/>;
+	} else if (badge === "User5") {
 		return <Verified color="error" sx={{fontSize: fontSize}}/>;
 	} else if (badge === "Transgender1") {
 		const uuid = crypto.randomUUID().toString();
@@ -104,10 +107,10 @@ UserBadge.propTypes = {
 	fontSize: PropTypes.number,
 }
 
-export const UsernameWithBadge = memo(function UsernameWithBadge({username, badge, fontWeight = "bold", fontSize, size = 18}) {
+export const UsernameWithBadge = memo(function UsernameWithBadge({username, badge, fontWeight = "bold", fontSize, size = 18, color}) {
 	return (
 		<Grid container alignItems="center" flexWrap="nowrap" gap={0.25}>
-			<Typography fontWeight={fontWeight} fontSize={fontSize} noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center">
+			<Typography fontWeight={fontWeight} fontSize={fontSize} noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center" color={color}>
 				{username}
 			</Typography>
 			<UserBadge badge={badge} fontSize={size}/>
@@ -121,6 +124,7 @@ UsernameWithBadge.propTypes = {
 	fontWeight: PropTypes.string,
 	fontSize: PropTypes.number,
 	size: PropTypes.number,
+	color: PropTypes.object,
 }
 
 export const SimpleUserItem = memo(function SimpleUserItem({username, displayName, avatarVersion, badge, disableNavigate = false, ...props}) {

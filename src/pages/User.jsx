@@ -344,7 +344,7 @@ const doFollow = (username, setIsFollowing) => {
 	});
 };
 
-const levelThresholds = [0, 50, 300, 1000, 3650, 10000, 1e9, 1e9];
+const levelThresholds = [0, 50, 300, 1000, 3650, 10000, 1e9, 1e10];
 
 const UserPage = memo(function UserPage({username}) {
 	const {clientUser, setClientUser} = useClientUser();
@@ -691,55 +691,61 @@ const UserPage = memo(function UserPage({username}) {
 				<DialogContent sx={{pb: 1}}>
 					<Grid container spacing={2}>
 						{supportedBadges.map((item) => (
-							<Tooltip key={item.id} title={item.info}>
-								<Grid
-									size={isSmallScreen ? 6 : 4}
+							<Grid
+								key={item.id}
+								size={isSmallScreen ? 6 : 4}
+								sx={{
+									height: 100,
+									border: myBadge === item.id ? 2 : 0,
+									borderColor: theme => theme.palette.primary.main,
+									borderRadius: 1,
+								}}
+							>
+								<ButtonBase
 									sx={{
-										height: 90,
-										border: myBadge === item.id ? 2 : 0,
-										borderColor: theme => theme.palette.primary.main,
-										borderRadius: 1,
+										borderRadius: myBadge === item.id ? 0 : 1,
+										width: "100%",
+										height: "100%",
+									}}
+									onClick={() => {
+										if (data.level >= item.levelRequirement && myBadge !== item.id) {
+											axios.post("/api/account/badge/modify", {badge: item.id}, {
+												headers: {
+													"Content-Type": "application/json",
+												},
+											}).then(res => {
+												if (res.data.status === 1) {
+													setMyBadge(item.id);
+													setClientUser(clientUser => ({
+														...clientUser,
+														badge: item.id,
+													}));
+													setIsManagingBadges(false);
+												}
+											});
+										}
 									}}
 								>
-									<ButtonBase
-										sx={{
-											borderRadius: myBadge === item.id ? 0 : 1,
-											width: "100%",
-											height: "100%",
-										}}
-										onClick={() => {
-											if (data.level >= item.levelRequirement && myBadge !== item.id) {
-												axios.post("/api/account/badge/modify", {badge: item.id}, {
-													headers: {
-														"Content-Type": "application/json",
-													},
-												}).then(res => {
-													if (res.data.status === 1) {
-														setMyBadge(item.id);
-														setClientUser(clientUser => ({
-															...clientUser,
-															badge: item.id,
-														}));
-														setIsManagingBadges(false);
-													}
-												});
-											}
-										}}
+									<Grid
+										container
+										direction="column"
+										gap={0.25}
+										alignItems="center"
+										padding={1}
 									>
-										<Grid
-											container
-											direction="column"
-											gap={0.5}
-											alignItems="center"
-											padding={1}
-										>
-											{item.id ? <UserBadge badge={item.id} fontSize={35}/> :
-												<BlockSharp sx={{color: theme => theme.palette.text.disabled, fontSize: 35}}/>}
-											<Typography color={data.level >= item.levelRequirement ? "textPrimary" : "textDisabled"}>{item.name}</Typography>
-										</Grid>
-									</ButtonBase>
-								</Grid>
-							</Tooltip>
+										{item.id ? <UserBadge badge={item.id} fontSize={35}/> :
+											<BlockSharp sx={{color: theme => theme.palette.text.disabled, fontSize: 35}}/>}
+										<Box>
+											<Typography color={data.level >= item.levelRequirement ? "textPrimary" : "textDisabled"}>
+												{item.name}
+											</Typography>
+											{item.levelRequirement > 0 && <Typography color="textSecondary" fontSize={12}>
+												V{item.levelRequirement}解锁
+											</Typography>}
+										</Box>
+									</Grid>
+								</ButtonBase>
+							</Grid>
 						))}
 					</Grid>
 				</DialogContent>
