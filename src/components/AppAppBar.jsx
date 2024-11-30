@@ -4,13 +4,13 @@ import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
 import Grid from "@mui/material/Grid2";
 import {Badge, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer, useMediaQuery} from "@mui/material";
 import {
 	AnalyticsOutlined,
 	ArticleOutlined,
 	AutoAwesome,
+	CalendarMonth,
 	ChatBubbleOutline,
 	DarkMode,
 	DrawOutlined,
@@ -27,8 +27,10 @@ import {useLocation, useNavigate} from "react-router";
 import PropTypes from "prop-types";
 import Button from "@mui/material/Button";
 import Cookies from "js-cookie";
-import {UserAvatar, UserBadge} from "src/components/UserComponents.jsx";
+import {UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateLink} from "src/components/NavigateComponents.jsx";
+import axios from "axios";
+import {enqueueSnackbar} from "notistack";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -48,7 +50,9 @@ const myName = Cookies.get("username");
 const myInformation = JSON.parse(localStorage.getItem("myInformation")) ?? {};
 
 const LeftBar = memo(function LeftBar({navigateCallback}) {
-	const {clientUser, isClientUserLoading} = useClientUser();
+	const [colorMode, toggleColorMode] = useColorMode();
+	
+	const {clientUser, isClientUserLoading, setClientUser} = useClientUser();
 	const navigate = useNavigate();
 	const firstLevelLocation = useLocation().pathname.split("/")[1];
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -67,6 +71,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 		myInformation.displayName = clientUser.displayName;
 		myInformation.avatarVersion = clientUser.avatarVersion;
 		myInformation.badge = clientUser.badge;
+		myInformation.lastCheckInTime = clientUser.lastCheckInTime;
 		localStorage.setItem("myInformation", JSON.stringify(myInformation));
 	}
 	
@@ -241,6 +246,43 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 					<ListItemText primary="关于"/>
 				</ListItemButton>
 			</List>
+			<Grid
+				container
+				direction="column"
+				sx={{
+					position: "absolute",
+					top: 8,
+					right: 8,
+				}}
+			>
+				<IconButton
+					color="primary"
+					onClick={toggleColorMode}
+				>
+					{colorMode === "auto" ? <AutoAwesome/> : (colorMode === "light" ? <LightMode/> : <DarkMode/>)}
+				</IconButton>
+				<IconButton
+					color={isClientUserLoading && myInformation.lastCheckInTime && new Date(myInformation.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ||
+					!isClientUserLoading && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ? "success" : "warning"}
+					onClick={() => {
+						axios.post("/api/account/check-in").then(res => {
+							if (res.data.status === 1) {
+								enqueueSnackbar("签到成功", {variant: "success"});
+								setClientUser(clientUser => ({
+									...clientUser,
+									lastCheckInTime: new Date(),
+								}));
+							} else if (res.data.status === 2) {
+								enqueueSnackbar("今天已经签过到了喵～", {variant: "error"});
+							} else {
+								enqueueSnackbar("登录状态错误", {variant: "error"});
+							}
+						});
+					}}
+				>
+					<CalendarMonth/>
+				</IconButton>
+			</Grid>
 		</>
 	);
 });
@@ -250,8 +292,6 @@ LeftBar.propTypes = {
 }
 
 export const PCAppBarLeft = memo(function PCAppBarLeft() {
-	const [colorMode, toggleColorMode] = useColorMode();
-	
 	return (
 		<Box
 			sx={{
@@ -264,18 +304,6 @@ export const PCAppBarLeft = memo(function PCAppBarLeft() {
 			}}
 		>
 			<LeftBar/>
-			<IconButton
-				color="primary"
-				size="small"
-				onClick={toggleColorMode}
-				sx={{
-					position: "absolute",
-					top: 8,
-					right: 8,
-				}}
-			>
-				{colorMode === "auto" ? <AutoAwesome/> : (colorMode === "light" ? <LightMode/> : <DarkMode/>)}
-			</IconButton>
 		</Box>
 	);
 });
@@ -299,7 +327,6 @@ export const PCAppBarRight = memo(function PCAppBarRight() {
 
 export const MobileAppBar = memo(function MobileAppBar() {
 	const [open, setOpen] = useState(false);
-	const [colorMode, toggleColorMode] = useColorMode();
 	
 	const toggleDrawer = (newOpen) => () => {
 		setOpen(newOpen);
@@ -318,16 +345,13 @@ export const MobileAppBar = memo(function MobileAppBar() {
 			}}
 		>
 			<Container>
-				<StyledToolbar variant="dense" disableGutters sx={{justifyContent: "flex-end"}}>
-					<Grid container spacing={1} justify="center" alignItems="center">
-						<IconButton size="small" onClick={toggleColorMode}>
-							{colorMode === "auto" ? <AutoAwesome fontSize="small"/> : (
-								colorMode === "light" ? <LightMode fontSize="small"/> : <DarkMode fontSize="small"/>
-							)}
-						</IconButton>
+				<StyledToolbar variant="dense" disableGutters sx={{justifyContent: "flex-start"}}>
+					<Grid container spacing={1} justify="center" alignItems="center" wrap={"nowrap"}>
 						<IconButton aria-label="Menu button" onClick={toggleDrawer(true)} sx={{width: 36, height: 36}}>
-							<MenuIcon/>
+							<UserAvatar username={myName} avatarVersion={myInformation.avatarVersion}
+							            displayName={myInformation.displayName} width={36} height={36}/>
 						</IconButton>
+						<UsernameWithBadge username={myInformation.displayName} badge={myInformation.badge} color={theme => theme.palette.text.primary}/>
 					</Grid>
 					<SwipeableDrawer anchor="left" open={open} onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
 						<Box sx={{height: "100%", overflow: "auto", width: 225}}>
