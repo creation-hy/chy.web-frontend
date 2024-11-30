@@ -5,7 +5,7 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Grid from "@mui/material/Grid2";
-import {Badge, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer, useMediaQuery} from "@mui/material";
+import {Badge, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
 import {
 	AnalyticsOutlined,
 	ArticleOutlined,
@@ -56,7 +56,6 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 	const {clientUser, isClientUserLoading, setClientUser} = useClientUser();
 	const navigate = useNavigate();
 	const firstLevelLocation = useLocation().pathname.split("/")[1];
-	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const navigateAndCloseDrawer = useCallback((event, url) => {
 		if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
@@ -84,7 +83,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 			<Box sx={{mt: 2.5, mb: 1}}>
 				{isClientUserLoading ? (
 					(!myName ? (
-						<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
+						<Grid container direction="column" gap={1.5} sx={{mt: 7}}>
 							<Button
 								variant="contained"
 								href="/register"
@@ -126,7 +125,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 						</Grid>
 					))
 				) : (!clientUser ? (
-					<Grid container direction="column" gap={1.5} sx={{mt: isSmallScreen ? 0 : 6.5}}>
+					<Grid container direction="column" gap={1.5} sx={{mt: 7}}>
 						<Button
 							variant="contained"
 							href="/register"
