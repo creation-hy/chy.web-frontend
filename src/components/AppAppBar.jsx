@@ -261,7 +261,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 				>
 					{colorMode === "auto" ? <AutoAwesome/> : (colorMode === "light" ? <LightMode/> : <DarkMode/>)}
 				</IconButton>
-				<IconButton
+				{isClientUserLoading || clientUser && <IconButton
 					color={isClientUserLoading && myInformation.lastCheckInTime && new Date(myInformation.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ||
 					!isClientUserLoading && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ? "success" : "warning"}
 					onClick={() => {
@@ -281,7 +281,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 					}}
 				>
 					<CalendarMonth/>
-				</IconButton>
+				</IconButton>}
 			</Grid>
 		</>
 	);
