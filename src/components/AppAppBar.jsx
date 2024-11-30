@@ -31,6 +31,7 @@ import {UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserCompo
 import {NavigateLink} from "src/components/NavigateComponents.jsx";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
+import Avatar from "@mui/material/Avatar";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -47,7 +48,7 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 }));
 
 const myName = Cookies.get("username");
-const myInformation = JSON.parse(localStorage.getItem("myInformation")) ?? {};
+let myInformation = JSON.parse(localStorage.getItem("myInformation")) ?? {};
 
 const LeftBar = memo(function LeftBar({navigateCallback}) {
 	const [colorMode, toggleColorMode] = useColorMode();
@@ -72,6 +73,9 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 		myInformation.avatarVersion = clientUser.avatarVersion;
 		myInformation.badge = clientUser.badge;
 		myInformation.lastCheckInTime = clientUser.lastCheckInTime;
+		localStorage.setItem("myInformation", JSON.stringify(myInformation));
+	} else if (!isClientUserLoading) {
+		myInformation = {};
 		localStorage.setItem("myInformation", JSON.stringify(myInformation));
 	}
 	
@@ -348,10 +352,11 @@ export const MobileAppBar = memo(function MobileAppBar() {
 				<StyledToolbar variant="dense" disableGutters sx={{justifyContent: "flex-start"}}>
 					<Grid container spacing={1} justify="center" alignItems="center" wrap={"nowrap"}>
 						<IconButton aria-label="Menu button" onClick={toggleDrawer(true)} sx={{width: 36, height: 36}}>
-							<UserAvatar username={myName} avatarVersion={myInformation.avatarVersion}
-							            displayName={myInformation.displayName} width={36} height={36}/>
+							{myName ? <UserAvatar username={myName} avatarVersion={myInformation.avatarVersion}
+							                      displayName={myInformation.displayName} width={36} height={36}/> : <Avatar/>}
 						</IconButton>
-						<UsernameWithBadge username={myInformation.displayName} badge={myInformation.badge} color={theme => theme.palette.text.primary}/>
+						{myName &&
+							<UsernameWithBadge username={myInformation.displayName} badge={myInformation.badge} color={theme => theme.palette.text.primary}/>}
 					</Grid>
 					<SwipeableDrawer anchor="left" open={open} onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
 						<Box sx={{height: "100%", overflow: "auto", width: 225}}>
