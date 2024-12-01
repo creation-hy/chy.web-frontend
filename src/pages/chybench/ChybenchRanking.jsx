@@ -1,11 +1,10 @@
 import Grid from "@mui/material/Grid2";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import {InputLabel} from "@mui/material";
+import {Backdrop, CircularProgress, InputLabel} from "@mui/material";
 import Box from "@mui/material/Box";
-import {memo, useCallback, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import axios from "axios";
-import {useQuery} from "@tanstack/react-query";
 import FormControl from "@mui/material/FormControl";
 import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import Cookies from "js-cookie";
@@ -14,15 +13,11 @@ import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import {DataGrid} from "@mui/x-data-grid";
 import Pagination from "@mui/material/Pagination";
 import PropTypes from "prop-types";
+import {debounce} from "lodash";
 
 const myname = Cookies.get("username");
 
-const RankingTable = memo(function RankingTable({rankingItem, rankingSize, pageNumber}) {
-	const {data} = useQuery({
-		queryKey: [rankingItem, rankingSize, pageNumber, "fetch"],
-		queryFn: () => axios.get(`/api/chybench/ranking/${rankingItem}/${rankingSize}/${pageNumber}`).then(res => res.data),
-	});
-	
+const RankingTable = memo(function RankingTable({data}) {
 	if (!data) {
 		return null;
 	}
@@ -89,12 +84,12 @@ const RankingTable = memo(function RankingTable({rankingItem, rankingSize, pageN
 		},
 	];
 	
-	const myItem = data.result.find(item => item.username === myname);
+	const myItem = data.find(item => item.username === myname);
 	
 	return (
 		<DataGrid
 			columns={columns}
-			rows={data.result}
+			rows={data}
 			initialState={{
 				pagination: {
 					paginationModel: {
@@ -111,11 +106,8 @@ const RankingTable = memo(function RankingTable({rankingItem, rankingSize, pageN
 });
 
 RankingTable.propTypes = {
-	rankingItem: PropTypes.string.isRequired,
-	rankingSize: PropTypes.number.isRequired,
-	pageNumber: PropTypes.number.isRequired,
+	data: PropTypes.array,
 }
-
 
 export default function ChybenchRanking() {
 	document.title = "排行榜 - Chybench - chy.web";
@@ -127,13 +119,35 @@ export default function ChybenchRanking() {
 	const [rankingSize, setSize] = useState(rankingParams.size ?? 0);
 	const [pageNumber, setPageNumber] = useState(0);
 	
-	const dataCount = useQuery({
-		queryKey: [rankingItem, rankingSize, "count"],
-		queryFn: () => axios.get(`/api/chybench/ranking/count/${rankingItem}/${rankingSize}`).then(res => res.data),
-	});
+	const [dataCount, setDataCount] = useState(0);
+	
+	const [isLoading, setIsLoading] = useState(true);
+	const [rankingData, setRankingData] = useState(null);
+	
+	const toggleLoading = useRef(debounce((newIsLoading) => {
+		setIsLoading(newIsLoading);
+	}, 100));
+	
+	useEffect(() => {
+		toggleLoading.current(true);
+		axios.get(`/api/chybench/ranking/${rankingItem}/${rankingSize}/${pageNumber}`).then(res => {
+			setRankingData(res.data.result);
+			toggleLoading.current(false);
+		});
+	}, [pageNumber, rankingItem, rankingSize]);
+	
+	useEffect(() => {
+		axios.get(`/api/chybench/ranking/count/${rankingItem}/${rankingSize}`).then(res => {
+			setPageNumber(0);
+			setDataCount(res.data.result);
+		});
+	}, [rankingItem, rankingSize]);
 	
 	return (
 		<Grid container direction="column" sx={{minHeight: "100%", justifyContent: "space-between", maxWidth: "100%"}}>
+			<Backdrop open={isLoading} sx={{zIndex: 8964}}>
+				<CircularProgress size={50}/>
+			</Backdrop>
 			<Grid container justifyContent="center" spacing={2} sx={{mb: 2}}>
 				<FormControl margin="dense">
 					<InputLabel id="select-item">
@@ -177,11 +191,12 @@ export default function ChybenchRanking() {
 					</Select>
 				</FormControl>
 			</Grid>
-			<RankingTable rankingItem={rankingItem} rankingSize={rankingSize} pageNumber={pageNumber}/>
+			<RankingTable data={rankingData}/>
 			<Grid container sx={{mt: 2}} justifyContent="center" alignItems="flex-end" flex={1}>
 				<Pagination
+					page={pageNumber + 1}
 					color="primary"
-					count={dataCount && dataCount.data ? Math.ceil(dataCount.data.result / 10.0) : 0}
+					count={Math.ceil(dataCount / 10.0)}
 					onChange={(event, value) => setPageNumber(value - 1)}
 				/>
 			</Grid>
