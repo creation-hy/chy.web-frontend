@@ -12,6 +12,7 @@ import {
 	MenuList,
 	Paper,
 	Switch,
+	Tooltip,
 	useMediaQuery,
 	Zoom
 } from "@mui/material";
@@ -21,7 +22,6 @@ import PropTypes from "prop-types";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography"
 import {
-	AddLinkOutlined,
 	AddReactionOutlined,
 	ArrowBack,
 	ArrowDownward,
@@ -35,7 +35,8 @@ import {
 	FormatQuoteOutlined,
 	InsertDriveFileOutlined,
 	MoreHoriz,
-	SearchOutlined,
+	PersonSearch,
+	Search,
 	Send,
 	SettingsOutlined,
 	UploadFileOutlined,
@@ -68,7 +69,7 @@ import {useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
-import {throttle} from "lodash";
+import {debounce, throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
@@ -500,14 +501,15 @@ const notify = (title, body, iconId, avatarVersion) => {
 
 const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, sendFiles}) {
 	const [binaryColorMode] = useBinaryColorMode();
+	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("md"));
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
 	const [fontStyle, setFontStyle] = useState("");
 	const fontTextRef = useRef(null);
 	
-	const [onAddLink, handleAddLink] = useState(false);
-	const linkHrefRef = useRef(null);
-	const linkTextRef = useRef(null);
+	const [onMessageSearching, setOnMessageSearching] = useState(false);
+	const [messageSearchResults, setMessageSearchResults] = useState(null);
+	const messageSearchInputRef = useRef(null);
 	
 	const [showUploadFileConfirmation, setShowUploadFileConfirmation] = useState(false);
 	const [isFileUploading, setIsFileUploading] = useState(false);
@@ -558,64 +560,85 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 		setShowUploadFileConfirmation(true);
 	}, []);
 	
+	const searchMessage = debounce((key) => {
+		if (!key || key === "") {
+			setMessageSearchResults(null);
+		} else {
+			axios.get(`/api/chat/message/match/${currentUserVar}/0`, {params: {key: key}}).then(res => {
+				setMessageSearchResults(res.data.result);
+			});
+		}
+	}, 200);
+	
 	return (
 		<>
 			<Box>
-				<IconButton
-					sx={{m: 0.5}}
-					onClick={() => {
-						updateCursorSelection();
-						handleEmojiPicker(true);
-					}}
-				>
-					<AddReactionOutlined/>
-				</IconButton>
-				<IconButton
-					sx={{m: 0.5}}
-					onClick={() => {
-						if (isMobile) {
-							setShowFileTypeSelector(true);
-						} else {
-							const input = document.createElement("input");
-							input.type = "file";
-							input.multiple = true;
-							input.onchange = (event) => {
-								sendFiles.current(Array.from(event.target.files));
-								event.target.value = null;
+				<Tooltip title={"添加表情"}>
+					<IconButton
+						sx={{m: 0.5}}
+						onClick={() => {
+							updateCursorSelection();
+							handleEmojiPicker(true);
+						}}
+					>
+						<AddReactionOutlined/>
+					</IconButton>
+				</Tooltip>
+				<Tooltip title={"上传文件"}>
+					<IconButton
+						sx={{m: 0.5}}
+						onClick={() => {
+							if (isMobile) {
+								setShowFileTypeSelector(true);
+							} else {
+								const input = document.createElement("input");
+								input.type = "file";
+								input.multiple = true;
+								input.onchange = (event) => {
+									sendFiles.current(Array.from(event.target.files));
+									event.target.value = null;
+								}
+								input.click();
 							}
-							input.click();
-						}
-					}}
-				>
-					<UploadFileOutlined/>
-				</IconButton>
-				<IconButton
-					sx={{m: 0.5}}
-					onClick={() => {
-						updateCursorSelection();
-						handleSpecialFont(true);
-					}}
-				>
-					<FontDownloadOutlined/>
-				</IconButton>
-				<IconButton
-					sx={{m: 0.5}}
-					onClick={() => {
-						updateCursorSelection();
-						handleAddLink(true);
-					}}
-				>
-					<AddLinkOutlined/>
-				</IconButton>
-				<IconButton
-					sx={{m: 0.5}}
-					onClick={() => {
-						updateCursorSelection();
-						handleSettings(true);
-					}}
-				>
-					<SettingsOutlined/>
-				</IconButton>
+						}}
+					>
+						<UploadFileOutlined/>
+					</IconButton>
+				</Tooltip>
+				<Tooltip title={"特殊字体"}>
+					<IconButton
+						sx={{m: 0.5}}
+						onClick={() => {
+							updateCursorSelection();
+							handleSpecialFont(true);
+						}}
+					>
+						<FontDownloadOutlined/>
+					</IconButton>
+				</Tooltip>
+				<Tooltip title={"搜索聊天记录"}>
+					<IconButton
+						sx={{m: 0.5}}
+						onClick={() => {
+							searchMessage("");
+							setMessageSearchResults(null);
+							setOnMessageSearching(true);
+						}}
+					>
+						<Search/>
+					</IconButton>
+				</Tooltip>
+				<Tooltip title={"设置"}>
+					<IconButton
+						sx={{m: 0.5}}
+						onClick={() => {
+							updateCursorSelection();
+							handleSettings(true);
+						}}
+					>
+						<SettingsOutlined/>
+					</IconButton>
+				</Tooltip>
 			</Box>
 			<Dialog open={showFileTypeSelector} onClose={() => setShowFileTypeSelector(false)}>
 				<MenuList>
@@ -720,26 +743,89 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 					</Button>
 				</DialogActions>
 			</Dialog>
-			<Dialog open={onAddLink} onClose={() => handleAddLink(false)} fullWidth>
-				<DialogTitle>
-					添加链接
-				</DialogTitle>
-				<DialogContent>
-					<MarkdownChecker/>
-					<Grid container gap={2}>
-						<TextField label="链接地址" sx={{mt: 1}} fullWidth inputRef={linkHrefRef}/>
-						<TextField label="显示文本" fullWidth inputRef={linkTextRef}/>
-					</Grid>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => handleAddLink(false)}>关闭</Button>
-					<Button
-						onClick={() => {
-							insertText("[" + linkTextRef.current.value + "](" + linkHrefRef.current.value + ")",
-								() => handleAddLink(false));
-						}}
-					>确认</Button>
-				</DialogActions>
+			<Dialog
+				open={onMessageSearching}
+				onClose={() => setOnMessageSearching(false)}
+				fullWidth
+				fullScreen={isSmallScreen}
+			>
+				<Grid container direction="column" justifyContent="space-between" height="100%" minHeight={0} wrap="nowrap">
+					<DialogTitle sx={{pb: 1.5}}>
+						<Grid container direction="column" gap={1}>
+							<Typography variant="h6">
+								聊天记录搜索
+							</Typography>
+							<OutlinedInput
+								autoFocus
+								inputRef={messageSearchInputRef}
+								inputProps={{style: {paddingTop: 10, paddingBottom: 10, marginTop: 1}}}
+								fullWidth
+								placeholder={"消息内容或发送者昵称"}
+								startAdornment={
+									<InputAdornment position="start">
+										<Search/>
+									</InputAdornment>
+								}
+								endAdornment={
+									<InputAdornment position="end">
+										{Boolean(messageSearchResults) && <Cancel
+											fontSize="small"
+											sx={{cursor: "pointer"}}
+											onClick={() => {
+												messageSearchInputRef.current.value = "";
+												searchMessage("");
+												setMessageSearchResults(null);
+											}}
+										/>}
+									</InputAdornment>
+								}
+								onChange={(event) => {
+									searchMessage(event.target.value);
+								}}
+							/>
+						</Grid>
+					</DialogTitle>
+					{messageSearchResults && messageSearchResults.length > 0 && <Divider/>}
+					{messageSearchResults && (
+						messageSearchResults.length === 0 ? (
+							<Typography align={"center"} color={"textSecondary"} sx={{py: 1}}>
+								没有找到相关消息呢……
+							</Typography>
+						) : (
+							<DialogContent sx={{pb: 1.5, pt: 1.5}}>
+								<List sx={{py: 0}}>
+									{messageSearchResults.map((item) => (
+										<ListItemButton
+											key={item.id}
+											sx={{borderRadius: 1, px: 1}}
+										>
+											<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.5}}>
+												<UserAvatar username={item.username} avatarVersion={item.avatarVersion}/>
+											</ListItemAvatar>
+											<Grid container direction="column" width="100%">
+												<Grid container justifyContent="space-between" wrap="nowrap">
+													<UsernameWithBadge username={item.displayName} badge={item.badge}/>
+													<Typography fontSize={13} color="textSecondary">
+														{convertDateToLocaleAbsoluteString(item.time)}
+													</Typography>
+												</Grid>
+												<Box fontSize={15} maxWidth="100%" sx={{wordBreak: "break-word"}}>
+													<ChatMarkdown useMarkdown={item.useMarkdown}>
+														{item.content}
+													</ChatMarkdown>
+												</Box>
+											</Grid>
+										</ListItemButton>
+									))}
+								</List>
+							</DialogContent>
+						)
+					)}
+					{messageSearchResults && messageSearchResults.length > 0 && <Divider/>}
+					<DialogActions>
+						<Button onClick={() => setOnMessageSearching(false)}>关闭</Button>
+					</DialogActions>
+				</Grid>
 			</Dialog>
 			<Dialog open={onEmojiPicker} onClose={() => handleEmojiPicker(false)} PaperProps={{sx: {borderRadius: "10px", margin: 0}}}>
 				<Picker
@@ -1397,13 +1483,14 @@ export default function Chat() {
 					height: "100%",
 					display: username && isSmallScreen ? "none" : "flex",
 					flexDirection: "column",
+					borderTop: 0,
 				}}
 			>
 				<OutlinedInput
 					inputRef={userSearchField}
 					startAdornment={
 						<InputAdornment position="start">
-							<SearchOutlined fontSize="small"/>
+							<PersonSearch sx={{fontSize: 22}}/>
 						</InputAdornment>
 					}
 					endAdornment={
@@ -1419,7 +1506,7 @@ export default function Chat() {
 						</InputAdornment>
 					}
 					placeholder="搜索用户"
-					sx={{fontSize: 14}}
+					sx={{fontSize: 15, mt: "1px"}}
 					onFocus={() => {
 						if (!matchList)
 							setMatchList([]);
@@ -1640,14 +1727,14 @@ export default function Chat() {
 							onDelete={() => setQuote(null)}
 						/>
 					}
-					<Card variant="outlined" sx={{maxWidth: "100%"}}>
+					<Card variant="outlined" sx={{maxWidth: "100%", borderTop: 0}}>
 						<TextField
 							inputRef={messageInput}
 							placeholder="Message"
 							multiline
 							fullWidth
 							maxRows={10}
-							slotProps={{input: {style: {padding: 10}}}}
+							slotProps={{input: {style: {padding: 10, marginTop: 1}}}}
 							sx={{
 								borderRadius: "8px",
 								backgroundColor: isDragging ? (theme) => theme.palette.divider : "normal",

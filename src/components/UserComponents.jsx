@@ -124,7 +124,7 @@ UsernameWithBadge.propTypes = {
 	fontWeight: PropTypes.string,
 	fontSize: PropTypes.number,
 	size: PropTypes.number,
-	color: PropTypes.object,
+	color: PropTypes.any,
 }
 
 export const SimpleUserItem = memo(function SimpleUserItem({username, displayName, avatarVersion, badge, disableNavigate = false, ...props}) {

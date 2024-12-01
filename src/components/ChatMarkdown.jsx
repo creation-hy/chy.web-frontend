@@ -29,31 +29,48 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 			remarkPlugins={[remarkGfm, remarkBreaks]}
 			components={{
 				hr: () => <Divider sx={{my: 1}}/>,
-				a: ({href, title, children}) => (<Link href={href} title={title}>{children}</Link>),
+				a: ({href, title, children}) => (
+					<Link href={href} title={title} onClick={(event) => event.stopPropagation()}>
+						{children}
+					</Link>
+				),
 				
-				table: ({children}) => (<TableContainer component={Paper} sx={{my: 0.5}}>
-					<Table size="small">{children}</Table>
-				</TableContainer>),
+				table: ({children}) => (
+					<TableContainer component={Paper} sx={{my: 0.5}}>
+						<Table size="small">{children}</Table>
+					</TableContainer>
+				),
 				tbody: ({children}) => (<TableBody>{children}</TableBody>),
 				tr: ({children}) => (<TableRow>{children}</TableRow>),
 				td: ({children}) => (<TableCell>{children}</TableCell>),
 				
-				ol: ({children}) => (<List sx={{
-					listStyleType: "decimal",
-					m: 0,
-					p: 0,
-					"& .MuiListItem-root": {display: "list-item"},
-				}}>{children}</List>),
-				ul: ({children}) => (<List sx={{
-					listStyleType: "disc",
-					m: 0,
-					p: 0,
-					"& .MuiListItem-root": {display: "list-item"},
-				}}>{children}</List>),
+				ol: ({children}) => (
+					<List
+						sx={{
+							listStyleType: "decimal",
+							m: 0,
+							p: 0,
+							"& .MuiListItem-root": {display: "list-item"},
+						}}
+					>
+						{children}
+					</List>
+				),
+				ul: ({children}) => (
+					<List sx={{
+						listStyleType: "disc",
+						m: 0,
+						p: 0,
+						"& .MuiListItem-root": {display: "list-item"},
+					}}>
+						{children}
+					</List>
+				),
 				li: ({children}) => (
 					<ListItem sx={{m: 0, p: 0}} disableGutters>
 						{children}
-					</ListItem>),
+					</ListItem>
+				),
 				
 				code: ({className, children}) => {
 					const match = /language-(\w+)/.exec(className || "");
