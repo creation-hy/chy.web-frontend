@@ -1372,7 +1372,9 @@ export default function Chat() {
 		
 		if (disconnectErrorBarKey.current) {
 			closeSnackbar(disconnectErrorBarKey.current);
-			getMessages(currentUserVar, 0, true);
+			if (messagePageNumberNew.current === 0) {
+				getMessages(currentUserVar, 0, true);
+			}
 			setContactsVersion(version => version + 1);
 			disconnectErrorBarKey.current = null;
 		}
