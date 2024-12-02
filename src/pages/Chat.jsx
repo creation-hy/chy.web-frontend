@@ -198,7 +198,7 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, ...props}) {
+export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, disableTouchRipple, ...props}) {
 	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
 	
 	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng|bmp)$/i.test(fileName) && deleted === false) {
@@ -214,6 +214,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 	return (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
 			<ListItemButton
+				disableTouchRipple={disableTouchRipple}
 				sx={{borderRadius: "8px"}}
 				onClick={!url ? undefined : () => {
 					if (!deleted) {
@@ -268,6 +269,7 @@ MessageFile.propTypes = {
 	fileName: PropTypes.string.isRequired,
 	fileSize: PropTypes.number.isRequired,
 	deleted: PropTypes.bool,
+	disableTouchRipple: PropTypes.bool,
 }
 
 const Message = memo(function Message({messageId, type, username, displayName, avatarVersion, badge, content, file, quote, setQuote, useMarkdown}) {
@@ -818,7 +820,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 								没有找到相关消息呢……
 							</Typography>
 						) : (
-							<DialogContent ref={messageSearchResultBodyRef} sx={{pb: 1.5, pt: 1.5}}>
+							<DialogContent ref={messageSearchResultBodyRef} sx={{py: 1}}>
 								<List sx={{py: 0}}>
 									{messageSearchResults.map((message, messageIndex) => (
 										<ListItemButton
@@ -837,9 +839,19 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 													</Typography>
 												</Grid>
 												<Box fontSize={15} maxWidth="100%" sx={{wordBreak: "break-word"}}>
-													<ChatMarkdown useMarkdown={message.useMarkdown}>
-														{message.content}
-													</ChatMarkdown>
+													{message.type === 1 ? (
+														<ChatMarkdown useMarkdown={message.useMarkdown}>
+															{message.content}
+														</ChatMarkdown>
+													) : (
+														<MessageFile
+															url={message.file.url}
+															fileName={message.file.fileName}
+															fileSize={message.file.fileSize}
+															deleted={message.file.deleted}
+															disableTouchRipple
+														/>
+													)}
 												</Box>
 											</Grid>
 										</ListItemButton>
