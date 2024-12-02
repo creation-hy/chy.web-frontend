@@ -116,34 +116,34 @@ const News = memo(function News({username, displayName, avatarVersion}) {
 						<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 					</IconButton>
 					<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-start' spacing={0.7}>
-						<Paper
-							elevation={3}
-							sx={{
-								padding: '8px 11px',
-								px: chat.type === 1 ? undefined : 0,
-								pt: chat.type === 1 ? undefined : 0,
-								borderRadius: '10px',
-								wordBreak: 'break-word',
-								maxWidth: "100%",
-							}}
-						>
-							<Box sx={{fontSize: 15}}>
-								{chat.type === 1 ? (
+						{chat.type === 1 ? (
+							<Paper
+								elevation={3}
+								sx={{
+									padding: '8px 11px',
+									px: chat.type === 1 ? undefined : 0,
+									pt: chat.type === 1 ? undefined : 0,
+									borderRadius: '10px',
+									wordBreak: 'break-word',
+									maxWidth: "100%",
+								}}
+							>
+								<Box sx={{fontSize: 15}}>
 									<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
-								) : (
-									<MessageFile
-										url={chat.file.url}
-										fileName={chat.file.fileName}
-										fileSize={chat.file.fileSize}
-										deleted={chat.file.deleted}
-										onContextMenu={(event) => event.preventDefault()}
-									/>
-								)}
-							</Box>
-							<Typography variant="caption" display="block" textAlign="right" mt={1} mr={chat.type === 1 ? undefined : "11px"}>
-								{convertDateToLocaleAbsoluteString(chat.time)}
-							</Typography>
-						</Paper>
+								</Box>
+								<Typography variant="caption" display="block" textAlign="right" mt={1} mr={chat.type === 1 ? undefined : "11px"}>
+									{convertDateToLocaleAbsoluteString(chat.time)}
+								</Typography>
+							</Paper>
+						) : (
+							<MessageFile
+								url={chat.file.url}
+								fileName={chat.file.fileName}
+								fileSize={chat.file.fileSize}
+								deleted={chat.file.deleted}
+								onContextMenu={(event) => event.preventDefault()}
+							/>
+						)}
 						{chat.quote != null &&
 							<Chip
 								variant="outlined"

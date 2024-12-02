@@ -392,10 +392,12 @@ const Message = memo(function Message({messageId, type, username, displayName, a
 				<DialogTitle>
 					<UsernameWithBadge username={displayName} badge={badge} fontSize={20} size={22}/>
 				</DialogTitle>
-				<DialogContent>
-					{type === 1 ? (
+				{type === 1 ? (
+					<DialogContent>
 						<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
-					) : (
+					</DialogContent>
+				) : (
+					<DialogContent sx={{display: "grid"}}>
 						<MessageFile
 							url={file.url}
 							fileName={file.fileName}
@@ -403,8 +405,8 @@ const Message = memo(function Message({messageId, type, username, displayName, a
 							deleted={file.deleted}
 							onContextMenu={(event) => event.preventDefault()}
 						/>
-					)}
-				</DialogContent>
+					</DialogContent>
+				)}
 				<DialogActions>
 					<Button onClick={() => setOnDialog(false)} color="primary">关闭</Button>
 				</DialogActions>
