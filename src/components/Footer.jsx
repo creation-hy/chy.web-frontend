@@ -9,7 +9,7 @@ function Copyright() {
 	return (
 		<Typography variant="body2" sx={{color: 'text.secondary', mt: 1}}>
 			{'Copyright © '}
-			chy.web
+			ChyAI
 			&nbsp;
 			2021-{new Date().getFullYear()}
 		</Typography>
@@ -24,8 +24,8 @@ export default function Footer() {
 				flexDirection: 'column',
 				alignItems: 'center',
 				gap: isMobile ? 2 : 4,
-				pb: isMobile ? 0 : 1,
-				pt: 3,
+				pb: isMobile ? 0 : 2,
+				pt: 1,
 				textAlign: {sm: 'center', md: 'left'},
 			}}
 		>
