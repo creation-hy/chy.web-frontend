@@ -886,7 +886,8 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 																	);
 																}
 																return content;
-															})}
+															})
+														}
 														badge={message.badge}
 													/>
 													<Typography fontSize={13} color="textSecondary">
@@ -895,7 +896,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 												</Grid>
 												<Box fontSize={15} maxWidth="100%" sx={{wordBreak: "break-word"}}>
 													{message.type === 1 ? (
-														<ChatMarkdown useMarkdown={message.useMarkdown} keyword={messageSearchInputRef.current.value}>
+														<ChatMarkdown useMarkdown={message.useMarkdown} keyword={messageSearchInputRef.current?.value}>
 															{message.content}
 														</ChatMarkdown>
 													) : (
@@ -1681,22 +1682,7 @@ export default function Chat() {
 					</List>
 					{matchList && <List>
 						{matchList.map((user, userIndex) => {
-							const displayNameIndex = user.displayName.toLowerCase().indexOf(userSearchField.current.value.toLowerCase());
-							const usernameIndex = user.username.toLowerCase().indexOf(userSearchField.current.value.toLowerCase());
-							const keyLength = userSearchField.current.value.length;
-							let beforeHighlight, highlight, afterHighlight;
-							
-							if (displayNameIndex !== -1) {
-								beforeHighlight = user.displayName.slice(0, displayNameIndex);
-								highlight = user.displayName.slice(displayNameIndex, displayNameIndex + keyLength);
-								afterHighlight = `${user.displayName.slice(displayNameIndex + keyLength)} (@${user.username})`;
-							} else if (usernameIndex !== -1) {
-								beforeHighlight = `${user.displayName} (@${user.username.slice(0, usernameIndex)}`;
-								highlight = user.username.slice(usernameIndex, usernameIndex + keyLength);
-								afterHighlight = `${user.username.slice(usernameIndex + keyLength)})`;
-							} else {
-								return null;
-							}
+							const regex = new RegExp(`(${userSearchField.current?.value?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i");
 							
 							return (
 								<ListItemButton
@@ -1716,11 +1702,17 @@ export default function Chat() {
 										lastMessageText={user.lastMessageText || "\u00A0"}
 										draft={user.draft}
 										displayNameNode={
-											<>
-												{beforeHighlight}
-												<Typography component="span" color="primary" fontWeight="bold">{highlight}</Typography>
-												{afterHighlight}
-											</>
+											(regex.test(user.displayName) ? user.displayName : "@" + user.username).split(regex).map((content, index) => {
+												if (regex?.test(content)) {
+													return (
+														<Typography key={index} component="span" color="primary" fontSize="inherit"
+														            fontWeight="inherit">
+															{content}
+														</Typography>
+													);
+												}
+												return content;
+											})
 										}
 									/>
 								</ListItemButton>
