@@ -511,6 +511,20 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	const [messageSearchResults, setMessageSearchResults] = useState(null);
 	const messageSearchInputRef = useRef(null);
 	
+	const messageSearchPageNumberCurrent = useRef(0);
+	const messageSearchPageNumberNew = useRef(0);
+	const lastMatchedMessageRef = useRef(null);
+	const messageSearchObserver = useRef(new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && messageSearchPageNumberNew.current === messageSearchPageNumberCurrent.current) {
+			messageSearchPageNumberNew.current = messageSearchPageNumberCurrent.current + 1;
+			axios.get(`/api/chat/message/match/${currentUserVar}/${messageSearchPageNumberNew.current}`, {params: {key: messageSearchInputRef.current.value}}).then(res => {
+				if (res.data?.result?.length > 0) {
+					setMessageSearchResults(result => result ? [...result, ...res.data.result] : res.data.result);
+				}
+			});
+		}
+	}));
+	
 	const [showUploadFileConfirmation, setShowUploadFileConfirmation] = useState(false);
 	const [isFileUploading, setIsFileUploading] = useState(false);
 	const [showFileTypeSelector, setShowFileTypeSelector] = useState(false);
@@ -536,6 +550,14 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 		inputField.current.focus();
 		inputField.current.setSelectionRange(start + text.length, start + text.length);
 	}, [inputField]);
+	
+	useEffect(() => {
+		if (lastMatchedMessageRef.current) {
+			messageSearchPageNumberCurrent.current = messageSearchPageNumberNew.current;
+			messageSearchObserver.current.disconnect();
+			messageSearchObserver.current.observe(lastMatchedMessageRef.current);
+		}
+	}, [messageSearchResults]);
 	
 	const MarkdownChecker = memo(function MarkdownChecker() {
 		return settings.useMarkdown === false && (
@@ -794,24 +816,25 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 						) : (
 							<DialogContent sx={{pb: 1.5, pt: 1.5}}>
 								<List sx={{py: 0}}>
-									{messageSearchResults.map((item) => (
+									{messageSearchResults.map((message, messageIndex) => (
 										<ListItemButton
-											key={item.id}
+											key={message.id}
+											ref={messageIndex === messageSearchResults.length - 1 ? lastMatchedMessageRef : null}
 											sx={{borderRadius: 1, px: 1}}
 										>
 											<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.5}}>
-												<UserAvatar username={item.username} avatarVersion={item.avatarVersion}/>
+												<UserAvatar username={message.username} avatarVersion={message.avatarVersion}/>
 											</ListItemAvatar>
 											<Grid container direction="column" width="100%">
 												<Grid container justifyContent="space-between" wrap="nowrap">
-													<UsernameWithBadge username={item.displayName} badge={item.badge}/>
+													<UsernameWithBadge username={message.displayName} badge={message.badge}/>
 													<Typography fontSize={13} color="textSecondary">
-														{convertDateToLocaleAbsoluteString(item.time)}
+														{convertDateToLocaleAbsoluteString(message.time)}
 													</Typography>
 												</Grid>
 												<Box fontSize={15} maxWidth="100%" sx={{wordBreak: "break-word"}}>
-													<ChatMarkdown useMarkdown={item.useMarkdown}>
-														{item.content}
+													<ChatMarkdown useMarkdown={message.useMarkdown}>
+														{message.content}
 													</ChatMarkdown>
 												</Box>
 											</Grid>
