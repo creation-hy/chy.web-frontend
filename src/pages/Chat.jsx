@@ -1,7 +1,9 @@
-import {memo, useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
+import {memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import axios from "axios";
 import {
+	Backdrop,
 	Badge,
+	CircularProgress,
 	Fab,
 	InputLabel,
 	List,
@@ -501,7 +503,7 @@ const notify = (title, body, iconId, avatarVersion) => {
 	}
 };
 
-const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, sendFiles}) {
+const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, sendFiles, setMessages, messagePageNumberNew, messagePageNumberCurrent}) {
 	const [binaryColorMode] = useBinaryColorMode();
 	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("md"));
 	
@@ -511,6 +513,10 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	
 	const [onMessageSearching, setOnMessageSearching] = useState(false);
 	const [messageSearchResults, setMessageSearchResults] = useState(null);
+	const [isMessageSearchScrollLoading, setIsMessageSearchScrollLoading] = useState(false);
+	const toggleMessageSearchScrollLoading = useRef(debounce((isLoading) => {
+		setIsMessageSearchScrollLoading(isLoading);
+	}, 100));
 	const messageSearchInputRef = useRef(null);
 	const messageSearchResultBodyRef = useRef(null);
 	
@@ -771,6 +777,9 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 					</Button>
 				</DialogActions>
 			</Dialog>
+			<Backdrop open={isMessageSearchScrollLoading} sx={{zIndex: 8964}}>
+				<CircularProgress size={50}/>
+			</Backdrop>
 			<Dialog
 				open={onMessageSearching}
 				onClose={() => setOnMessageSearching(false)}
@@ -827,6 +836,32 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 											key={message.id}
 											ref={messageIndex === messageSearchResults.length - 1 ? lastMatchedMessageRef : null}
 											sx={{borderRadius: 1, px: 1}}
+											onClick={async () => {
+												if (!messagesVar.find(item => item.id === message.id)) {
+													toggleMessageSearchScrollLoading.current(true);
+													
+													let currentMessageList;
+													
+													do {
+														messagePageNumberNew.current = messagePageNumberCurrent.current = messagePageNumberCurrent.current + 1;
+														console.log(messagePageNumberNew.current);
+														currentMessageList = await axios.get(`/api/chat/message/${currentUserVar}/${messagePageNumberNew.current}`)
+															.then(res => res.data.result.message);
+														messagesVar = [...currentMessageList, ...messagesVar];
+													} while (!currentMessageList.find(item => item.id === message.id));
+													
+													flushSync(() => setMessages([...messagesVar]));
+													
+													toggleMessageSearchScrollLoading.current(false);
+												}
+												
+												if (document.getElementById(`message-${message.id}`)) {
+													document.getElementById(`message-${message.id}`).scrollIntoView({behavior: "smooth"});
+													setOnMessageSearching(false);
+												} else {
+													enqueueSnackbar("消息不存在", {variant: "error"});
+												}
+											}}
 										>
 											<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.5}}>
 												<UserAvatar username={message.username} avatarVersion={message.avatarVersion}/>
@@ -964,6 +999,9 @@ ChatToolBar.propTypes = {
 	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
 	sendFiles: PropTypes.object.isRequired,
+	setMessages: PropTypes.func.isRequired,
+	messagePageNumberNew: PropTypes.any.isRequired,
+	messagePageNumberCurrent: PropTypes.any.isRequired,
 }
 
 const ScrollTop = memo(function ScrollTop({children, messageCard}) {
@@ -1050,12 +1088,6 @@ export default function Chat() {
 	const messagePageNumberCurrent = useRef(0);
 	const messagePageNumberNew = useRef(0);
 	const lastMessageRef = useRef(null);
-	const messageLoadingObserver = useRef(new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && messagePageNumberNew.current === messagePageNumberCurrent.current) {
-			messagePageNumberNew.current = messagePageNumberCurrent.current + 1;
-			getMessages(currentUserVar, messagePageNumberNew.current);
-		}
-	}));
 	
 	const userFindPageNumberCurrent = useRef(0);
 	const userFindPageNumberNew = useRef(0);
@@ -1165,6 +1197,13 @@ export default function Chat() {
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
 	}, [messageCardScrollTo, navigate, setClientUser]);
+	
+	const messageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
+		if (entries[0].isIntersecting && messagePageNumberNew.current === messagePageNumberCurrent.current) {
+			messagePageNumberNew.current = messagePageNumberCurrent.current + 1;
+			getMessages(currentUserVar, messagePageNumberNew.current);
+		}
+	}), [getMessages]);
 	
 	const [isContactsLoading, setIsContactsLoading] = useState(true);
 	
@@ -1473,10 +1512,10 @@ export default function Chat() {
 	useEffect(() => {
 		if (lastMessageRef.current) {
 			messagePageNumberCurrent.current = messagePageNumberNew.current;
-			messageLoadingObserver.current.disconnect();
-			messageLoadingObserver.current.observe(lastMessageRef.current);
+			messageLoadingObserver.disconnect();
+			messageLoadingObserver.observe(lastMessageRef.current);
 		}
-	}, [messages]);
+	}, [messageLoadingObserver, messages]);
 	
 	useEffect(() => {
 		if (lastUserFindingRef.current) {
@@ -1817,7 +1856,15 @@ export default function Chat() {
 							}}
 						/>
 						<Grid container justifyContent="space-between">
-							<ChatToolBar inputField={messageInput} quote={quote} setQuote={setQuote} sendFiles={sendFiles}/>
+							<ChatToolBar
+								inputField={messageInput}
+								quote={quote}
+								setQuote={setQuote}
+								sendFiles={sendFiles}
+								setMessages={setMessages}
+								messagePageNumberNew={messagePageNumberNew}
+								messagePageNumberCurrent={messagePageNumberCurrent}
+							/>
 							<Button variant="contained" startIcon={<Send/>} sx={{my: "auto", mr: 0.75}} onClick={sendMessage}>发送</Button>
 						</Grid>
 					</Card>
