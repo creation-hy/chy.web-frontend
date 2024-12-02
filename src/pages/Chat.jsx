@@ -510,6 +510,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	const [onMessageSearching, setOnMessageSearching] = useState(false);
 	const [messageSearchResults, setMessageSearchResults] = useState(null);
 	const messageSearchInputRef = useRef(null);
+	const messageSearchResultBodyRef = useRef(null);
 	
 	const messageSearchPageNumberCurrent = useRef(0);
 	const messageSearchPageNumberNew = useRef(0);
@@ -587,7 +588,10 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 			setMessageSearchResults(null);
 		} else {
 			axios.get(`/api/chat/message/match/${currentUserVar}/0`, {params: {key: key}}).then(res => {
-				setMessageSearchResults(res.data.result);
+				flushSync(() => setMessageSearchResults(res.data.result));
+				if (messageSearchResultBodyRef.current) {
+					messageSearchResultBodyRef.current.scrollTo({top: 0, behavior: "instant"});
+				}
 			});
 		}
 	}, 200);
@@ -814,7 +818,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 								没有找到相关消息呢……
 							</Typography>
 						) : (
-							<DialogContent sx={{pb: 1.5, pt: 1.5}}>
+							<DialogContent ref={messageSearchResultBodyRef} sx={{pb: 1.5, pt: 1.5}}>
 								<List sx={{py: 0}}>
 									{messageSearchResults.map((message, messageIndex) => (
 										<ListItemButton
