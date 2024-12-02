@@ -513,6 +513,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	
 	const [onMessageSearching, setOnMessageSearching] = useState(false);
 	const [messageSearchResults, setMessageSearchResults] = useState(null);
+	const [messageSearchRegex, setMessageSearchRegex] = useState(null);
 	const [isMessageSearchScrollLoading, setIsMessageSearchScrollLoading] = useState(false);
 	const toggleMessageSearchScrollLoading = useRef(debounce((isLoading) => {
 		setIsMessageSearchScrollLoading(isLoading);
@@ -596,6 +597,9 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 			setMessageSearchResults(null);
 		} else {
 			axios.get(`/api/chat/message/match/${currentUserVar}/0`, {params: {key: key}}).then(res => {
+				messageSearchPageNumberNew.current = 0;
+				messageSearchPageNumberCurrent.current = 0;
+				setMessageSearchRegex(new RegExp(`(${key?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i"));
 				flushSync(() => setMessageSearchResults(res.data.result));
 				if (messageSearchResultBodyRef.current) {
 					messageSearchResultBodyRef.current.scrollTo({top: 0, behavior: "instant"});
@@ -868,14 +872,28 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 											</ListItemAvatar>
 											<Grid container direction="column" width="100%">
 												<Grid container justifyContent="space-between" wrap="nowrap">
-													<UsernameWithBadge username={message.displayName} badge={message.badge}/>
+													<UsernameWithBadge
+														username={
+															message.displayName.split(messageSearchRegex).map((content, index) => {
+																if (messageSearchRegex?.test(content)) {
+																	return (
+																		<Typography key={index} component="span" color="primary" fontSize="inherit"
+																		            fontWeight="inherit">
+																			{content}
+																		</Typography>
+																	);
+																}
+																return content;
+															})}
+														badge={message.badge}
+													/>
 													<Typography fontSize={13} color="textSecondary">
 														{convertDateToLocaleAbsoluteString(message.time)}
 													</Typography>
 												</Grid>
 												<Box fontSize={15} maxWidth="100%" sx={{wordBreak: "break-word"}}>
 													{message.type === 1 ? (
-														<ChatMarkdown useMarkdown={message.useMarkdown}>
+														<ChatMarkdown useMarkdown={message.useMarkdown} keyword={messageSearchInputRef.current.value}>
 															{message.content}
 														</ChatMarkdown>
 													) : (

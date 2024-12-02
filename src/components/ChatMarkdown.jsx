@@ -8,10 +8,10 @@ import SyntaxHighlighter from "react-syntax-highlighter";
 import {tomorrow, tomorrowNight} from "react-syntax-highlighter/dist/cjs/styles/hljs";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import remarkBreaks from "remark-breaks";
-import {memo} from "react";
+import React, {memo, useCallback, useMemo} from "react";
 import Typography from "@mui/material/Typography";
 
-export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, ...props}) {
+export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, keyword, ...props}) {
 	if (!children)
 		children = "";
 	
@@ -22,6 +22,35 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 		.replace(/(?<!~)~(?!~)([^~]+)~(?!~)/g, '\\~$1\\~');
 	
 	const [binaryColorMode] = useBinaryColorMode();
+	const regex = useMemo(() =>
+		new RegExp(`(${keyword?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i"), [keyword]);
+	
+	const highlightText = useCallback((node) => {
+		if (!keyword) {
+			return node;
+		}
+		
+		if (typeof node === 'string') {
+			return node.split(regex).map((content, index) => {
+				if (regex.test(content)) {
+					return (
+						<Typography key={index} component="span" color="primary" fontSize="inherit" fontWeight="inherit">
+							{content}
+						</Typography>
+					);
+				}
+				return content;
+			});
+		} else if (React.isValidElement(node)) {
+			return React.cloneElement(node, {
+				children: React.Children.map(node.props.children, highlightText),
+			});
+		} else if (node) {
+			return React.Children.map(node, highlightText);
+		}
+		
+		return node;
+	}, [keyword]);
 	
 	return useMarkdown ? (
 		<Markdown
@@ -31,18 +60,32 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 				hr: () => <Divider sx={{my: 1}}/>,
 				a: ({href, title, children}) => (
 					<Link href={href} title={title} onClick={(event) => event.stopPropagation()}>
-						{children}
+						{highlightText(children)}
 					</Link>
 				),
+				p: ({children}) => (
+					<Typography fontSize="inherit">
+						{highlightText(children)}
+					</Typography>
+				),
+				
+				h1: ({children}) => (<h1>{highlightText(children)}</h1>),
+				h2: ({children}) => (<h2>{highlightText(children)}</h2>),
+				h3: ({children}) => (<h3>{highlightText(children)}</h3>),
+				h4: ({children}) => (<h4>{highlightText(children)}</h4>),
+				h5: ({children}) => (<h5>{highlightText(children)}</h5>),
+				h6: ({children}) => (<h6>{highlightText(children)}</h6>),
 				
 				table: ({children}) => (
 					<TableContainer component={Paper} sx={{my: 0.5}}>
-						<Table size="small">{children}</Table>
+						<Table size="small">
+							{highlightText(children)}
+						</Table>
 					</TableContainer>
 				),
-				tbody: ({children}) => (<TableBody>{children}</TableBody>),
-				tr: ({children}) => (<TableRow>{children}</TableRow>),
-				td: ({children}) => (<TableCell>{children}</TableCell>),
+				tbody: ({children}) => (<TableBody>{highlightText(children)}</TableBody>),
+				tr: ({children}) => (<TableRow>{highlightText(children)}</TableRow>),
+				td: ({children}) => (<TableCell>{highlightText(children)}</TableCell>),
 				
 				ol: ({children}) => (
 					<List
@@ -53,7 +96,7 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 							"& .MuiListItem-root": {display: "list-item"},
 						}}
 					>
-						{children}
+						{highlightText(children)}
 					</List>
 				),
 				ul: ({children}) => (
@@ -63,12 +106,12 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 						p: 0,
 						"& .MuiListItem-root": {display: "list-item"},
 					}}>
-						{children}
+						{highlightText(children)}
 					</List>
 				),
 				li: ({children}) => (
 					<ListItem sx={{m: 0, p: 0}} disableGutters>
-						{children}
+						{highlightText(children)}
 					</ListItem>
 				),
 				
@@ -92,7 +135,7 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 							marginLeft: 2,
 							marginRight: 2,
 						}}>
-							{children}
+							{highlightText(children)}
 						</code>
 					);
 				},
@@ -107,7 +150,7 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 		</Markdown>
 	) : (
 		<Typography whiteSpace="pre-wrap" fontSize="inherit">
-			{children}
+			{highlightText(children)}
 		</Typography>
 	);
 });
@@ -115,4 +158,5 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, .
 ChatMarkdown.propTypes = {
 	useMarkdown: PropTypes.bool,
 	children: PropTypes.string,
+	keyword: PropTypes.string,
 }
