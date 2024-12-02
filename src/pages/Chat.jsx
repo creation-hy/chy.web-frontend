@@ -1684,6 +1684,10 @@ export default function Chat() {
 						{matchList.map((user, userIndex) => {
 							const regex = new RegExp(`(${userSearchField.current?.value?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i");
 							
+							if (!regex.test(user.username) && !regex.test(user.displayName)) {
+								return null;
+							}
+							
 							return (
 								<ListItemButton
 									key={user.username}
