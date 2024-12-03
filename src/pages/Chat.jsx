@@ -274,7 +274,22 @@ MessageFile.propTypes = {
 	disableTouchRipple: PropTypes.bool,
 }
 
-const Message = memo(function Message({messageId, type, username, displayName, avatarVersion, badge, content, file, quote, setQuote, useMarkdown}) {
+const Message = memo(function Message({
+	                                      messageId,
+	                                      type,
+	                                      username,
+	                                      displayName,
+	                                      avatarVersion,
+	                                      badge,
+	                                      content,
+	                                      file,
+	                                      quote,
+	                                      setQuote,
+	                                      useMarkdown,
+	                                      setMessages,
+	                                      messagePageNumberNew,
+	                                      messagePageNumberCurrent
+                                      }) {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -282,10 +297,18 @@ const Message = memo(function Message({messageId, type, username, displayName, a
 	const contextMenuTimeout = useRef(null);
 	const isLongPress = useRef(false);
 	
+	const [isMessageSearchScrollLoading, setIsMessageSearchScrollLoading] = useState(false);
+	const toggleMessageSearchScrollLoading = useRef(debounce((isLoading) => {
+		setIsMessageSearchScrollLoading(isLoading);
+	}, 100));
+	
 	const isMe = username === myname;
 	
 	return (
 		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
+			<Backdrop open={isMessageSearchScrollLoading} sx={{zIndex: 8964}}>
+				<CircularProgress size={50}/>
+			</Backdrop>
 			{!isMe && <NavigateIconButton sx={{mr: 1, p: 0}} href={`/user/${username}`}>
 				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 			</NavigateIconButton>}
@@ -378,9 +401,29 @@ const Message = memo(function Message({messageId, type, username, displayName, a
 						variant="outlined"
 						avatar={<UserAvatar username={quote.username} displayName={quote.displayName} avatarVersion={quote.avatarVersion}/>}
 						label={quote.displayName + ": " + quote.content}
-						onClick={() => {
-							if (document.getElementById("message-" + quote.id))
-								document.getElementById("message-" + quote.id).scrollIntoView({behavior: "smooth"});
+						onClick={async () => {
+							if (!messagesVar.find(item => item.id === quote.id)) {
+								toggleMessageSearchScrollLoading.current(true);
+								
+								let currentMessageList;
+								
+								do {
+									messagePageNumberNew.current = messagePageNumberCurrent.current = messagePageNumberCurrent.current + 1;
+									currentMessageList = await axios.get(`/api/chat/message/${currentUserVar}/${messagePageNumberNew.current}`)
+										.then(res => res.data.result.message);
+									messagesVar = [...currentMessageList, ...messagesVar];
+								} while (!currentMessageList.find(item => item.id === quote.id));
+								
+								flushSync(() => setMessages([...messagesVar]));
+								
+								toggleMessageSearchScrollLoading.current(false);
+							}
+							
+							if (document.getElementById(`message-${quote.id}`)) {
+								document.getElementById(`message-${quote.id}`).scrollIntoView({behavior: "smooth"});
+							} else {
+								enqueueSnackbar("消息不存在", {variant: "error"});
+							}
 						}}
 					/>
 				}
@@ -483,6 +526,9 @@ Message.propTypes = {
 	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
 	useMarkdown: PropTypes.bool,
+	setMessages: PropTypes.func.isRequired,
+	messagePageNumberCurrent: PropTypes.object.isRequired,
+	messagePageNumberNew: PropTypes.object.isRequired,
 }
 
 const notify = (title, body, iconId, avatarVersion) => {
@@ -850,7 +896,6 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 													
 													do {
 														messagePageNumberNew.current = messagePageNumberCurrent.current = messagePageNumberCurrent.current + 1;
-														console.log(messagePageNumberNew.current);
 														currentMessageList = await axios.get(`/api/chat/message/${currentUserVar}/${messagePageNumberNew.current}`)
 															.then(res => res.data.result.message);
 														messagesVar = [...currentMessageList, ...messagesVar];
@@ -1802,6 +1847,9 @@ export default function Chat() {
 									quote={message.quote}
 									setQuote={setQuote}
 									useMarkdown={message.useMarkdown}
+									setMessages={setMessages}
+									messagePageNumberCurrent={messagePageNumberCurrent}
+									messagePageNumberNew={messagePageNumberNew}
 								/>
 							</Box>
 						);
