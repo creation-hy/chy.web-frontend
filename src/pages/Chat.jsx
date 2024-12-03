@@ -3,6 +3,7 @@ import axios from "axios";
 import {
 	Backdrop,
 	Badge,
+	ButtonBase,
 	CircularProgress,
 	Fab,
 	InputLabel,
@@ -29,9 +30,11 @@ import {
 	ArrowDownward,
 	BrokenImageOutlined,
 	Cancel,
+	Close,
 	CloudDownload,
 	ContentCopyOutlined,
 	DeleteOutline,
+	FileDownloadOutlined,
 	Filter,
 	FontDownloadOutlined,
 	FormatQuoteOutlined,
@@ -200,31 +203,136 @@ UserItem.propTypes = {
 	displayNameNode: PropTypes.node,
 }
 
-export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, disableTouchRipple, ...props}) {
+export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, disableMediaEvent, ...props}) {
 	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
 	
+	const [showImagePreview, setShowImagePreview] = useState(false);
+	
 	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng|bmp)$/i.test(fileName) && deleted === false) {
-		return <img src={url} alt={fileName}
-		            style={{maxWidth: "min(100%, 300px)", maxHeight: "min(100%, 300px)", objectFit: "contain", borderRadius: "4px"}} {...props} />;
+		return (
+			<>
+				<ButtonBase
+					sx={{
+						display: "grid",
+						borderRadius: 0.5,
+					}}
+					onClick={!disableMediaEvent && (() => {
+						setShowImagePreview(true);
+					})}
+					disableRipple={disableMediaEvent}
+				>
+					<img
+						src={url}
+						alt={fileName}
+						style={{
+							maxWidth: "min(100%, 300px)",
+							maxHeight: "min(100%, 300px)",
+							objectFit: "contain",
+							borderRadius: 4,
+						}}
+						{...props}
+					/>
+				</ButtonBase>
+				<Dialog
+					open={showImagePreview}
+					onClose={() => setShowImagePreview(false)}
+					fullScreen
+				>
+					<Grid container direction="column" sx={{width: "100%", height: "100%"}} wrap="nowrap">
+						<Box
+							sx={{
+								flex: 1,
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "center",
+								overflow: "hidden",
+								position: "relative",
+							}}
+						>
+							<img
+								src={url}
+								alt="Image preview"
+								style={{
+									width: "100%",
+									height: "100%",
+									objectFit: "contain",
+								}}
+							/>
+							<IconButton
+								onClick={() => setShowImagePreview(false)}
+								style={{
+									position: "absolute",
+									top: 10,
+									right: 10,
+									color: "white",
+									backgroundColor: "rgba(0, 0, 0, 0.5)",
+								}}
+							>
+								<Close/>
+							</IconButton>
+							<Grid
+								container
+								gap={1}
+								sx={{
+									position: "absolute",
+									bottom: 10,
+									right: 10,
+								}}
+							>
+								<Tooltip title="下载图片">
+									<IconButton
+										onClick={() => {
+											const a = document.createElement('a');
+											a.href = url;
+											a.download = fileName;
+											document.body.appendChild(a);
+											a.click();
+											document.body.removeChild(a);
+										}}
+										style={{
+											color: "white",
+											backgroundColor: "rgba(0, 0, 0, 0.5)",
+										}}
+									>
+										<FileDownloadOutlined/>
+									</IconButton>
+								</Tooltip>
+							</Grid>
+						</Box>
+					</Grid>
+				</Dialog>
+			</>
+		);
 	}
 	
 	if (/\.(mp4|webm|ogg|ogv)$/i.test(fileName) && deleted === false) {
-		return <video src={url} controls
-		              style={{maxWidth: "min(100%, 300px)", maxHeight: "min(100%, 300px)", objectFit: "contain", borderRadius: "4px"}} {...props} />;
+		return (
+			<video
+				src={url}
+				controls
+				style={{
+					maxWidth: "min(100%, 300px)",
+					maxHeight: "min(100%, 300px)",
+					objectFit: "contain",
+					borderRadius: 4,
+				}}
+				{...props}
+			/>
+		);
 	}
 	
 	return (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
 			<ListItemButton
-				disableTouchRipple={disableTouchRipple}
+				disableTouchRipple={disableMediaEvent}
 				sx={{borderRadius: "8px"}}
-				onClick={!url ? undefined : () => {
+				onClick={!disableMediaEvent && (() => {
 					if (!deleted) {
 						window.open(url);
 					} else {
 						setShowBrokenDialog(true);
 					}
-				}}
+				})}
 			>
 				<Grid container gap={1.5} wrap="nowrap" alignItems="center">
 					{!deleted ? <InsertDriveFileOutlined fontSize="large"/> : <BrokenImageOutlined fontSize="large"/>}
@@ -271,7 +379,7 @@ MessageFile.propTypes = {
 	fileName: PropTypes.string.isRequired,
 	fileSize: PropTypes.number.isRequired,
 	deleted: PropTypes.bool,
-	disableTouchRipple: PropTypes.bool,
+	disableMediaEvent: PropTypes.bool,
 }
 
 const Message = memo(function Message({
@@ -983,7 +1091,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 															fileName={message.file.fileName}
 															fileSize={message.file.fileSize}
 															deleted={message.file.deleted}
-															disableTouchRipple
+															disableMediaEvent
 														/>
 													)}
 												</Box>
