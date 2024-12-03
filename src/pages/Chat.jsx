@@ -1361,6 +1361,10 @@ export default function Chat() {
 				stomp.onWebSocketClose = () => {
 				};
 				stomp.disconnect(() => stomp = null);
+				
+				if (disconnectErrorBarKey.current) {
+					closeSnackbar(disconnectErrorBarKey.current);
+				}
 			}
 		}
 	}, []);
