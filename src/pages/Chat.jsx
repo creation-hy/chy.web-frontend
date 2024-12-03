@@ -561,13 +561,19 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	
 	const [onMessageSearching, setOnMessageSearching] = useState(false);
 	const [messageSearchResults, setMessageSearchResults] = useState(null);
-	const [messageSearchRegex, setMessageSearchRegex] = useState(null);
 	const [isMessageSearchScrollLoading, setIsMessageSearchScrollLoading] = useState(false);
 	const toggleMessageSearchScrollLoading = useRef(debounce((isLoading) => {
 		setIsMessageSearchScrollLoading(isLoading);
 	}, 100));
+	
+	const [messageSearchKeywords, setMessageSearchKeywords] = useState("");
 	const messageSearchInputRef = useRef(null);
+	const lastMessageSearchTime = useRef(null);
 	const messageSearchResultBodyRef = useRef(null);
+	
+	const messageSearchRegex = useMemo(() => {
+		return new RegExp(`(${messageSearchKeywords === "" ? "?!" : messageSearchKeywords?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i");
+	}, [messageSearchKeywords]);
 	
 	const messageSearchPageNumberCurrent = useRef(0);
 	const messageSearchPageNumberNew = useRef(0);
@@ -640,21 +646,27 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 		setShowUploadFileConfirmation(true);
 	}, []);
 	
-	const searchMessage = debounce((key) => {
+	const searchMessage = useRef(debounce((key) => {
+		const currentTime = Date.now();
+		lastMessageSearchTime.current = currentTime;
+		
 		if (!key || key === "") {
 			setMessageSearchResults(null);
+			setMessageSearchKeywords("");
 		} else {
 			axios.get(`/api/chat/message/match/${currentUserVar}/0`, {params: {key: key}}).then(res => {
+				if (lastMessageSearchTime.current !== currentTime) {
+					return;
+				}
 				messageSearchPageNumberNew.current = 0;
 				messageSearchPageNumberCurrent.current = 0;
-				setMessageSearchRegex(new RegExp(`(${key?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i"));
 				flushSync(() => setMessageSearchResults(res.data.result));
 				if (messageSearchResultBodyRef.current) {
 					messageSearchResultBodyRef.current.scrollTo({top: 0, behavior: "instant"});
 				}
 			});
 		}
-	}, 200);
+	}, 200));
 	
 	return (
 		<>
@@ -706,7 +718,8 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 					<IconButton
 						sx={{m: 0.5}}
 						onClick={() => {
-							searchMessage("");
+							setMessageSearchKeywords("");
+							searchMessage.current("");
 							setMessageSearchResults(null);
 							setOnMessageSearching(true);
 						}}
@@ -847,6 +860,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 							<OutlinedInput
 								autoFocus
 								inputRef={messageSearchInputRef}
+								value={messageSearchKeywords}
 								inputProps={{style: {paddingTop: 10, paddingBottom: 10, marginTop: 1}}}
 								fullWidth
 								placeholder={"消息内容或发送者昵称"}
@@ -857,19 +871,21 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 								}
 								endAdornment={
 									<InputAdornment position="end">
-										{Boolean(messageSearchResults) && <Cancel
+										{messageSearchKeywords && <Cancel
 											fontSize="small"
 											sx={{cursor: "pointer"}}
 											onClick={() => {
-												messageSearchInputRef.current.value = "";
-												searchMessage("");
+												lastMessageSearchTime.current = -1;
+												setMessageSearchKeywords("");
+												searchMessage.current("");
 												setMessageSearchResults(null);
 											}}
 										/>}
 									</InputAdornment>
 								}
 								onChange={(event) => {
-									searchMessage(event.target.value);
+									setMessageSearchKeywords(event.target.value);
+									searchMessage.current(event.target.value);
 								}}
 							/>
 						</Grid>
@@ -941,7 +957,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 												</Grid>
 												<Box fontSize={15} maxWidth="100%" sx={{wordBreak: "break-word"}}>
 													{message.type === 1 ? (
-														<ChatMarkdown useMarkdown={message.useMarkdown} keyword={messageSearchInputRef.current?.value}>
+														<ChatMarkdown useMarkdown={message.useMarkdown} keyword={messageSearchKeywords}>
 															{message.content}
 														</ChatMarkdown>
 													) : (
@@ -1190,10 +1206,10 @@ export default function Chat() {
 	}));
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
-		messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
+		messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
 		[...messageCard.current.getElementsByTagName("img"), ...messageCard.current.getElementsByTagName("video")].map(element => {
 			const resizeObserver = new ResizeObserver(() => {
-				messageCard.current.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
+				messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
 			});
 			resizeObserver.observe(element);
 		});
