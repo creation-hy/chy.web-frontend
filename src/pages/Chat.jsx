@@ -570,6 +570,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	const messageSearchInputRef = useRef(null);
 	const lastMessageSearchTime = useRef(null);
 	const messageSearchResultBodyRef = useRef(null);
+	const messageSearchResultBodyScrollTop = useRef(0);
 	
 	const messageSearchRegex = useMemo(() => {
 		return new RegExp(`(${messageSearchKeywords === "" ? "?!" : messageSearchKeywords?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i");
@@ -668,6 +669,11 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 		}
 	}, 200));
 	
+	const closeMessageSearchDialog = () => {
+		messageSearchResultBodyScrollTop.current = messageSearchResultBodyRef.current?.scrollTop ?? 0;
+		setOnMessageSearching(false);
+	};
+	
 	return (
 		<>
 			<Box>
@@ -718,10 +724,21 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 					<IconButton
 						sx={{m: 0.5}}
 						onClick={() => {
-							setMessageSearchKeywords("");
-							searchMessage.current("");
-							setMessageSearchResults(null);
-							setOnMessageSearching(true);
+							flushSync(() => setOnMessageSearching(true));
+							if (lastMatchedMessageRef.current) {
+								messageSearchResultBodyRef.current?.scrollTo({top: messageSearchResultBodyScrollTop.current});
+								
+								[...messageSearchResultBodyRef.current.getElementsByTagName("img"), ...messageSearchResultBodyRef.current.getElementsByTagName("video")].map(element => {
+									const resizeObserver = new ResizeObserver(() => {
+										messageSearchResultBodyRef.current?.scrollTo({top: messageSearchResultBodyScrollTop.current});
+									});
+									resizeObserver.observe(element);
+								});
+								
+								messageSearchPageNumberCurrent.current = messageSearchPageNumberNew.current;
+								messageSearchObserver.current.disconnect();
+								messageSearchObserver.current.observe(lastMatchedMessageRef.current);
+							}
 						}}
 					>
 						<Search/>
@@ -847,7 +864,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 			</Backdrop>
 			<Dialog
 				open={onMessageSearching}
-				onClose={() => setOnMessageSearching(false)}
+				onClose={closeMessageSearchDialog}
 				fullWidth
 				fullScreen={isSmallScreen}
 			>
@@ -924,7 +941,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 												
 												if (document.getElementById(`message-${message.id}`)) {
 													document.getElementById(`message-${message.id}`).scrollIntoView({behavior: "smooth"});
-													setOnMessageSearching(false);
+													closeMessageSearchDialog();
 												} else {
 													enqueueSnackbar("消息不存在", {variant: "error"});
 												}
@@ -979,7 +996,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 					)}
 					{messageSearchResults && messageSearchResults.length > 0 && <Divider/>}
 					<DialogActions>
-						<Button onClick={() => setOnMessageSearching(false)}>关闭</Button>
+						<Button onClick={closeMessageSearchDialog}>关闭</Button>
 					</DialogActions>
 				</Grid>
 			</Dialog>
