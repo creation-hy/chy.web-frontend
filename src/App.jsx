@@ -3,7 +3,7 @@ import {BrowserRouter, Route, Routes} from "react-router-dom";
 import Blog from "src/pages/Blog.jsx";
 import SignIn from "src/pages/sign-in/SignIn.jsx";
 import SignUp from "src/pages/SignUp.jsx";
-import Chat from "src/pages/Chat.jsx";
+import Chat, {ChatNotificationClient} from "src/pages/Chat.jsx";
 import User from "src/pages/User.jsx";
 import AIArt from "src/pages/AIArt.jsx";
 import Container from "@mui/material/Container";
@@ -48,6 +48,7 @@ const PageContainer = memo(function PageContainer() {
 	return (
 		<Grid container width="100%" height="100%" overflow="hidden" justifyContent="center">
 			<BrowserRouter>
+				<ChatNotificationClient/>
 				{!isSmallScreen && <PCAppBarLeft/>}
 				<Box ref={containerRef} display="flex" flexDirection="column" sx={{height: "100%", maxWidth: 1200, flex: 1, overflow: "auto"}}>
 					{isSmallScreen && <MobileAppBar/>}

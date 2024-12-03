@@ -70,7 +70,7 @@ import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import Select from "@mui/material/Select";
 import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
-import {useNavigate, useParams} from "react-router";
+import {useLocation, useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import SignUp from "src/pages/SignUp.jsx";
@@ -1259,6 +1259,86 @@ ScrollTop.propTypes = {
 	children: PropTypes.node,
 	messageCard: PropTypes.object.isRequired,
 }
+
+export const ChatNotificationClient = memo(function ChatNotificationClient() {
+	const socket = useRef(null);
+	
+	const stomp = useRef(null);
+	
+	const firstLevelLocation = useLocation().pathname.split("/")[1];
+	const {setClientUser} = useClientUser();
+	
+	const updateClientUser = useRef((offset) => {
+		setClientUser(clientUser => ({
+			...clientUser,
+			newMessageCount: clientUser.newMessageCount + offset,
+		}));
+	});
+	
+	const stompOnConnect = useRef(() => {
+		stomp.current.subscribe(`/user/queue/chat.message`, (message) => {
+			const data = JSON.parse(message.body);
+			
+			if (data.sender !== myname) {
+				updateClientUser.current(1);
+				
+				if (settingsVar["allowNotification"] !== false) {
+					notify("[私聊] " + data.sender + "说：",
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
+				}
+			}
+		}, {"auto-delete": true});
+		
+		stomp.current.subscribe("/topic/chat.group.public.message", (message) => {
+			const data = JSON.parse(message.body);
+			
+			if (data.sender !== myname) {
+				updateClientUser.current(1);
+				
+				if (settingsVar["allowNotification"] !== false && settingsVar["allowPublicNotification"] !== false) {
+					notify("[公共] " + data.sender + "说：",
+						settingsVar["displayNotificationContent"] === false ? "由于权限被关闭，无法显示消息内容" : data.content, data.sender, data.senderAvatarVersion);
+				}
+			}
+		});
+	});
+	
+	useEffect(() => {
+		const stompConnect = () => {
+			if (firstLevelLocation === "" || firstLevelLocation === "chat") {
+				return;
+			}
+			
+			socket.current = new SockJS(window.location.origin + "/api/websocket");
+			socket.onclose = stompReconnect;
+			
+			stomp.current = Stomp.over(() => socket.current);
+			stomp.current.heartbeat.incoming = 10000;
+			stomp.current.heartbeat.outgoing = 10000;
+			
+			stomp.current.connect({
+				"username": myname,
+				"user-token": myToken,
+			}, stompOnConnect.current, null, stompReconnect);
+		};
+		
+		const stompReconnect = async () => {
+			setTimeout(stompConnect, 1000);
+		};
+		
+		const inChat = firstLevelLocation === "" || firstLevelLocation === "chat";
+		
+		if (!stomp.current && !inChat) {
+			stompConnect();
+		} else if (stomp.current && inChat) {
+			stomp.current.onWebSocketClose = () => {
+			};
+			stomp.current.disconnect(() => stomp.current = null);
+		}
+	}, [firstLevelLocation]);
+	
+	return null;
+});
 
 export default function Chat() {
 	document.title = "Chat - chy.web";
