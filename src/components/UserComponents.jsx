@@ -110,7 +110,7 @@ UserBadge.propTypes = {
 export const UsernameWithBadge = memo(function UsernameWithBadge({username, badge, fontWeight = "bold", fontSize, size = 18, color}) {
 	return (
 		<Grid container alignItems="center" flexWrap="nowrap" gap={0.25}>
-			<Typography fontWeight={fontWeight} fontSize={fontSize} noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center" color={color}>
+			<Typography fontWeight={fontWeight} fontSize={fontSize} noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center" sx={{color: color}}>
 				{username}
 			</Typography>
 			<UserBadge badge={badge} fontSize={size}/>

@@ -5,7 +5,7 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Grid from "@mui/material/Grid2";
-import {Badge, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
+import {Badge, ButtonBase, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
 import {
 	AnalyticsOutlined,
 	ArticleOutlined,
@@ -112,8 +112,8 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 								<UserAvatar username={myName} displayName={myInformation.displayName}
 								            avatarVersion={myInformation.avatarVersion} width={80} height={80}/>
 							</IconButton>
-							<Grid container alignItems="center" flexWrap="nowrap" gap={0.25}>
-								<NavigateLink href={`/user/${myInformation.username}`}>
+							<Grid container alignItems="center" flexWrap="nowrap" gap={0.25} maxWidth="100%">
+								<NavigateLink href={`/user/${myInformation.username}`} sx={{overflow: "hidden"}}>
 									<Typography fontSize={18} fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center">
 										{myInformation.displayName}
 									</Typography>
@@ -154,8 +154,8 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 							<UserAvatar username={clientUser.username} displayName={clientUser.displayName}
 							            avatarVersion={clientUser.avatarVersion} width={80} height={80}/>
 						</IconButton>
-						<Grid container alignItems="center" flexWrap="nowrap" gap={0.25}>
-							<NavigateLink href={`/user/${clientUser.username}`}>
+						<Grid container alignItems="center" flexWrap="nowrap" gap={0.25} maxWidth="100%">
+							<NavigateLink href={`/user/${clientUser.username}`} sx={{overflow: "hidden"}}>
 								<Typography fontSize={18} fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center">
 									{clientUser.displayName}
 								</Typography>
@@ -318,10 +318,6 @@ export const MobileAppBar = memo(function MobileAppBar() {
 	const [open, setOpen] = useState(false);
 	const {clientUser, isClientUserLoading} = useClientUser();
 	
-	const toggleDrawer = (newOpen) => () => {
-		setOpen(newOpen);
-	};
-	
 	if (clientUser) {
 		myInformation.displayName = clientUser.displayName;
 		myInformation.avatarVersion = clientUser.avatarVersion;
@@ -348,14 +344,30 @@ export const MobileAppBar = memo(function MobileAppBar() {
 			<Container>
 				<StyledToolbar variant="dense" disableGutters sx={{justifyContent: "flex-start"}}>
 					<Grid container spacing={1} justify="center" alignItems="center" wrap={"nowrap"}>
-						<IconButton aria-label="Menu button" onClick={toggleDrawer(true)} sx={{width: 36, height: 36}}>
+						<IconButton aria-label="Menu button" onClick={() => setOpen(true)} sx={{width: 36, height: 36}}>
 							{myName ? <UserAvatar username={myName} avatarVersion={myInformation.avatarVersion}
 							                      displayName={myInformation.displayName} width={36} height={36}/> : <Avatar/>}
 						</IconButton>
-						{myName &&
-							<UsernameWithBadge username={myInformation.displayName} badge={myInformation.badge} color={theme => theme.palette.text.primary}/>}
+						{myName && (
+							<ButtonBase
+								sx={{overflow: "hidden"}}
+								onClick={() => setOpen(true)}
+								disableRipple
+							>
+								<UsernameWithBadge
+									username={myInformation.displayName}
+									badge={myInformation.badge}
+									color={theme => theme.palette.text.primary}
+								/>
+							</ButtonBase>
+						)}
 					</Grid>
-					<SwipeableDrawer anchor="left" open={open} onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
+					<SwipeableDrawer
+						anchor="left"
+						open={open}
+						onOpen={() => setOpen(true)}
+						onClose={() => setOpen(false)}
+					>
 						<Box sx={{height: "100%", overflow: "auto", width: 225}}>
 							<LeftBar navigateCallback={() => setOpen(false)}/>
 						</Box>

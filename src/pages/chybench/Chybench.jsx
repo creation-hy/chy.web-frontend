@@ -284,7 +284,7 @@ export default function Chybench() {
 	
 	return (
 		<Grid container direction="column" sx={{alignItems: "center", width: "100%"}} spacing={2}>
-			<Card variant="outlined" sx={{padding: 3, width: "100%", maxWidth: 800}}>
+			<Card variant="outlined" sx={{p: 2.5, width: "100%", maxWidth: 800}}>
 				<Typography>
 					CPU线程数：{cores}<br/>
 					GPU：{gpuName}<br/>
