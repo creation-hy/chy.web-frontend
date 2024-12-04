@@ -1535,7 +1535,7 @@ export default function Chat() {
 			}
 			setShowScrollTop(false);
 			currentUserVar = username;
-			setCurrentUser(username);
+			flushSync(() => setCurrentUser(username));
 			setQuote(null);
 			messagePageNumberNew.current = 0;
 			messagePageNumberCurrent.current = 0;
@@ -1551,9 +1551,11 @@ export default function Chat() {
 		
 		if (userItem) {
 			setCurrentUserMessageAllowed(userItem.isMessageAllowed);
-			if (messageInput.current) {
-				messageInput.current.value = userItem.draft ? userItem.draft : "";
-			}
+			setTimeout(() => {
+				if (messageInput.current) {
+					messageInput.current.value = userItem.draft ? userItem.draft : "";
+				}
+			}, 0);
 		}
 		
 		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
@@ -1575,8 +1577,15 @@ export default function Chat() {
 					...clientUser,
 					newMessageCount: Math.max(0, clientUser.newMessageCount - userInfo.newMessageCount),
 				}));
-				userInfo.newMessageCount = 0;
-				setUsers([...usersVar]);
+				
+				setUsers(users => {
+					usersVar = users.map(user => user.username !== userInfo.username ? user : {
+						...user,
+						newMessageCount: 0,
+					});
+					
+					return usersVar;
+				});
 				
 				if (messageInput.current) {
 					messageInput.current.value = userInfo.draft ? userInfo.draft : "";
