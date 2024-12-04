@@ -11,7 +11,7 @@ import remarkBreaks from "remark-breaks";
 import React, {memo, useCallback, useMemo} from "react";
 import Typography from "@mui/material/Typography";
 
-export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, keyword, ...props}) {
+export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, keyword, fontColor, ...props}) {
 	if (!children)
 		children = "";
 	
@@ -50,14 +50,14 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, k
 		}
 		
 		return node;
-	}, [keyword]);
+	}, [keyword, regex]);
 	
 	return useMarkdown ? (
 		<Markdown
 			className="my-markdown"
 			remarkPlugins={[remarkGfm, remarkBreaks]}
 			components={{
-				hr: () => <Divider sx={{my: 1}}/>,
+				hr: () => <Divider sx={{my: 1}} color={fontColor}/>,
 				a: ({href, title, children}) => (
 					<Link href={href} title={title} onClick={(event) => event.stopPropagation()}>
 						{highlightText(children)}
@@ -159,4 +159,5 @@ ChatMarkdown.propTypes = {
 	useMarkdown: PropTypes.bool,
 	children: PropTypes.string,
 	keyword: PropTypes.string,
+	fontColor: PropTypes.any,
 }
