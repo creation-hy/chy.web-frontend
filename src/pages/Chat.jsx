@@ -1049,7 +1049,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 								autoFocus
 								inputRef={messageSearchInputRef}
 								value={messageSearchKeywords}
-								inputProps={{style: {paddingTop: 10, paddingBottom: 10, marginTop: 1}}}
+								inputProps={{style: {paddingTop: 10, paddingBottom: 10}}}
 								fullWidth
 								placeholder={"消息内容或发送者昵称"}
 								startAdornment={
@@ -1991,7 +1991,7 @@ export default function Chat() {
 					height: "100%",
 					display: username && isSmallScreen ? "none" : "flex",
 					flexDirection: "column",
-					borderTop: 0,
+					overflow: "visible",
 				}}
 			>
 				<OutlinedInput
@@ -2014,7 +2014,7 @@ export default function Chat() {
 						</InputAdornment>
 					}
 					placeholder="搜索用户"
-					sx={{fontSize: 15, mt: "1px"}}
+					sx={{fontSize: 15, mx: "-1px", mt: "-1px"}}
 					onFocus={() => {
 						if (!matchList)
 							setMatchList([]);
@@ -2234,15 +2234,18 @@ export default function Chat() {
 							onDelete={() => setQuote(null)}
 						/>
 					}
-					<Card variant="outlined" sx={{maxWidth: "100%", borderTop: 0}}>
+					<Card variant="outlined" sx={{maxWidth: "100%", overflow: "visible", boxSizing: "border-box"}}>
 						<TextField
 							inputRef={messageInput}
 							placeholder="Message"
 							multiline
 							fullWidth
 							maxRows={10}
-							slotProps={{input: {style: {padding: 10, marginTop: 1}}}}
+							slotProps={{input: {style: {padding: 10}}}}
 							sx={{
+								mt: "-1px",
+								mx: "-1px",
+								width: "calc(100% + 2px)",
 								borderRadius: "8px",
 								backgroundColor: isDragging ? (theme) => theme.palette.divider : "normal",
 							}}
