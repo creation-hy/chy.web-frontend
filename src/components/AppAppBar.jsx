@@ -265,9 +265,9 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 				>
 					{colorMode === "auto" ? <AutoAwesome/> : (colorMode === "light" ? <LightMode/> : <DarkMode/>)}
 				</IconButton>
-				{myName && <IconButton
+				{(isClientUserLoading && myName || !isClientUserLoading && clientUser) && <IconButton
 					color={isClientUserLoading && myInformation.lastCheckInTime && new Date(myInformation.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ||
-					!isClientUserLoading && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ? "success" : "warning"}
+					clientUser && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ? "success" : "warning"}
 					onClick={() => {
 						axios.post("/api/account/check-in").then(res => {
 							if (res.data.status === 1) {
@@ -285,7 +285,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 					}}
 				>
 					{isClientUserLoading && myInformation.lastCheckInTime && new Date(myInformation.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ||
-					!isClientUserLoading && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ?
+					clientUser && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ?
 						<EventAvailable/> : <CalendarMonth/>}
 				</IconButton>}
 			</Grid>
