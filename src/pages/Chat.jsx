@@ -32,6 +32,7 @@ import {
 	AddReactionOutlined,
 	ArrowBack,
 	ArrowDownward,
+	Block,
 	BrokenImageOutlined,
 	Cancel,
 	Close,
@@ -120,47 +121,87 @@ const saveDraft = throttle((contact, content, setUsers) => {
 }, 100);
 
 const UserItem = memo(function UserItem({
-	                                        username, displayName, avatarVersion, badge,
-	                                        isOnline, newMessageCount, lastMessageTime, lastMessageText, draft, displayNameNode
+	                                        username,
+	                                        displayName,
+	                                        displayNameString,
+	                                        avatarVersion,
+	                                        badge,
+	                                        isOnline,
+	                                        newMessageCount,
+	                                        lastMessageTime,
+	                                        lastMessageText,
+	                                        draft,
+	                                        selected,
+	                                        isMessageAllowed,
                                         }) {
+	const navigate = useNavigate();
+	
 	return (
-		<>
+		<ListItemButton
+			onClick={() => navigate(`/chat/${username}`)}
+			selected={selected}
+		>
 			<ListItemAvatar>
-				<Badge badgeContent={newMessageCount} overlap="circular" color="error">
-					<Badge
-						badgeContent={isOnline === true ? " " : 0} overlap="circular" color="success" variant="dot"
-						anchorOrigin={{vertical: "bottom", horizontal: "right"}}
-						sx={{
-							'& .MuiBadge-badge': {
-								backgroundColor: '#44b700',
-								color: '#44b700',
-								boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
-								'&::after': {
-									position: 'absolute',
-									top: 0,
-									left: 0,
-									width: '100%',
-									height: '100%',
-									borderRadius: '50%',
-									animation: 'ripple 1.2s infinite ease-in-out',
-									border: '1px solid currentColor',
-									content: '""',
+				<Badge
+					badgeContent={newMessageCount}
+					overlap="circular"
+					color="error"
+				>
+					{isMessageAllowed ? (
+						<Badge
+							badgeContent={isOnline === true ? " " : 0}
+							overlap="circular"
+							color="success"
+							variant="dot"
+							anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+							sx={{
+								'& .MuiBadge-badge': {
+									backgroundColor: '#44b700',
+									color: '#44b700',
+									boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
+									'&::after': {
+										position: 'absolute',
+										top: 0,
+										left: 0,
+										width: '100%',
+										height: '100%',
+										borderRadius: '50%',
+										animation: 'ripple 1.2s infinite ease-in-out',
+										border: '1px solid currentColor',
+										content: '""',
+									},
 								},
-							},
-							'@keyframes ripple': {
-								'0%': {
-									transform: 'scale(.8)',
-									opacity: 1,
+								'@keyframes ripple': {
+									'0%': {
+										transform: 'scale(.8)',
+										opacity: 1,
+									},
+									'100%': {
+										transform: 'scale(2.4)',
+										opacity: 0,
+									},
 								},
-								'100%': {
-									transform: 'scale(2.4)',
-									opacity: 0,
-								},
-							},
-						}}
-					>
-						<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
-					</Badge>
+							}}
+						>
+							<UserAvatar username={username} displayName={displayNameString} avatarVersion={avatarVersion}/>
+						</Badge>
+					) : (
+						<Badge
+							badgeContent={<Block fontSize="small"/>}
+							overlap="circular"
+							color="error"
+							anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+							sx={{
+								'& .MuiBadge-badge': {
+									width: 20,
+									height: 20,
+									borderRadius: "50%",
+								}
+							}}
+						>
+							<UserAvatar username={username} displayName={displayNameString} avatarVersion={avatarVersion}/>
+						</Badge>
+					)}
 				</Badge>
 			</ListItemAvatar>
 			<ListItemText
@@ -172,7 +213,7 @@ const UserItem = memo(function UserItem({
 						gap: 1,
 					}}>
 						<UsernameWithBadge
-							username={displayNameNode ? displayNameNode : displayName}
+							username={displayName}
 							badge={badge}
 						/>
 						{lastMessageTime && <Typography variant="body2" color="textSecondary">
@@ -190,13 +231,14 @@ const UserItem = memo(function UserItem({
 					</Typography>
 				)}
 			/>
-		</>
+		</ListItemButton>
 	);
 });
 
 UserItem.propTypes = {
 	username: PropTypes.string.isRequired,
-	displayName: PropTypes.string,
+	displayName: PropTypes.node,
+	displayNameString: PropTypes.string,
 	avatarVersion: PropTypes.number.isRequired,
 	badge: PropTypes.string,
 	isOnline: PropTypes.bool,
@@ -204,7 +246,8 @@ UserItem.propTypes = {
 	lastMessageTime: PropTypes.string,
 	lastMessageText: PropTypes.string,
 	draft: PropTypes.string,
-	displayNameNode: PropTypes.node,
+	selected: PropTypes.bool.isRequired,
+	isMessageAllowed: PropTypes.bool.isRequired,
 }
 
 export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, disableMediaEvent, ...props}) {
@@ -1969,13 +2012,11 @@ export default function Chat() {
 				/>
 				<Box sx={{overflowY: "auto"}}>
 					<List>
-						<ListItemButton
-							onClick={() => navigate("/chat/ChatRoomSystem")}
-							selected={currentUser === "ChatRoomSystem"}
-						>
-							{users != null && <UserItem
+						{users != null &&
+							<UserItem
 								username="ChatRoomSystem"
 								displayName="公共"
+								displayNameString="公共"
 								avatarVersion={1}
 								badge={users.find(item => item.username === "ChatRoomSystem").badge}
 								isOnline={false}
@@ -1983,21 +2024,22 @@ export default function Chat() {
 								lastMessageTime={users.find(item => item.username === "ChatRoomSystem").lastMessageTime}
 								draft={users.find(item => item.username === "ChatRoomSystem").draft}
 								lastMessageText={users.find(item => item.username === "ChatRoomSystem").lastMessageText}
-							/>}
-						</ListItemButton>
+								selected={currentUser === "ChatRoomSystem"}
+								isMessageAllowed={users.find(item => item.username === "ChatRoomSystem").isMessageAllowed}
+							/>
+						}
 					</List>
 					<Divider/>
 					<List sx={{display: matchList ? "none" : "block"}}>
 						{users != null && users.map((user, userIndex) => (user.username !== "ChatRoomSystem" &&
-							<ListItemButton
+							<Box
 								key={user.username}
 								ref={userIndex === users.length - 1 ? lastContactRef : undefined}
-								onClick={() => navigate(`/chat/${user.username}`)}
-								selected={currentUser === user.username}
 							>
 								<UserItem
 									username={user.username}
 									displayName={user.displayName}
+									displayNameString={user.displayName}
 									avatarVersion={user.avatarVersion}
 									badge={user.badge}
 									isOnline={user.isOnline}
@@ -2005,8 +2047,10 @@ export default function Chat() {
 									lastMessageTime={user.lastMessageTime}
 									lastMessageText={user.lastMessageText}
 									draft={user.draft}
+									selected={currentUser === user.username}
+									isMessageAllowed={user.isMessageAllowed}
 								/>
-							</ListItemButton>
+							</Box>
 						))}
 					</List>
 					{matchList && <List>
@@ -2018,23 +2062,13 @@ export default function Chat() {
 							}
 							
 							return (
-								<ListItemButton
+								<Box
 									key={user.username}
 									ref={userIndex === matchList.length - 1 ? lastUserFindingRef : undefined}
-									onClick={() => navigate(`/chat/${user.username}`)}
-									selected={currentUser === user.username}
 								>
 									<UserItem
 										username={user.username}
-										displayName={`${user.displayName} (@${user.username})`}
-										avatarVersion={user.avatarVersion}
-										badge={user.badge}
-										isOnline={user.isOnline}
-										newMessageCount={user.newMessageCount}
-										lastMessageTime={user.lastMessageTime}
-										lastMessageText={user.lastMessageText || "\u00A0"}
-										draft={user.draft}
-										displayNameNode={
+										displayName={
 											(regex.test(user.displayName) ? user.displayName : "@" + user.username).split(regex).map((content, index) => {
 												if (regex?.test(content)) {
 													return (
@@ -2047,8 +2081,18 @@ export default function Chat() {
 												return content;
 											})
 										}
+										displayNameString={user.displayName}
+										avatarVersion={user.avatarVersion}
+										badge={user.badge}
+										isOnline={user.isOnline}
+										newMessageCount={user.newMessageCount}
+										lastMessageTime={user.lastMessageTime}
+										lastMessageText={user.lastMessageText || "\u00A0"}
+										draft={user.draft}
+										selected={currentUser === user.username}
+										isMessageAllowed={user.isMessageAllowed}
 									/>
-								</ListItemButton>
+								</Box>
 							);
 						})}
 					</List>}
