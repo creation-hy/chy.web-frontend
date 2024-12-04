@@ -1452,6 +1452,9 @@ export default function Chat() {
 	const [currentUser, setCurrentUser] = useState(null);
 	const [currentUserDisplayName, setCurrentUserDisplayName] = useState(null);
 	const [currentUserBadge, setCurrentUserBadge] = useState(null);
+	const [isCurrentUserMessageAllowed, setCurrentUserMessageAllowed] = useState(true);
+	const [showMessageBlockAlert, setShowMessageBlockAlert] = useState(false);
+	
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
@@ -1544,24 +1547,27 @@ export default function Chat() {
 			console.log("你的浏览器不支持通知，人家也没办法呀……", e);
 		}
 		
+		const userItem = usersVar.find(item => item.username === username);
+		
+		if (userItem) {
+			setCurrentUserMessageAllowed(userItem.isMessageAllowed);
+			
+			setClientUser(clientUser => ({
+				...clientUser,
+				newMessageCount: Math.max(0, clientUser.newMessageCount - userItem.newMessageCount),
+			}));
+			userItem.newMessageCount = 0;
+			setUsers([...usersVar]);
+			
+			if (messageInput.current) {
+				messageInput.current.value = userItem.draft ? userItem.draft : "";
+			}
+		}
+		
 		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
 			if (res.data.status === 0) {
 				navigate("/chat");
 				return;
-			}
-			
-			const userItem = usersVar.find(item => item.username === username);
-			
-			if (userItem) {
-				setClientUser(clientUser => ({
-					...clientUser,
-					newMessageCount: Math.max(0, clientUser.newMessageCount - userItem.newMessageCount),
-				}));
-				userItem.newMessageCount = 0;
-				setUsers([...usersVar]);
-				if (messageInput.current) {
-					messageInput.current.value = userItem.draft ? userItem.draft : "";
-				}
 			}
 			
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
@@ -1662,6 +1668,11 @@ export default function Chat() {
 	const sendMessage = useCallback(() => {
 		const content = messageInput.current.value.trim();
 		
+		if (!isCurrentUserMessageAllowed) {
+			setShowMessageBlockAlert(true);
+			return;
+		}
+		
 		if (content.length === 0) {
 			return;
 		}
@@ -1683,7 +1694,7 @@ export default function Chat() {
 		} else {
 			enqueueSnackbar("消息长度不能超过 2000 字", {variant: "error"});
 		}
-	}, [quote]);
+	}, [quote, isCurrentUserMessageAllowed]);
 	
 	const updateUserItem = useCallback((username, displayName, avatarVersion, badge, content, time, isCurrent, sender) => {
 		const userItem = usersVar.find(item => item.username === username);
@@ -2249,7 +2260,7 @@ export default function Chat() {
 								}
 							}}
 						/>
-						<Grid container justifyContent="space-between">
+						<Grid container justifyContent="space-between" alignItems="center">
 							<ChatToolBar
 								inputField={messageInput}
 								quote={quote}
@@ -2259,7 +2270,29 @@ export default function Chat() {
 								messagePageNumberNew={messagePageNumberNew}
 								messagePageNumberCurrent={messagePageNumberCurrent}
 							/>
-							<Button variant="contained" startIcon={<Send/>} sx={{my: "auto", mr: 0.75}} onClick={sendMessage}>发送</Button>
+							<Dialog open={showMessageBlockAlert} onClose={() => setShowMessageBlockAlert(false)}>
+								<DialogTitle>
+									对方暂时不想接收您的消息呢QAQ
+								</DialogTitle>
+								<DialogActions>
+									<Button onClick={() => setShowMessageBlockAlert(false)}>
+										关闭
+									</Button>
+								</DialogActions>
+							</Dialog>
+							<Tooltip title={isCurrentUserMessageAllowed ? undefined : "对方暂时不想接收您的消息呢QAQ"}>
+								<Box height="max-content">
+									<Button
+										variant="contained"
+										startIcon={isCurrentUserMessageAllowed ? <Send/> : <Block/>}
+										disabled={!isCurrentUserMessageAllowed}
+										sx={{my: "auto", mr: 0.75}}
+										onClick={sendMessage}
+									>
+										发送
+									</Button>
+								</Box>
+							</Tooltip>
 						</Grid>
 					</Card>
 				</Box>}
