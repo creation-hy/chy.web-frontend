@@ -15,6 +15,10 @@ import {
 	MenuList,
 	Paper,
 	Switch,
+	Table,
+	TableBody,
+	TableCell,
+	TableRow,
 	Tooltip,
 	useMediaQuery,
 	Zoom
@@ -465,7 +469,9 @@ const Message = memo(function Message({
 						}}
 					>
 						<Box>
-							<ChatMarkdown useMarkdown={useMarkdown}>{content}</ChatMarkdown>
+							<ChatMarkdown useMarkdown={useMarkdown} fontColor={isMe ? "white" : "normal"}>
+								{content}
+							</ChatMarkdown>
 						</Box>
 					</Paper>
 				) : (
@@ -661,6 +667,7 @@ const notify = (title, body, iconId, avatarVersion) => {
 
 const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, sendFiles, setMessages, messagePageNumberNew, messagePageNumberCurrent}) {
 	const [binaryColorMode] = useBinaryColorMode();
+	const {clientUser} = useClientUser();
 	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("md"));
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -723,6 +730,19 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 		inputField.current.focus();
 		inputField.current.setSelectionRange(start + text.length, start + text.length);
 	}, [inputField]);
+	
+	useEffect(() => {
+		if (clientUser) {
+			setSettings(settings => {
+				settingsVar = {
+					...settings,
+					allowMessageFrom: clientUser.allowMessageFrom,
+				};
+				
+				return settingsVar;
+			});
+		}
+	}, [clientUser]);
 	
 	useEffect(() => {
 		if (lastMatchedMessageRef.current) {
@@ -1117,33 +1137,70 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 					}}
 				/>
 			</Dialog>
-			<Dialog open={onSettings} onClose={() => handleSettings(false)}>
+			<Dialog open={onSettings} onClose={() => handleSettings(false)} fullWidth maxWidth="xs">
 				<DialogTitle>
 					设置
 				</DialogTitle>
-				<DialogContent>
-					<Grid container direction="column" spacing={1}>
-						{settingItems.map((item, index) => (
-							<Grid container key={item} alignItems="center">
-								<Switch
-									checked={settings[item] !== false}
-									onChange={(event) => {
-										const newSettings = {...settings, [item]: event.currentTarget.checked};
-										setSettings(newSettings);
-										settingsVar = newSettings;
-										localStorage.setItem("chatSettings", JSON.stringify(newSettings));
-									}}
-									sx={{
-										'& .MuiSwitch-thumb': {
-											boxShadow: 'none', // 关闭阴影
-										},
-									}}
-								/>
-								<Typography>{settingItemsDisplay[index]}</Typography>
-							</Grid>
-						))}
-					</Grid>
-				</DialogContent>
+				<Card variant="outlined" sx={{mx: 3, mb: 2, px: 1}}>
+					<Table>
+						<TableBody>
+							{settingItems.map((item, index) => (
+								<TableRow key={item}>
+									<TableCell sx={{py: 1, pl: 1}}>
+										<Typography>
+											{settingItemsDisplay[index]}
+										</Typography>
+									</TableCell>
+									<TableCell align="right" sx={{py: 1, pr: 0}}>
+										<Switch
+											checked={settings[item] !== false}
+											onChange={(event) => {
+												const newSettings = {...settings, [item]: event.target.checked};
+												setSettings(newSettings);
+												settingsVar = newSettings;
+												localStorage.setItem("chatSettings", JSON.stringify(newSettings));
+											}}
+											sx={{
+												'& .MuiSwitch-thumb': {
+													boxShadow: 'none', // 关闭阴影
+												},
+											}}
+										/>
+									</TableCell>
+								</TableRow>
+							))}
+							<TableRow key="allowMessageFrom">
+								<TableCell sx={{py: 1, pl: 1, border: 0}}>
+									<Typography>
+										允许的消息来源
+									</Typography>
+								</TableCell>
+								<TableCell align="right" sx={{py: 1, pr: 0, border: 0}}>
+									<Select
+										variant="outlined"
+										size="small"
+										value={settings["allowMessageFrom"] ?? "ALL"}
+										onChange={(event) => {
+											const newSettings = {...settings, allowMessageFrom: event.target.value};
+											setSettings(newSettings);
+											settingsVar = newSettings;
+											
+											axios.post(`/api/account/allow-message-from/modify`, {allowMessageFrom: event.target.value}, {
+												headers: {
+													'Content-Type': 'application/json',
+												},
+											});
+										}}
+									>
+										<MenuItem value="ALL">所有人</MenuItem>
+										<MenuItem value="FOLLOWING">关注的人</MenuItem>
+										<MenuItem value="SELF">仅自己</MenuItem>
+									</Select>
+								</TableCell>
+							</TableRow>
+						</TableBody>
+					</Table>
+				</Card>
 				<DialogActions>
 					<Button onClick={() => handleSettings(false)}>关闭</Button>
 				</DialogActions>
@@ -1459,7 +1516,9 @@ export default function Chat() {
 				}));
 				userItem.newMessageCount = 0;
 				setUsers([...usersVar]);
-				messageInput.current.value = userItem.draft ? userItem.draft : "";
+				if (messageInput.current) {
+					messageInput.current.value = userItem.draft ? userItem.draft : "";
+				}
 			}
 			
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
