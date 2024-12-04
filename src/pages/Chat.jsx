@@ -1551,23 +1551,36 @@ export default function Chat() {
 		
 		if (userItem) {
 			setCurrentUserMessageAllowed(userItem.isMessageAllowed);
-			
-			setClientUser(clientUser => ({
-				...clientUser,
-				newMessageCount: Math.max(0, clientUser.newMessageCount - userItem.newMessageCount),
-			}));
-			userItem.newMessageCount = 0;
-			setUsers([...usersVar]);
-			
 			if (messageInput.current) {
 				messageInput.current.value = userItem.draft ? userItem.draft : "";
 			}
 		}
 		
 		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
+			if (currentUserVar !== username) {
+				return;
+			}
+			
 			if (res.data.status === 0) {
 				navigate("/chat");
 				return;
+			}
+			
+			const userInfo = res.data?.result?.userInfo;
+			
+			if (userInfo) {
+				setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
+				
+				setClientUser(clientUser => ({
+					...clientUser,
+					newMessageCount: Math.max(0, clientUser.newMessageCount - userInfo.newMessageCount),
+				}));
+				userInfo.newMessageCount = 0;
+				setUsers([...usersVar]);
+				
+				if (messageInput.current) {
+					messageInput.current.value = userInfo.draft ? userInfo.draft : "";
+				}
 			}
 			
 			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
@@ -1579,12 +1592,12 @@ export default function Chat() {
 				});
 			}
 			
-			if (!isCurrentUser) {
+			if (!isCurrentUser && userInfo) {
 				flushSync(() => {
-					setCurrentUserDisplayName(res.data.result.displayName);
-					setCurrentUserBadge(res.data.result.badge);
-					setLastOnline(res.data.result.isOnline || username === myname ? "在线" : (
-						res.data.result.lastOnline ? "上次上线：" + convertDateToLocaleShortString(res.data.result.lastOnline) : "从未上线"));
+					setCurrentUserDisplayName(userInfo.displayName);
+					setCurrentUserBadge(userInfo.badge);
+					setLastOnline(userInfo.isOnline || username === myname ? "在线" : (
+						userInfo.lastOnline ? "上次上线：" + convertDateToLocaleShortString(userInfo.lastOnline) : "从未上线"));
 				});
 				setShowScrollTop(true);
 			}
@@ -1630,6 +1643,7 @@ export default function Chat() {
 						isOnline: info.isOnline,
 						lastMessageText: "\u00A0",
 						newMessageCount: 0,
+						isMessageAllowed: info.isMessageAllowed,
 					}, ...res.data.result] : res.data.result;
 					
 					setUsers([...usersVar]);
@@ -1718,6 +1732,7 @@ export default function Chat() {
 					lastMessageTime: time,
 					lastMessageText: content,
 					newMessageCount: sender !== myname && !isCurrent ? 1 : 0,
+					isMessageAllowed: res.data.result[0].isMessageAllowed,
 				}, ...usersVar];
 				setUsers([...usersVar]);
 			});
