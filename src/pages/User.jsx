@@ -37,9 +37,12 @@ import {
 	LockResetOutlined,
 	LogoutOutlined,
 	MailOutlined,
-	PersonAddDisabledOutlined,
+	PersonAdd,
 	PersonAddOutlined,
+	PersonOffOutlined,
+	PersonOutlined,
 	Restore,
+	SwapHoriz,
 	Upload,
 	VerifiedOutlined
 } from "@mui/icons-material";
@@ -168,6 +171,123 @@ News.propTypes = {
 	avatarVersion: PropTypes.number.isRequired,
 }
 
+const UserItem = memo(function UserItem({username, displayName, avatarVersion, badge, introduction, isFollowing, isFollowedBy, isBlocking, showBlockButton}) {
+	const [isFollowingState, setIsFollowing] = useState(isFollowing);
+	const [isBlockingState, setIsBlocking] = useState(isBlocking);
+	
+	return (
+		<>
+			<ListItem sx={{p: 0}}>
+				<ListItemAvatar>
+					<NavigateButtonBase
+						href={`/user/${username}`}
+						sx={{borderRadius: "50%"}}
+					>
+						<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
+					</NavigateButtonBase>
+				</ListItemAvatar>
+				<Grid container wrap="nowrap" justifyContent="space-between" alignItems="center" flex={1}>
+					<ListItemText sx={{m: 0}}>
+						<Grid container alignItems="center" wrap="nowrap" gap={0.25}>
+							<NavigateLink href={`/user/${username}`} sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
+								<Typography fontWeight="bold" noWrap alignItems="center">
+									{displayName}
+								</Typography>
+							</NavigateLink>
+							<UserBadge badge={badge} fontSize={18}/>
+						</Grid>
+						<Typography
+							fontSize={14}
+							color="textSecondary"
+							noWrap
+							overflow="hidden"
+							textOverflow="ellipsis"
+							maxWidth="100%"
+						>
+							<NavigateLink href={`/user/${username}`} underline="none">
+								@{username}
+							</NavigateLink>
+						</Typography>
+					</ListItemText>
+					{!showBlockButton ? (
+						<Button
+							variant={isFollowingState ? "outlined" : "contained"}
+							sx={{ml: 2, flexShrink: 0}}
+							disabled={username === myname}
+							startIcon={isFollowedBy && isFollowingState ? <SwapHoriz/> : (isFollowingState ? <PersonOutlined/> : <PersonAdd/>)}
+							onClick={() => {
+								axios.post("/api/user/" + username + "/follow").then(res => {
+									if (res.data.status === 1) {
+										setIsFollowing(true);
+									} else if (res.data.status === 2) {
+										setIsFollowing(false);
+									} else {
+										enqueueSnackbar(res.data.content, {variant: "error"});
+									}
+								})
+							}}
+						>
+							{isFollowingState ? (isFollowedBy ? "已互关" : "已关注") : "关注"}
+						</Button>
+					) : (
+						<Button
+							color="error"
+							variant={isBlockingState ? "outlined" : "contained"}
+							sx={{ml: 2, flexShrink: 0}}
+							disabled={username === myname}
+							startIcon={<Block/>}
+							onClick={() => {
+								axios.post("/api/user/" + username + "/block").then(res => {
+									if (res.data.status === 1) {
+										setIsBlocking(true);
+									} else if (res.data.status === 2) {
+										setIsBlocking(false);
+									} else {
+										enqueueSnackbar(res.data.content, {variant: "error"});
+									}
+								})
+							}}
+						>
+							{isBlockingState ? "已屏蔽" : "屏蔽"}
+						</Button>
+					)}
+				</Grid>
+			</ListItem>
+			<Grid container sx={{ml: 7, mt: 0.25}}>
+				<Typography
+					component="span"
+					fontSize={14}
+					color="textPrimary"
+					maxHeight="6em"
+					overflow="hidden"
+					textOverflow="ellipsis"
+					sx={{
+						display: "-webkit-box",
+						WebkitBoxOrient: "vertical",
+						WebkitLineClamp: 4,
+					}}
+				>
+					<NavigateLink href={`/user/${username}`} underline="none">
+						{introduction}
+					</NavigateLink>
+				</Typography>
+			</Grid>
+		</>
+	);
+});
+
+UserItem.propTypes = {
+	username: PropTypes.string.isRequired,
+	displayName: PropTypes.string,
+	avatarVersion: PropTypes.number.isRequired,
+	badge: PropTypes.string,
+	introduction: PropTypes.string,
+	isFollowing: PropTypes.bool,
+	isFollowedBy: PropTypes.bool,
+	isBlocking: PropTypes.bool,
+	showBlockButton: PropTypes.bool.isRequired,
+}
+
 const Follows = memo(function Follows({username, type}) {
 	const [followingList, setFollowingList] = useState([]);
 	const [followersList, setFollowersList] = useState([]);
@@ -238,120 +358,18 @@ const Follows = memo(function Follows({username, type}) {
 			{userList.map((user, userIndex) => (
 				<Fragment key={user.username}>
 					{userIndex !== 0 && <Divider/>}
-					<Box sx={{px: 2, py: 2.5}}>
-						<ListItem ref={userIndex === userList.length - 1 ? lastUserRef : undefined} sx={{p: 0}}>
-							<ListItemAvatar>
-								<NavigateButtonBase
-									href={`/user/${user.username}`}
-									sx={{borderRadius: "50%"}}
-								>
-									<UserAvatar username={user.username} displayName={user.displayName} avatarVersion={user.avatarVersion}/>
-								</NavigateButtonBase>
-							</ListItemAvatar>
-							<Grid container wrap="nowrap" justifyContent="space-between" alignItems="center" flex={1}>
-								<ListItemText sx={{m: 0}}>
-									<Grid container alignItems="center" wrap="nowrap" gap={0.25}>
-										<NavigateLink href={`/user/${user.username}`} sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
-											<Typography fontWeight="bold" noWrap alignItems="center">
-												{user.displayName}
-											</Typography>
-										</NavigateLink>
-										<UserBadge badge={user.badge} fontSize={18}/>
-									</Grid>
-									<Typography
-										fontSize={14}
-										color="textSecondary"
-										noWrap
-										overflow="hidden"
-										textOverflow="ellipsis"
-										maxWidth="100%"
-									>
-										<NavigateLink href={`/user/${user.username}`} underline="none">
-											@{user.username}
-										</NavigateLink>
-									</Typography>
-								</ListItemText>
-								{!showBlockButton ? (
-									<Button
-										variant={user.alreadyFollowed ? "outlined" : "contained"}
-										sx={{ml: 2, flexShrink: 0}}
-										disabled={user.username === myname}
-										onClick={() => {
-											axios.post("/api/user/" + user.username + "/follow").then(res => {
-												if (res.data.status === 1) {
-													setUserList(userList => userList.map(item => (
-														item.username !== user.username ? item : {
-															...item,
-															alreadyFollowed: true,
-														}
-													)));
-												} else if (res.data.status === 2) {
-													setUserList(userList => userList.map(item => (
-														item.username !== user.username ? item : {
-															...item,
-															alreadyFollowed: false,
-														}
-													)));
-												} else {
-													enqueueSnackbar(res.data.content, {variant: "error"});
-												}
-											})
-										}}
-									>
-										{user.alreadyFollowed ? "取消关注" : "关注"}
-									</Button>
-								) : (
-									<Button
-										color="error"
-										variant={user.alreadyBlocked ? "outlined" : "contained"}
-										sx={{ml: 2, flexShrink: 0}}
-										disabled={user.username === myname}
-										onClick={() => {
-											axios.post("/api/user/" + user.username + "/block").then(res => {
-												if (res.data.status === 1) {
-													setUserList(userList => userList.map(item => (
-														item.username !== user.username ? item : {
-															...item,
-															alreadyBlocked: true,
-														}
-													)));
-												} else if (res.data.status === 2) {
-													setUserList(userList => userList.map(item => (
-														item.username !== user.username ? item : {
-															...item,
-															alreadyBlocked: false,
-														}
-													)));
-												} else {
-													enqueueSnackbar(res.data.content, {variant: "error"});
-												}
-											})
-										}}
-									>
-										{user.alreadyBlocked ? "取消屏蔽" : "屏蔽"}
-									</Button>
-								)}
-							</Grid>
-						</ListItem>
-						<Grid container sx={{ml: 7, mt: 0.25}}>
-							<Typography
-								component="span"
-								fontSize={14}
-								color="textPrimary"
-								maxHeight="6em"
-								overflow="hidden"
-								textOverflow="ellipsis"
-								sx={{
-									display: "-webkit-box",
-									WebkitBoxOrient: "vertical",
-									WebkitLineClamp: 4,
-								}}
-							>
-								<NavigateLink href={`/user/${user.username}`} underline="none">
-									{user.introduction}
-								</NavigateLink>
-							</Typography>
-						</Grid>
+					<Box sx={{px: 2, py: 2.5}} ref={userIndex === userList.length - 1 ? lastUserRef : undefined}>
+						<UserItem
+							username={user.username}
+							displayName={user.displayName}
+							avatarVersion={user.avatarVersion}
+							badge={user.badge}
+							introduction={user.introduction}
+							isFollowing={user.isFollowing}
+							isFollowedBy={user.isFollowedBy}
+							isBlocking={user.isBlocking}
+							showBlockButton={showBlockButton}
+						/>
 					</Box>
 				</Fragment>
 			))}
@@ -441,10 +459,10 @@ const UserPage = memo(function UserPage({username}) {
 	
 	useLayoutEffect(() => {
 		if (data && data.username) {
-			setFollowingCount(data["followingCount"]);
-			setFollowersCount(data["followerCount"]);
-			setIsFollowing(data["alreadyFollowed"]);
-			setIsBlocking(data["alreadyBlocked"]);
+			setFollowingCount(data.followingCount);
+			setFollowersCount(data.followerCount);
+			setIsFollowing(data.isFollowing);
+			setIsBlocking(data.isBlocking);
 			setAvatarVersion(data.avatarVersion);
 			setMyBadge(data.badge);
 		}
@@ -638,7 +656,7 @@ const UserPage = memo(function UserPage({username}) {
 													setDataVersion(version => version + 1);
 												});
 											}}>
-												<PersonAddDisabledOutlined/>
+												<PersonOffOutlined/>
 											</IconButton>
 										</Tooltip>
 									) : (
