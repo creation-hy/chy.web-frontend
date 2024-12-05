@@ -1255,7 +1255,13 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 				<DialogContent>
 					<Grid container direction="column" gap={1}>
 						{files.map((file, index) => (
-							<MessageFile key={index} fileName={file.name} fileSize={file.size}/>
+							<MessageFile
+								key={index}
+								url={URL.createObjectURL(file)}
+								fileName={file.name}
+								fileSize={file.size}
+								deleted={false}
+							/>
 						))}
 					</Grid>
 				</DialogContent>
