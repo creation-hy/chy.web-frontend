@@ -1714,8 +1714,6 @@ export default function Chat() {
 				quoteId: quote?.id,
 				useMarkdown: settingsVar.useMarkdown,
 			}));
-			
-			uploadDraft(currentUserVar, "");
 		} else {
 			enqueueSnackbar("消息长度不能超过 2000 字", {variant: "error"});
 		}
