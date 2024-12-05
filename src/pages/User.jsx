@@ -3,6 +3,7 @@ import {useNavigate, useParams} from "react-router";
 import {Fragment, memo, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import {
 	Alert,
+	Badge,
 	ButtonBase,
 	CircularProgress,
 	InputLabel,
@@ -170,7 +171,10 @@ News.propTypes = {
 const Follows = memo(function Follows({username, type}) {
 	const [followingList, setFollowingList] = useState([]);
 	const [followersList, setFollowersList] = useState([]);
+	const [blockingList, setBlockingList] = useState([]);
 	const [userList, setUserList] = useState([]);
+	
+	const [showBlockButton, setShowBlockButton] = useState(false);
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -192,23 +196,34 @@ const Follows = memo(function Follows({username, type}) {
 			pageNumberCurrent.current = 0;
 			if (type === "following") {
 				setFollowingList([...res.data.result]);
-			} else {
+			} else if (type === "followers") {
 				setFollowersList([...res.data.result]);
+			} else {
+				setBlockingList([...res.data.result]);
 			}
 		});
 	}, [username, type]);
 	
 	useEffect(() => {
 		if (type === "following") {
+			setShowBlockButton(false);
 			setUserList([...followingList]);
 		}
 	}, [followingList]);
 	
 	useEffect(() => {
-		if (type === "follower") {
+		if (type === "followers") {
+			setShowBlockButton(false);
 			setUserList([...followersList]);
 		}
 	}, [followersList]);
+	
+	useEffect(() => {
+		if (type === "blocking") {
+			setShowBlockButton(true);
+			setUserList([...blockingList]);
+		}
+	}, [blockingList]);
 	
 	useEffect(() => {
 		if (lastUserRef.current) {
@@ -256,32 +271,66 @@ const Follows = memo(function Follows({username, type}) {
 										</NavigateLink>
 									</Typography>
 								</ListItemText>
-								<Button
-									variant={user.alreadyFollowed ? "outlined" : "contained"}
-									sx={{ml: 2, flexShrink: 0}}
-									disabled={user.username === myname}
-									onClick={() => {
-										axios.post("/api/user/" + user.username + "/follow").then(res => {
-											if (res.data.status === 1) {
-												setUserList(userList => userList.map(item => (
-													item.username !== user.username ? item : {
-														...item,
-														alreadyFollowed: true,
-													}
-												)));
-											} else if (res.data.status === 2) {
-												setUserList(userList => userList.map(item => (
-													item.username !== user.username ? item : {
-														...item,
-														alreadyFollowed: false,
-													}
-												)));
-											}
-										})
-									}}
-								>
-									{user.alreadyFollowed ? "取消关注" : "关注"}
-								</Button>
+								{!showBlockButton ? (
+									<Button
+										variant={user.alreadyFollowed ? "outlined" : "contained"}
+										sx={{ml: 2, flexShrink: 0}}
+										disabled={user.username === myname}
+										onClick={() => {
+											axios.post("/api/user/" + user.username + "/follow").then(res => {
+												if (res.data.status === 1) {
+													setUserList(userList => userList.map(item => (
+														item.username !== user.username ? item : {
+															...item,
+															alreadyFollowed: true,
+														}
+													)));
+												} else if (res.data.status === 2) {
+													setUserList(userList => userList.map(item => (
+														item.username !== user.username ? item : {
+															...item,
+															alreadyFollowed: false,
+														}
+													)));
+												} else {
+													enqueueSnackbar(res.data.content, {variant: "error"});
+												}
+											})
+										}}
+									>
+										{user.alreadyFollowed ? "取消关注" : "关注"}
+									</Button>
+								) : (
+									<Button
+										color="error"
+										variant={user.alreadyBlocked ? "outlined" : "contained"}
+										sx={{ml: 2, flexShrink: 0}}
+										disabled={user.username === myname}
+										onClick={() => {
+											axios.post("/api/user/" + user.username + "/block").then(res => {
+												if (res.data.status === 1) {
+													setUserList(userList => userList.map(item => (
+														item.username !== user.username ? item : {
+															...item,
+															alreadyBlocked: true,
+														}
+													)));
+												} else if (res.data.status === 2) {
+													setUserList(userList => userList.map(item => (
+														item.username !== user.username ? item : {
+															...item,
+															alreadyBlocked: false,
+														}
+													)));
+												} else {
+													enqueueSnackbar(res.data.content, {variant: "error"});
+												}
+											})
+										}}
+									>
+										{user.alreadyBlocked ? "取消屏蔽" : "屏蔽"}
+									</Button>
+								)}
 							</Grid>
 						</ListItem>
 						<Grid container sx={{ml: 7, mt: 0.25}}>
@@ -324,7 +373,11 @@ const TabPanel = memo(function TabPanel({value, username, displayName, avatarVer
 		return <Follows username={username} type="following"/>;
 	}
 	
-	return <Follows username={username} type="follower"/>;
+	if (value === 2) {
+		return <Follows username={username} type="followers"/>;
+	}
+	
+	return <Follows username={username} type="blocking"/>;
 });
 
 TabPanel.propTypes = {
@@ -340,6 +393,8 @@ const doFollow = (username, setIsFollowing) => {
 			setIsFollowing(true);
 		} else if (res.data.status === 2) {
 			setIsFollowing(false);
+		} else {
+			enqueueSnackbar(res.data.content, {variant: "error"});
 		}
 	});
 };
@@ -352,7 +407,7 @@ const UserPage = memo(function UserPage({username}) {
 	const navigate = useNavigate();
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
-	const tabs = [undefined, "following", "followers"];
+	const tabs = username === myname ? [undefined, "following", "followers", "blocking"] : [undefined, "following", "followers"];
 	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
 	const [followingCount, setFollowingCount] = useState(0);
 	const [followersCount, setFollowersCount] = useState(0);
@@ -426,8 +481,22 @@ const UserPage = memo(function UserPage({username}) {
 								            avatarVersion={avatarVersion} width={100} height={100}/>
 							</IconButton>
 						) : (
-							<UserAvatar username={data.username} displayName={data.displayName}
-							            avatarVersion={avatarVersion} width={100} height={100}/>
+							<Badge
+								badgeContent={isBlocking ? <Block fontSize="large"/> : undefined}
+								overlap="circular"
+								color="error"
+								anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+								sx={{
+									'& .MuiBadge-badge': {
+										width: 35,
+										height: 35,
+										borderRadius: "50%",
+									}
+								}}
+							>
+								<UserAvatar username={data.username} displayName={data.displayName}
+								            avatarVersion={avatarVersion} width={100} height={100}/>
+							</Badge>
 						)}
 						<input
 							type="file"
@@ -595,6 +664,8 @@ const UserPage = memo(function UserPage({username}) {
 													setIsBlocking(true);
 												} else if (res.data.status === 2) {
 													setIsBlocking(false);
+												} else {
+													enqueueSnackbar(res.data.content, {variant: "error"});
 												}
 											});
 										}}>
@@ -614,7 +685,7 @@ const UserPage = memo(function UserPage({username}) {
 					</Box>
 				</Grid>
 			</Card>
-			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 1, mt: 1}}>
+			<Box sx={{borderBottom: 1, borderColor: 'divider', mb: 1, mt: 1.5}}>
 				<Tabs
 					value={tabValue}
 					onChange={(event, newValue) => {
@@ -622,9 +693,10 @@ const UserPage = memo(function UserPage({username}) {
 						setTabValue(newValue);
 					}}
 				>
-					<Tab label="动态" data-option="chat"/>
-					<Tab label={`关注(${followingCount})`} data-option="following"/>
-					<Tab label={`粉丝(${followersCount})`} data-option="follower"/>
+					<Tab label="动态"/>
+					<Tab label={`关注(${followingCount})`}/>
+					<Tab label={`粉丝(${followersCount})`}/>
+					{username === myname && <Tab label={`屏蔽(${data.blockingCount})`}/>}
 				</Tabs>
 			</Box>
 			<TabPanel value={tabValue} username={data.username} displayName={data.displayName} avatarVersion={avatarVersion}/>
