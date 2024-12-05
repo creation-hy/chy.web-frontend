@@ -1575,19 +1575,21 @@ export default function Chat() {
 			if (userInfo) {
 				setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
 				
-				setClientUser(clientUser => ({
-					...clientUser,
-					newMessageCount: Math.max(0, clientUser.newMessageCount - userInfo.newMessageCount),
-				}));
-				
-				setUsers(users => {
-					usersVar = users.map(user => user.username !== userInfo.username ? user : {
-						...user,
-						newMessageCount: 0,
-					});
+				if (pageNumber === 0) {
+					setClientUser(clientUser => ({
+						...clientUser,
+						newMessageCount: Math.max(0, clientUser.newMessageCount - userInfo.newMessageCount),
+					}));
 					
-					return usersVar;
-				});
+					setUsers(users => {
+						usersVar = users.map(user => user.username !== userInfo.username ? user : {
+							...user,
+							newMessageCount: 0,
+						});
+						
+						return usersVar;
+					});
+				}
 				
 				if (messageInput.current) {
 					messageInput.current.value = userInfo.draft ? userInfo.draft : "";
