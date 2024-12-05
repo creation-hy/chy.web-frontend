@@ -30,6 +30,7 @@ import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useQuery} from "@tanstack/react-query";
 import {
+	Block,
 	BlockSharp,
 	EditOutlined,
 	LockResetOutlined,
@@ -256,7 +257,7 @@ const Follows = memo(function Follows({username, type}) {
 									</Typography>
 								</ListItemText>
 								<Button
-									variant={user.alreadyFollowing ? "outlined" : "contained"}
+									variant={user.alreadyFollowed ? "outlined" : "contained"}
 									sx={{ml: 2, flexShrink: 0}}
 									disabled={user.username === myname}
 									onClick={() => {
@@ -265,21 +266,21 @@ const Follows = memo(function Follows({username, type}) {
 												setUserList(userList => userList.map(item => (
 													item.username !== user.username ? item : {
 														...item,
-														alreadyFollowing: true,
+														alreadyFollowed: true,
 													}
 												)));
 											} else if (res.data.status === 2) {
 												setUserList(userList => userList.map(item => (
 													item.username !== user.username ? item : {
 														...item,
-														alreadyFollowing: false,
+														alreadyFollowed: false,
 													}
 												)));
 											}
 										})
 									}}
 								>
-									{user.alreadyFollowing ? "取消关注" : "关注"}
+									{user.alreadyFollowed ? "取消关注" : "关注"}
 								</Button>
 							</Grid>
 						</ListItem>
@@ -335,7 +336,6 @@ TabPanel.propTypes = {
 
 const doFollow = (username, setIsFollowing) => {
 	return axios.post("/api/user/" + username + "/follow").then(res => {
-		enqueueSnackbar(res.data.content, {variant: res.data.status === 0 ? "error" : "success"});
 		if (res.data.status === 1) {
 			setIsFollowing(true);
 		} else if (res.data.status === 2) {
@@ -359,6 +359,7 @@ const UserPage = memo(function UserPage({username}) {
 	
 	const [modifying, setModifying] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
+	const [isBlocking, setIsBlocking] = useState(null);
 	const [resetPasswordOn, setResetPasswordOn] = useState(false);
 	
 	const [isManagingBadges, setIsManagingBadges] = useState(false);
@@ -387,7 +388,8 @@ const UserPage = memo(function UserPage({username}) {
 		if (data && data.username) {
 			setFollowingCount(data["followingCount"]);
 			setFollowersCount(data["followerCount"]);
-			setIsFollowing(data["alreadyFollowing"]);
+			setIsFollowing(data["alreadyFollowed"]);
+			setIsBlocking(data["alreadyBlocked"]);
 			setAvatarVersion(data.avatarVersion);
 			setMyBadge(data.badge);
 		}
@@ -536,15 +538,15 @@ const UserPage = memo(function UserPage({username}) {
 											<VerifiedOutlined/>
 										</IconButton>
 									</Tooltip>
-									<Tooltip title="重置密码">
-										<IconButton onClick={() => setResetPasswordOn(true)}>
-											<LockResetOutlined/>
-										</IconButton>
-									</Tooltip>
 									<Tooltip title="私信">
 										<NavigateIconButton href={`/chat/${data.username}`}>
 											<MailOutlined/>
 										</NavigateIconButton>
+									</Tooltip>
+									<Tooltip title="重置密码">
+										<IconButton onClick={() => setResetPasswordOn(true)}>
+											<LockResetOutlined/>
+										</IconButton>
 									</Tooltip>
 									<Tooltip title="登出">
 										<IconButton
@@ -585,6 +587,19 @@ const UserPage = memo(function UserPage({username}) {
 										<NavigateIconButton href={`/chat/${data.username}`}>
 											<MailOutlined/>
 										</NavigateIconButton>
+									</Tooltip>
+									<Tooltip title={isBlocking ? "取消屏蔽" : "屏蔽"}>
+										<IconButton onClick={() => {
+											axios.post(`/api/user/${data.username}/block`).then(res => {
+												if (res.data.status === 1) {
+													setIsBlocking(true);
+												} else if (res.data.status === 2) {
+													setIsBlocking(false);
+												}
+											});
+										}}>
+											<Block color={isBlocking ? "inherit" : "error"}/>
+										</IconButton>
 									</Tooltip>
 								</Box>
 							)}
