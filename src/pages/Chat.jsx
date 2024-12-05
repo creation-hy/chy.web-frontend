@@ -92,6 +92,8 @@ let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSe
 let usersVar = [], messagesVar = [];
 let socket, stomp;
 
+settingsVar.allowMessageFrom = undefined;
+
 const uploadDraft = (contact, content) => {
 	axios.post("/api/chat/draft/save", {contact: contact, content: content}, {
 		headers: {
@@ -775,7 +777,7 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	}, [inputField]);
 	
 	useEffect(() => {
-		if (clientUser) {
+		if (clientUser && !settingsVar.allowMessageFrom) {
 			setSettings(settings => {
 				settingsVar = {
 					...settings,
