@@ -148,7 +148,7 @@ const os = osName + " " + osVersion, browser = browserName + " " + fullBrowserVe
 const webgl = document.createElement("canvas").getContext("experimental-webgl");
 const gpuName = webgl.getParameter(webgl.getExtension("WEBGL_debug_renderer_info").UNMASKED_RENDERER_WEBGL)
 	.replace(/ANGLE [(].*, (.*) [(]0x.*, .*[)]/g, "$1").replace(/ANGLE [(].*, (.*), OpenGL.*[)]/g, "$1")
-	.replace(/ANGLE [(].*, (.*) (Direct).*[)], or similar/g, "$1").replace(/(.*), or similar/g, "$1").replace(/ANGLE [(]Apple, ANGLE Metal Renderer: (.*), (.*)[)]/g, "$1");
+	.replace(/ANGLE [(].*, (.*) (Direct).*[)]/g, "$1").replace(/(.*), or similar/g, "$1").replace(/ANGLE [(]Apple, ANGLE Metal Renderer: (.*), (.*)[)]/g, "$1");
 
 const workerFunc = () => {
 	const generateMatrix = (size) => {
