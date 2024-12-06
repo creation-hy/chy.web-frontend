@@ -8,16 +8,17 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import {InputLabel, LinearProgress, Switch, useMediaQuery} from "@mui/material";
 import PropTypes from "prop-types";
-import {useState} from "react";
+import {memo, useCallback, useState} from "react";
 import {Close, HourglassBottom, Leaderboard, PlayArrow} from "@mui/icons-material";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import FormControl from "@mui/material/FormControl";
 import Dialog from "@mui/material/Dialog";
-import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
+import {ChybenchRanking} from "src/pages/chybench/ChybenchRanking.jsx";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
 import {LoadingButton} from "@mui/lab";
+import {useNavigate} from "react-router";
 
 function LinearProgressWithLabel(props) {
 	return (
@@ -185,9 +186,10 @@ let workerCode = workerFunc.toString();
 workerCode = workerCode.substring(workerCode.indexOf("{") + 1, workerCode.lastIndexOf("}"));
 const workerScript = URL.createObjectURL(new Blob([workerCode], {type: "application/javascript"}));
 
-export default function Chybench() {
+export const Chybench = memo(function Chybench({showRanking}) {
 	document.title = "Chybench - chy.web";
 	
+	const navigate = useNavigate();
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const [size, setSize] = useState(chybenchParams.size ?? 1);
@@ -198,7 +200,13 @@ export default function Chybench() {
 	const [memoryProgress, setMemoryProgress] = useState(0);
 	
 	const [running, setRunning] = useState(false);
-	const [showRanking, toggleRanking] = useState(false);
+	const toggleRanking = useCallback((showRanking) => {
+		if (showRanking) {
+			navigate("/chybench/ranking");
+		} else {
+			navigate("/chybench");
+		}
+	}, []);
 	
 	const benchmark = async (size, rounds) => {
 		let cpuSingleScore = 0, cpuMultiScore = 0, gpuScore = 0, memoryScore = 0;
@@ -382,4 +390,8 @@ export default function Chybench() {
 			</Dialog>
 		</Grid>
 	)
+});
+
+Chybench.propTypes = {
+	showRanking: PropTypes.bool.isRequired,
 }

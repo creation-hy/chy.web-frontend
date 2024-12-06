@@ -11,8 +11,7 @@ import {MobileAppBar, PCAppBarLeft} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
-import Chybench from "src/pages/chybench/Chybench.jsx";
-import ChybenchRanking from "src/pages/chybench/ChybenchRanking.jsx";
+import {Chybench} from "src/pages/chybench/Chybench.jsx";
 import Error from "src/pages/Error.jsx";
 import Minesweeper from "src/pages/minesweeper/Minesweeper.jsx";
 import Box from "@mui/material/Box";
@@ -73,8 +72,9 @@ const PageContainer = memo(function PageContainer() {
 							<Route path="/user/:username/:tab" element={<User/>}/>
 							<Route path="/ai-art" element={<AIArt/>}/>
 							<Route path="/ai-art/:tab" element={<AIArt/>}/>
-							<Route path="/chybench" element={<Chybench/>}/>
-							<Route path="/chybench/ranking" element={<ChybenchRanking/>}/>
+							<Route path="/chybench" element={<Chybench showRanking={false}/>}/>
+							<Route path="/chybench/ranking" element={<Chybench showRanking={true}/>}/>
+							<Route path="/chybench/ranking/page/:pageNumber" element={<Chybench showRanking={true}/>}/>
 							<Route path="/minesweeper" element={<Minesweeper/>}/>
 							<Route path="/chat" element={<Chat/>}/>
 							<Route path="/chat/:username" element={<Chat/>}/>

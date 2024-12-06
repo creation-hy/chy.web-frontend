@@ -13,6 +13,8 @@ import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import {DataGrid} from "@mui/x-data-grid";
 import Pagination from "@mui/material/Pagination";
 import PropTypes from "prop-types";
+import {useQuery} from "@tanstack/react-query";
+import {useNavigate, useParams} from "react-router";
 import {debounce} from "lodash";
 
 const myname = Cookies.get("username");
@@ -109,43 +111,59 @@ RankingTable.propTypes = {
 	data: PropTypes.array,
 }
 
-export default function ChybenchRanking() {
+export const ChybenchRanking = memo(function ChybenchRanking() {
 	document.title = "排行榜 - Chybench - chy.web";
+	
+	const navigate = useNavigate();
 	
 	const rankingParams = useMemo(() => JSON.parse(localStorage.getItem("chybenchRanking")) || {}, []);
 	const updateRankingParams = useCallback(() => localStorage.setItem("chybenchRanking", JSON.stringify(rankingParams)), [rankingParams]);
 	
 	const [rankingItem, setItem] = useState(rankingParams.item ?? "gpuScore");
 	const [rankingSize, setSize] = useState(rankingParams.size ?? 0);
-	const [pageNumber, setPageNumber] = useState(0);
+	
+	const [pageNumber, setPageNumber] = useState(Number(useParams().pageNumber ?? 0));
+	
+	const togglePageNumber = useCallback((page) => {
+		console.log(page);
+		navigate(`/chybench/ranking/page/${page}`);
+		setPageNumber(page);
+	}, []);
+	
+	const [rankingData, setRankingData] = useState([]);
 	
 	const [dataCount, setDataCount] = useState(0);
 	
-	const [isLoading, setIsLoading] = useState(true);
-	const [rankingData, setRankingData] = useState(null);
+	const {data, isLoading} = useQuery({
+		queryKey: [rankingItem, rankingSize, pageNumber],
+		queryFn: () => axios.get(`/api/chybench/ranking/${rankingItem}/${rankingSize}/${pageNumber}`).then(res => res.data.result),
+	});
 	
-	const toggleLoading = useRef(debounce((newIsLoading) => {
-		setIsLoading(newIsLoading);
+	const [showLoadingProgress, setShowLoadingProgress] = useState(false);
+	
+	const toggleShowLoading = useRef(debounce((newIsLoading) => {
+		setShowLoadingProgress(newIsLoading);
 	}, 100));
 	
 	useEffect(() => {
-		toggleLoading.current(true);
-		axios.get(`/api/chybench/ranking/${rankingItem}/${rankingSize}/${pageNumber}`).then(res => {
-			setRankingData(res.data.result);
-			toggleLoading.current(false);
-		});
-	}, [pageNumber, rankingItem, rankingSize]);
-	
-	useEffect(() => {
 		axios.get(`/api/chybench/ranking/count/${rankingItem}/${rankingSize}`).then(res => {
-			setPageNumber(0);
 			setDataCount(res.data.result);
 		});
 	}, [rankingItem, rankingSize]);
 	
+	useEffect(() => {
+		if (data) {
+			setRankingData(data);
+		}
+	}, [data]);
+	
+	useEffect(() => {
+		toggleShowLoading.current(isLoading);
+	}, [isLoading]);
+	
 	return (
 		<Grid container direction="column" sx={{minHeight: "100%", justifyContent: "space-between", maxWidth: "100%"}}>
-			<Backdrop open={isLoading} sx={{zIndex: 8964}}>
+			<Backdrop open={showLoadingProgress} sx={{zIndex: 8964}}>
 				<CircularProgress size={50}/>
 			</Backdrop>
 			<Grid container justifyContent="center" spacing={2} sx={{mb: 2}}>
@@ -160,6 +178,7 @@ export default function ChybenchRanking() {
 						value={rankingItem}
 						onChange={(event) => {
 							setItem(event.target.value);
+							togglePageNumber(0);
 							rankingParams.item = event.target.value;
 							updateRankingParams();
 						}}
@@ -181,6 +200,7 @@ export default function ChybenchRanking() {
 						value={rankingSize}
 						onChange={(event) => {
 							setSize(event.target.value);
+							togglePageNumber(0);
 							rankingParams.size = event.target.value;
 							updateRankingParams();
 						}}
@@ -197,9 +217,9 @@ export default function ChybenchRanking() {
 					page={pageNumber + 1}
 					color="primary"
 					count={Math.ceil(dataCount / 10.0)}
-					onChange={(event, value) => setPageNumber(value - 1)}
+					onChange={(event, value) => togglePageNumber(value - 1)}
 				/>
 			</Grid>
 		</Grid>
 	);
-}
+});
