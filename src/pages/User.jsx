@@ -76,7 +76,7 @@ const News = memo(function News({username, displayName, avatarVersion}) {
 		staleTime: Infinity,
 	});
 	
-	const [chatList, setChatList] = useState([]);
+	const [chatList, setChatList] = useState(null);
 	
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
@@ -108,7 +108,12 @@ const News = memo(function News({username, displayName, avatarVersion}) {
 	
 	return (
 		<Box sx={{mt: -0.5}}>
-			{chatList.map((chat, chatIndex) => (
+			{!chatList && (
+				<Box textAlign="center" mt={4}>
+					<CircularProgress/>
+				</Box>
+			)}
+			{chatList && chatList.map((chat, chatIndex) => (
 				<Grid
 					container
 					key={chat.id}
@@ -289,10 +294,10 @@ UserItem.propTypes = {
 }
 
 const Follows = memo(function Follows({username, type}) {
-	const [followingList, setFollowingList] = useState([]);
-	const [followersList, setFollowersList] = useState([]);
-	const [blockingList, setBlockingList] = useState([]);
-	const [userList, setUserList] = useState([]);
+	const [followingList, setFollowingList] = useState(null);
+	const [followersList, setFollowersList] = useState(null);
+	const [blockingList, setBlockingList] = useState(null);
+	const [userList, setUserList] = useState(null);
 	
 	const [showBlockButton, setShowBlockButton] = useState(false);
 	
@@ -327,23 +332,23 @@ const Follows = memo(function Follows({username, type}) {
 	useEffect(() => {
 		if (type === "following") {
 			setShowBlockButton(false);
-			setUserList([...followingList]);
+			setUserList(followingList);
 		}
-	}, [followingList]);
+	}, [followingList, type]);
 	
 	useEffect(() => {
 		if (type === "followers") {
 			setShowBlockButton(false);
-			setUserList([...followersList]);
+			setUserList(followersList);
 		}
-	}, [followersList]);
+	}, [followersList, type]);
 	
 	useEffect(() => {
 		if (type === "blocking") {
 			setShowBlockButton(true);
-			setUserList([...blockingList]);
+			setUserList(blockingList);
 		}
-	}, [blockingList]);
+	}, [blockingList, type]);
 	
 	useEffect(() => {
 		if (lastUserRef.current) {
@@ -355,7 +360,12 @@ const Follows = memo(function Follows({username, type}) {
 	
 	return (
 		<List sx={{pt: 0, mt: -1}}>
-			{userList.map((user, userIndex) => (
+			{!userList && (
+				<Box textAlign="center" mt={4}>
+					<CircularProgress/>
+				</Box>
+			)}
+			{userList && userList.map((user, userIndex) => (
 				<Fragment key={user.username}>
 					{userIndex !== 0 && <Divider/>}
 					<Box sx={{px: 2, py: 2.5}} ref={userIndex === userList.length - 1 ? lastUserRef : undefined}>
