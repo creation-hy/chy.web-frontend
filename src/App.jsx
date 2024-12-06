@@ -13,7 +13,7 @@ import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
 import {Chybench} from "src/pages/chybench/Chybench.jsx";
 import Error from "src/pages/Error.jsx";
-import Minesweeper from "src/pages/minesweeper/Minesweeper.jsx";
+import {Minesweeper} from "src/pages/minesweeper/Minesweeper.jsx";
 import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
@@ -75,7 +75,9 @@ const PageContainer = memo(function PageContainer() {
 							<Route path="/chybench" element={<Chybench showRanking={false}/>}/>
 							<Route path="/chybench/ranking" element={<Chybench showRanking={true}/>}/>
 							<Route path="/chybench/ranking/page/:pageNumber" element={<Chybench showRanking={true}/>}/>
-							<Route path="/minesweeper" element={<Minesweeper/>}/>
+							<Route path="/minesweeper" element={<Minesweeper showRanking={false}/>}/>
+							<Route path="/minesweeper/ranking" element={<Minesweeper showRanking={true}/>}/>
+							<Route path="/minesweeper/ranking/page/:pageNumber" element={<Minesweeper showRanking={true}/>}/>
 							<Route path="/chat" element={<Chat/>}/>
 							<Route path="/chat/:username" element={<Chat/>}/>
 							<Route path="*" element={<Error/>}/>

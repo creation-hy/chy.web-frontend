@@ -1,4 +1,4 @@
-import {memo, useMemo, useRef, useState} from 'react';
+import {memo, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Grid from "@mui/material/Grid2";
 import TextField from "@mui/material/TextField";
 import DialogContent from "@mui/material/DialogContent";
@@ -6,7 +6,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import {Alert} from "@mui/material";
+import {Alert, Backdrop, CircularProgress} from "@mui/material";
 import {enqueueSnackbar} from "notistack";
 import Typography from "@mui/material/Typography";
 import axios from "axios";
@@ -20,6 +20,8 @@ import {useQuery} from "@tanstack/react-query";
 import {flushSync} from "react-dom";
 import Cookies from "js-cookie";
 import {isIOS13} from "react-device-detect";
+import {useNavigate, useParams} from "react-router";
+import {debounce} from "lodash";
 
 let flippedCount = 0, passedTimeInterval;
 let startTime = 0, rows = 10, mines = 10;
@@ -117,11 +119,20 @@ const tableColumns = [
 ];
 
 const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
-	const [pageNumber, setPageNumber] = useState(0);
+	const navigate = useNavigate();
 	
-	const {data} = useQuery({
+	const [pageNumber, setPageNumber] = useState(Number(useParams().pageNumber ?? 0));
+	
+	const togglePageNumber = useCallback((page) => {
+		navigate(`/minesweeper/ranking/page/${page}`);
+		setPageNumber(page);
+	}, []);
+	
+	const [rankingData, setRankingData] = useState([]);
+	
+	const {data, isLoading} = useQuery({
 		queryKey: ["minesweeper-ranking", pageNumber],
-		queryFn: () => axios.get(`/api/minesweeper/ranking/${pageNumber}`).then(res => res.data),
+		queryFn: () => axios.get(`/api/minesweeper/ranking/${pageNumber}`).then(res => res.data.result),
 	});
 	
 	const countData = useQuery({
@@ -129,11 +140,23 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 		queryFn: () => axios.get(`/api/minesweeper/ranking-count`).then(res => res.data),
 	});
 	
+	const [showLoadingProgress, setShowLoadingProgress] = useState(false);
+	
+	const toggleShowLoading = useRef(debounce((newIsLoading) => {
+		setShowLoadingProgress(newIsLoading);
+	}, 100));
+	
 	const myItem = data && data.result ? data.result.find(item => item.username === myname) : undefined;
 	
-	if (!data) {
-		return null;
-	}
+	useEffect(() => {
+		if (data) {
+			setRankingData(data);
+		}
+	}, [data]);
+	
+	useEffect(() => {
+		toggleShowLoading.current(isLoading);
+	}, [isLoading]);
 	
 	return (
 		<Dialog
@@ -141,6 +164,9 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 			onClose={() => setShowRanking(false)}
 			maxWidth="xl"
 		>
+			<Backdrop open={showLoadingProgress} sx={{zIndex: 8964}}>
+				<CircularProgress size={50}/>
+			</Backdrop>
 			<IconButton
 				onClick={() => setShowRanking(false)}
 				sx={{
@@ -157,16 +183,17 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 			<DialogContent>
 				<DataGrid
 					columns={tableColumns}
-					rows={data ? data.result : undefined}
+					rows={rankingData}
 					rowSelectionModel={myItem ? myItem.id : undefined}
 					disableRowSelectionOnClick
 					hideFooter
 				/>
 				<Grid container sx={{mt: 2}} justifyContent="center" alignItems="flex-end" flex={1}>
 					<Pagination
+						page={pageNumber + 1}
 						color="primary"
 						count={countData.data ? Math.ceil(countData.data.result / 10.0) : 0}
-						onChange={(event, value) => setPageNumber(value - 1)}
+						onChange={(event, value) => togglePageNumber(value - 1)}
 					/>
 				</Grid>
 			</DialogContent>
@@ -179,11 +206,21 @@ Ranking.propTypes = {
 	setShowRanking: PropTypes.func.isRequired,
 }
 
-export default function Minesweeper() {
+export const Minesweeper = memo(function Minesweeper({showRanking}) {
+	const navigate = useNavigate();
+	
 	const [isGameStarted, setIsGameStarted] = useState(false);
 	const [grid, setGrid] = useState([]);
 	const [elapsedTime, setElapsedTime] = useState("00:00:00");
-	const [showRanking, setShowRanking] = useState(false);
+	
+	const setShowRanking = useCallback((showRanking) => {
+		if (showRanking) {
+			navigate("/minesweeper/ranking");
+		} else {
+			navigate("/minesweeper");
+		}
+	}, []);
+	
 	const boxes = useRef([]);
 	
 	const minesweeperSettings = useMemo(() => JSON.parse(localStorage.getItem("minesweeperSettings")) || {}, []);
@@ -414,16 +451,13 @@ export default function Minesweeper() {
 					>
 						结束游戏
 					</Button>
-					<Button
-						variant="contained"
-						startIcon={<Leaderboard/>}
-						onClick={() => setShowRanking(true)}
-					>
-						排行榜
-					</Button>
 				</Grid>
 			)}
 			<Ranking showRanking={showRanking} setShowRanking={setShowRanking}/>
 		</Box>
 	);
+});
+
+Minesweeper.propTypes = {
+	showRanking: PropTypes.bool.isRequired,
 }

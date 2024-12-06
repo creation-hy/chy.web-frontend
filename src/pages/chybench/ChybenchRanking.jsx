@@ -125,7 +125,6 @@ export const ChybenchRanking = memo(function ChybenchRanking() {
 	const [pageNumber, setPageNumber] = useState(Number(useParams().pageNumber ?? 0));
 	
 	const togglePageNumber = useCallback((page) => {
-		console.log(page);
 		navigate(`/chybench/ranking/page/${page}`);
 		setPageNumber(page);
 	}, []);
