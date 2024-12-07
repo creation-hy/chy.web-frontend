@@ -16,8 +16,8 @@ import {
 	DrawOutlined,
 	EventAvailable,
 	ForumOutlined,
-	InfoOutlined,
 	LightMode,
+	SettingsOutlined,
 	SportsEsportsOutlined
 } from "@mui/icons-material";
 import {useColorMode} from "src/components/ColorMode.jsx";
@@ -240,14 +240,14 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 					<ListItemText primary="Blog"/>
 				</ListItemButton>
 				<ListItemButton
-					href="/blog"
-					onClick={(event) => navigateAndCloseDrawer(event, "/about")}
-					selected={firstLevelLocation === "about"}
+					href="/settings"
+					onClick={(event) => navigateAndCloseDrawer(event, "/settings")}
+					selected={firstLevelLocation === "settings"}
 				>
 					<ListItemIcon>
-						<InfoOutlined/>
+						<SettingsOutlined/>
 					</ListItemIcon>
-					<ListItemText primary="关于"/>
+					<ListItemText primary="设置"/>
 				</ListItemButton>
 			</List>
 			<Grid

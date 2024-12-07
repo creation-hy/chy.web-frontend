@@ -34,8 +34,6 @@ import {
 	Block,
 	BlockSharp,
 	EditOutlined,
-	LockResetOutlined,
-	LogoutOutlined,
 	MailOutlined,
 	PersonAdd,
 	PersonAddOutlined,
@@ -56,7 +54,6 @@ import TextField from "@mui/material/TextField";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
-import ResetPassword from "src/components/ResetPassword.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
@@ -443,7 +440,6 @@ const UserPage = memo(function UserPage({username}) {
 	const [modifying, setModifying] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(null);
 	const [isBlocking, setIsBlocking] = useState(null);
-	const [resetPasswordOn, setResetPasswordOn] = useState(false);
 	
 	const [isManagingBadges, setIsManagingBadges] = useState(false);
 	const [myBadge, setMyBadge] = useState(null);
@@ -603,7 +599,6 @@ const UserPage = memo(function UserPage({username}) {
 								</Button>
 							</DialogActions>
 						</Dialog>
-						<ResetPassword open={resetPasswordOn} handleClose={() => setResetPasswordOn(false)}/>
 						<Grid container direction="column" justifyContent="center">
 							<Grid container alignItems="center" wrap="nowrap" maxWidth="100%">
 								<UsernameWithBadge username={data.displayName} badge={myBadge} fontSize={20} size={22}/>
@@ -639,22 +634,6 @@ const UserPage = memo(function UserPage({username}) {
 										<NavigateIconButton href={`/chat/${data.username}`}>
 											<MailOutlined/>
 										</NavigateIconButton>
-									</Tooltip>
-									<Tooltip title="重置密码">
-										<IconButton onClick={() => setResetPasswordOn(true)}>
-											<LockResetOutlined/>
-										</IconButton>
-									</Tooltip>
-									<Tooltip title="登出">
-										<IconButton
-											onClick={() => {
-												Cookies.remove("username");
-												Cookies.remove("user_token");
-												window.location.href = "/login";
-											}}
-										>
-											<LogoutOutlined/>
-										</IconButton>
 									</Tooltip>
 								</Box>
 							) : (

@@ -15,10 +15,6 @@ import {
 	MenuList,
 	Paper,
 	Switch,
-	Table,
-	TableBody,
-	TableCell,
-	TableRow,
 	Tooltip,
 	useMediaQuery,
 	Zoom
@@ -91,8 +87,6 @@ const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
 let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {useMarkdown: false};
 let usersVar = [], messagesVar = [];
 let socket, stomp;
-
-settingsVar.allowMessageFrom = undefined;
 
 const uploadDraft = (contact, content) => {
 	axios.post("/api/chat/draft/save", {contact: contact, content: content}, {
@@ -761,8 +755,6 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	
 	const [onSettings, handleSettings] = useState(false);
 	const [settings, setSettings] = useState(settingsVar);
-	const settingItems = ["useMarkdown", "allowNotification", "allowPublicNotification", "allowCurrentNotification", "displayNotificationContent"];
-	const settingItemsDisplay = ["启用Markdown+", "允许通知", "允许公共频道通知", "允许当前联系人通知", "通知显示消息内容"];
 	
 	const updateCursorSelection = useCallback(() => {
 		cursorSelection.current = [inputField.current.selectionStart, inputField.current.selectionEnd];
@@ -775,19 +767,6 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 		inputField.current.focus();
 		inputField.current.setSelectionRange(start + text.length, start + text.length);
 	}, [inputField]);
-	
-	useEffect(() => {
-		if (clientUser && !settingsVar.allowMessageFrom) {
-			setSettings(settings => {
-				settingsVar = {
-					...settings,
-					allowMessageFrom: clientUser.allowMessageFrom,
-				};
-				
-				return settingsVar;
-			});
-		}
-	}, [clientUser]);
 	
 	useEffect(() => {
 		if (lastMatchedMessageRef.current) {
@@ -1187,64 +1166,20 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 					设置
 				</DialogTitle>
 				<Card variant="outlined" sx={{mx: 3, mb: 2, px: 1}}>
-					<Table>
-						<TableBody>
-							{settingItems.map((item, index) => (
-								<TableRow key={item}>
-									<TableCell sx={{py: 1, pl: 1}}>
-										<Typography>
-											{settingItemsDisplay[index]}
-										</Typography>
-									</TableCell>
-									<TableCell align="right" sx={{py: 1, pr: 0}}>
-										<Switch
-											checked={settings[item] !== false}
-											onChange={(event) => {
-												const newSettings = {...settings, [item]: event.target.checked};
-												setSettings(newSettings);
-												settingsVar = newSettings;
-												localStorage.setItem("chatSettings", JSON.stringify(newSettings));
-											}}
-											sx={{
-												'& .MuiSwitch-thumb': {
-													boxShadow: 'none', // 关闭阴影
-												},
-											}}
-										/>
-									</TableCell>
-								</TableRow>
-							))}
-							<TableRow key="allowMessageFrom">
-								<TableCell sx={{py: 1, pl: 1, border: 0}}>
-									<Typography>
-										允许的消息来源
-									</Typography>
-								</TableCell>
-								<TableCell align="right" sx={{py: 1, pr: 0, border: 0}}>
-									<Select
-										variant="outlined"
-										size="small"
-										value={settings["allowMessageFrom"] ?? "ALL"}
-										onChange={(event) => {
-											const newSettings = {...settings, allowMessageFrom: event.target.value};
-											setSettings(newSettings);
-											settingsVar = newSettings;
-											
-											axios.post(`/api/account/allow-message-from/modify`, {allowMessageFrom: event.target.value}, {
-												headers: {
-													'Content-Type': 'application/json',
-												},
-											});
-										}}
-									>
-										<MenuItem value="ALL">所有人</MenuItem>
-										<MenuItem value="FOLLOWING">关注的人</MenuItem>
-										<MenuItem value="SELF">仅自己</MenuItem>
-									</Select>
-								</TableCell>
-							</TableRow>
-						</TableBody>
-					</Table>
+					<Grid container alignItems="center" justifyContent="space-between" sx={{p: 1}} wrap="nowrap">
+						<Typography>
+							启用Markdown+
+						</Typography>
+						<Switch
+							checked={settings["useMarkdown"] !== false}
+							onChange={(event) => {
+								const newSettings = {...settings, useMarkdown: event.target.checked};
+								setSettings(newSettings);
+								settingsVar = newSettings;
+								localStorage.setItem("chatSettings", JSON.stringify(newSettings));
+							}}
+						/>
+					</Grid>
 				</Card>
 				<DialogActions>
 					<Button onClick={() => handleSettings(false)}>关闭</Button>
@@ -1385,6 +1320,8 @@ export const ChatNotificationClient = memo(function ChatNotificationClient() {
 	
 	const stompOnConnect = useRef(() => {
 		stomp.current.subscribe(`/user/queue/chat.message`, (message) => {
+			settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {useMarkdown: false};
+			
 			const data = JSON.parse(message.body);
 			
 			if (data.sender !== myname) {
@@ -1398,6 +1335,8 @@ export const ChatNotificationClient = memo(function ChatNotificationClient() {
 		}, {"auto-delete": true});
 		
 		stomp.current.subscribe("/topic/chat.group.public.message", (message) => {
+			settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {useMarkdown: false};
+			
 			const data = JSON.parse(message.body);
 			
 			if (data.sender !== myname) {

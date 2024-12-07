@@ -22,6 +22,7 @@ import {memo, useEffect, useRef, useState} from "react";
 import {Fab, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import {KeyboardArrowUpOutlined} from "@mui/icons-material";
+import {Settings} from "src/pages/Settings.jsx";
 
 const PageContainer = memo(function PageContainer() {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -80,6 +81,9 @@ const PageContainer = memo(function PageContainer() {
 							<Route path="/minesweeper/ranking/page/:pageNumber" element={<Minesweeper showRanking={true}/>}/>
 							<Route path="/chat" element={<Chat/>}/>
 							<Route path="/chat/:username" element={<Chat/>}/>
+							<Route path="/settings" element={<Settings/>}/>
+							<Route path="/settings/:item1" element={<Settings/>}/>
+							<Route path="/settings/:item1/:item2" element={<Settings/>}/>
 							<Route path="*" element={<Error/>}/>
 						</Routes>
 						<Box minHeight={16}/>
