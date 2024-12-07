@@ -1537,7 +1537,7 @@ export default function Chat() {
 		
 		const isCurrentUser = currentUserVar === username;
 		
-		const userItem = usersVar.find(item => item.username === username);
+		const userItem = usersVar.find(item => item.username === username) ?? matchList?.find(item => item.username === username);
 		
 		if (userItem) {
 			setCurrentUserDisplayName(userItem.displayName);
@@ -1605,18 +1605,12 @@ export default function Chat() {
 				}
 			}
 			
-			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
-			
-			if (res.data.result && res.data.result.message && res.data.result.message.length > 0 || pageNumber === 0) {
-				flushSync(() => {
-					messagesVar = pageNumber === 0 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
-					setMessages([...messagesVar]);
-				});
-			}
-			
 			if (!isCurrentUser && userInfo) {
 				flushSync(() => {
 					setCurrentUserDisplayName(userInfo.displayName);
+					setCurrentUserBadge(userInfo.badge);
+					setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
+					
 					setUsers(users => {
 						usersVar = users.map(user => user.username !== userInfo.username ? user : {
 							...user,
@@ -1624,10 +1618,17 @@ export default function Chat() {
 							badge: userInfo.badge,
 							isMessageAllowed: userInfo.isMessageAllowed,
 						});
-						setCurrentUserBadge(userInfo.badge);
-						setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
 						return usersVar;
 					});
+				});
+			}
+			
+			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
+			
+			if (res.data.result && res.data.result.message && res.data.result.message.length > 0 || pageNumber === 0) {
+				flushSync(() => {
+					messagesVar = pageNumber === 0 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
+					setMessages([...messagesVar]);
 				});
 			}
 			
