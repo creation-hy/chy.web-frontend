@@ -1646,7 +1646,7 @@ export default function Chat() {
 	const [isContactsLoading, setIsContactsLoading] = useState(true);
 	
 	useEffect(() => {
-		axios.get("/api/chat/contacts/0").then(res => {
+		axios.get("/api/chat/contacts/0", {params: {extraContactName: username}}).then(res => {
 			if (res.data.status !== 1) {
 				setLogged(false);
 				return;
@@ -1658,27 +1658,8 @@ export default function Chat() {
 			contactFetchSuccess.current = true;
 			setIsContactsLoading(false);
 			
-			if (!username || res.data.result.find(item => item.username === username)) {
-				usersVar = res.data.result;
-				setUsers([...usersVar]);
-			} else {
-				axios.get(`/api/user/find/0`, {params: {key: username}}).then(currentUserRes => {
-					const info = currentUserRes.data.result[0];
-					
-					usersVar = info.username === username ? [{
-						username: username,
-						displayName: info.displayName,
-						avatarVersion: info.avatarVersion,
-						badge: info.badge,
-						isOnline: info.isOnline,
-						lastMessageText: "\u00A0",
-						newMessageCount: 0,
-						isMessageAllowed: info.isMessageAllowed,
-					}, ...res.data.result] : res.data.result;
-					
-					setUsers([...usersVar]);
-				});
-			}
+			usersVar = res.data.result;
+			setUsers([...usersVar]);
 		});
 	}, [contactsVersion]);
 	
@@ -2099,7 +2080,7 @@ export default function Chat() {
 									isOnline={user.isOnline}
 									newMessageCount={user.newMessageCount}
 									lastMessageTime={user.lastMessageTime}
-									lastMessageText={user.lastMessageText}
+									lastMessageText={user.lastMessageText || "\u00A0"}
 									draft={user.draft}
 									selected={currentUser === user.username}
 									isMessageAllowed={user.isMessageAllowed}
