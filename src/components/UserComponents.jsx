@@ -86,12 +86,12 @@ export const UserBadge = memo(function UserBadge({badge, fontSize}) {
 			<SvgIcon sx={{fontSize: fontSize}}>
 				<defs>
 					<linearGradient id={`rainbow-gradient-${uuid}`} x1="0%" y1="0%" x2="0%" y2="100%">
-						<stop offset="0%" style={{stopColor: "#FF0018"}}/>
-						<stop offset="16.7%" style={{stopColor: "#FFA52C"}}/>
-						<stop offset="33.4%" style={{stopColor: "#FFFF41"}}/>
-						<stop offset="50.1%" style={{stopColor: "#008018"}}/>
-						<stop offset="66.8%" style={{stopColor: "#0000F9"}}/>
-						<stop offset="83.5%" style={{stopColor: "#86007D"}}/>
+						<stop offset="0%" style={{stopColor: "#E40303"}}/>
+						<stop offset="21.7%" style={{stopColor: "#FF8C00"}}/>
+						<stop offset="33.4%" style={{stopColor: "#FFCD00"}}/>
+						<stop offset="50.1%" style={{stopColor: "#008C45"}}/>
+						<stop offset="66.8%" style={{stopColor: "#004DFF"}}/>
+						<stop offset="83.5%" style={{stopColor: "#750787"}}/>
 					</linearGradient>
 				</defs>
 				<Verified sx={{fill: `url(#rainbow-gradient-${uuid})`}}/>
