@@ -1545,11 +1545,9 @@ export default function Chat() {
 				userItem.lastOnline ? "上次上线：" + convertDateToLocaleShortString(userItem.lastOnline) : "从未上线"));
 			setCurrentUserBadge(userItem.badge);
 			setCurrentUserMessageAllowed(userItem.isMessageAllowed);
-			setTimeout(() => {
-				if (messageInput.current) {
-					messageInput.current.value = userItem.draft ? userItem.draft : "";
-				}
-			}, 0);
+			if (messageInput.current) {
+				messageInput.current.value = userItem.draft ? userItem.draft : "";
+			}
 			setShowScrollTop(true);
 		}
 		
@@ -2243,7 +2241,7 @@ export default function Chat() {
 						</Fab>
 					</ScrollTop>}
 				</Card>
-				{currentUser != null && <Box sx={{width: "100%"}}>
+				<Box sx={{width: "100%", display: currentUser ? "block" : "none"}}>
 					{quote != null &&
 						<Chip
 							variant="outlined"
@@ -2342,7 +2340,7 @@ export default function Chat() {
 							</Tooltip>
 						</Grid>
 					</Card>
-				</Box>}
+				</Box>
 			</Grid>
 		</Grid>
 	);
