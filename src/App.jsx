@@ -17,7 +17,6 @@ import {Minesweeper} from "src/pages/minesweeper/Minesweeper.jsx";
 import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
-import Start from "src/pages/Start.jsx";
 import {memo, useEffect, useRef, useState} from "react";
 import {Fab, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
@@ -65,7 +64,6 @@ const PageContainer = memo(function PageContainer() {
 						{!isSmallScreen && <Box minHeight={16}/>}
 						<Routes>
 							<Route path="/" element={<Chat/>}/>
-							<Route path="/about" element={<Start/>}/>
 							<Route path="/blog" element={<Blog/>}/>
 							<Route path="/login" element={<SignIn/>}/>
 							<Route path="/register" element={<SignUp/>}/>

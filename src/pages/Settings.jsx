@@ -1,4 +1,4 @@
-import {List, ListItemButton, ListItemIcon, ListItemText, Switch, Table, TableBody, TableCell, TableRow} from "@mui/material";
+import {Badge, List, ListItemButton, ListItemIcon, ListItemText, Switch, Table, TableBody, TableCell, TableRow} from "@mui/material";
 import {AccountCircle, ArrowBack, ExitToApp, InfoOutlined, LockReset, LogoutOutlined, MailOutlined} from "@mui/icons-material";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
@@ -14,12 +14,13 @@ import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import Cookies from "js-cookie";
 import PropTypes from "prop-types";
-import {NavigateButtonBase} from "src/components/NavigateComponents.jsx";
+import {NavigateButtonBase, NavigateLink} from "src/components/NavigateComponents.jsx";
 import Box from "@mui/material/Box";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import {useClientUser} from "src/components/ClientUser.jsx";
+import Footer from "src/components/Footer.jsx";
 
 const SettingsItemButton = ({url, icon, text, onClick}) => {
 	return (
@@ -37,6 +38,7 @@ const SettingsItemButton = ({url, icon, text, onClick}) => {
 				<ListItemButton
 					disableRipple
 					onClick={onClick}
+					sx={{pl: 3}}
 				>
 					<ListItemIcon>
 						{icon}
@@ -56,17 +58,19 @@ SettingsItemButton.propTypes = {
 }
 
 const MainSettings = () => {
+	document.title = "设置 - chy.web";
+	
 	return (
 		<>
 			<CardContent>
-				<Grid container sx={{minHeight: 40, pl: 1}} alignItems="center">
+				<Grid container sx={{minHeight: 40, pl: 0.5}} alignItems="center">
 					<Typography variant="h5">
 						设置
 					</Typography>
 				</Grid>
 			</CardContent>
 			<List>
-				<SettingsItemButton url={"/settings/account"} icon={<AccountCircle/>} text={"账户设置"}/>
+				<SettingsItemButton url={"/settings/account"} icon={<AccountCircle/>} text={"账号设置"}/>
 				<SettingsItemButton url={"/settings/chat"} icon={<MailOutlined/>} text={"聊天设置"}/>
 				<SettingsItemButton url={"/settings/about"} icon={<InfoOutlined/>} text={"关于"}/>
 				<SettingsItemButton
@@ -84,6 +88,8 @@ const MainSettings = () => {
 }
 
 const AccountSettings = () => {
+	document.title = "账号设置 - chy.web";
+	
 	const navigate = useNavigate();
 	const location = useLocation();
 	
@@ -108,6 +114,8 @@ const AccountSettings = () => {
 }
 
 const ResetPassword = () => {
+	document.title = "重置密码 - chy.web";
+	
 	const navigate = useNavigate();
 	const location = useLocation();
 	
@@ -220,6 +228,8 @@ const ResetPassword = () => {
 }
 
 const ChatSettings = () => {
+	document.title = "聊天设置 - chy.web";
+	
 	const navigate = useNavigate();
 	const location = useLocation();
 	
@@ -244,7 +254,7 @@ const ChatSettings = () => {
 	}, [clientUser]);
 	
 	return (
-		<CardContent sx={{p: 2}}>
+		<CardContent>
 			<Grid container alignItems="center" spacing={2} sx={{mb: 2}}>
 				<IconButton onClick={() => navigate(location.pathname.replace(/\/[^/]+\/?$/, ''))}>
 					<ArrowBack/>
@@ -280,7 +290,7 @@ const ChatSettings = () => {
 								允许的消息来源
 							</Typography>
 						</TableCell>
-						<TableCell align="right" sx={{py: 1, pr: 0, border: 0}}>
+						<TableCell align="right" sx={{py: 1, pr: 1, border: 0}}>
 							<Select
 								variant="outlined"
 								size="small"
@@ -312,7 +322,45 @@ const ChatSettings = () => {
 	);
 }
 
+const About = () => {
+	const navigate = useNavigate();
+	const location = useLocation();
+	
+	document.title = "关于 - chy.web";
+	
+	return (
+		<CardContent sx={{display: "flex", flexDirection: "column", height: "100%"}}>
+			<Grid container alignItems="center" spacing={2} sx={{mb: 2}}>
+				<IconButton onClick={() => navigate(location.pathname.replace(/\/[^/]+\/?$/, ''))}>
+					<ArrowBack/>
+				</IconButton>
+				<Typography variant="h5">
+					关于
+				</Typography>
+			</Grid>
+			<Box sx={{mb: 2}}>
+				<Typography variant="h3" align="center" fontWeight="bold" mt={1}>
+					<Badge badgeContent="Beta" color="primary">
+						chy.web 5.1
+					</Badge>
+				</Typography>
+			</Box>
+			<Box>
+				<Typography align="center">
+					开发团队：<NavigateLink color="primary" underline="always" href={"/user/creation_hy"}>chy</NavigateLink>,&nbsp;
+					<NavigateLink color="primary" underline="always" href={"/user/Administrator"}>6913</NavigateLink>
+				</Typography>
+				<Typography align="center">
+					官方账号：<NavigateLink color="primary" underline="always" href={"/user/chy.web"}>chy.web</NavigateLink>
+				</Typography>
+				<Footer/>
+			</Box>
+		</CardContent>
+	);
+}
+
 export const Settings = () => {
+	const navigate = useNavigate();
 	const {item1, item2} = useParams();
 	
 	let cardContent;
@@ -329,7 +377,17 @@ export const Settings = () => {
 		if (!item2) {
 			cardContent = <ChatSettings/>;
 		}
+	} else if (item1 === "about") {
+		if (!item2) {
+			cardContent = <About/>;
+		}
 	}
+	
+	useEffect(() => {
+		if (!cardContent) {
+			navigate("/settings");
+		}
+	}, []);
 	
 	return (
 		<Container maxWidth="sm" sx={{p: 0, height: "100%"}}>
