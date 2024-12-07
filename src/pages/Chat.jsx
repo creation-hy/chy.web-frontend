@@ -1537,6 +1537,22 @@ export default function Chat() {
 		
 		const isCurrentUser = currentUserVar === username;
 		
+		const userItem = usersVar.find(item => item.username === username);
+		
+		if (userItem) {
+			setCurrentUserDisplayName(userItem.displayName);
+			setLastOnline(userItem.isOnline || username === myname ? "在线" : (
+				userItem.lastOnline ? "上次上线：" + convertDateToLocaleShortString(userItem.lastOnline) : "从未上线"));
+			setCurrentUserBadge(userItem.badge);
+			setCurrentUserMessageAllowed(userItem.isMessageAllowed);
+			setTimeout(() => {
+				if (messageInput.current) {
+					messageInput.current.value = userItem.draft ? userItem.draft : "";
+				}
+			}, 0);
+			setShowScrollTop(true);
+		}
+		
 		if (!isCurrentUser) {
 			if (messageInput.current) {
 				uploadDraft(currentUserVar, messageInput.current.value);
@@ -1553,17 +1569,6 @@ export default function Chat() {
 			Notification.requestPermission();
 		} catch (e) {
 			console.log("你的浏览器不支持通知，人家也没办法呀……", e);
-		}
-		
-		const userItem = usersVar.find(item => item.username === username);
-		
-		if (userItem) {
-			setCurrentUserMessageAllowed(userItem.isMessageAllowed);
-			setTimeout(() => {
-				if (messageInput.current) {
-					messageInput.current.value = userItem.draft ? userItem.draft : "";
-				}
-			}, 0);
 		}
 		
 		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
@@ -1614,11 +1619,18 @@ export default function Chat() {
 			if (!isCurrentUser && userInfo) {
 				flushSync(() => {
 					setCurrentUserDisplayName(userInfo.displayName);
-					setCurrentUserBadge(userInfo.badge);
-					setLastOnline(userInfo.isOnline || username === myname ? "在线" : (
-						userInfo.lastOnline ? "上次上线：" + convertDateToLocaleShortString(userInfo.lastOnline) : "从未上线"));
+					setUsers(users => {
+						usersVar = users.map(user => user.username !== userInfo.username ? user : {
+							...user,
+							displayName: userInfo.displayName,
+							badge: userInfo.badge,
+							isMessageAllowed: userInfo.isMessageAllowed,
+						});
+						setCurrentUserBadge(userInfo.badge);
+						setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
+						return usersVar;
+					});
 				});
-				setShowScrollTop(true);
 			}
 			
 			messageCardScrollTo(currentScrollBottom, "instant");
@@ -1671,7 +1683,7 @@ export default function Chat() {
 		});
 	}, [contactsVersion]);
 	
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (!isContactsLoading) {
 			currentUserVar = null;
 			setCurrentUser(null);
