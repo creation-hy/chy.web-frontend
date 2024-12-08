@@ -72,6 +72,7 @@ import {TransitionGroup} from "react-transition-group";
 import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import {isIOS13} from "react-device-detect";
 import {useNavigate, useParams} from "react-router";
+import Cookies from "js-cookie";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -121,6 +122,8 @@ const samplerDisplayNameList = [
 
 const optimizationPositiveTags = "masterpiece, best quality, Amazing, finely detail, Depth of field, extremely detailed CG unity 8k wallpaper, ";
 const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers: 1.5), (long body: 1.3), (mutation, poorly drawn: 1.2) , black-white, bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated, anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers, lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body, fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts, heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand, missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs, fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears, fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears, heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers, one hand with more than 5 fingers, one hand with less than 5 fingers, one hand owith more than 5 digit, one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit, colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts, signature, 3D, 3D game, 3D game scene, 3D character, malformed feet, extra feet, bad feet, poorly drawn feet, fused feet, missing feet, extra shoes, bad shoes, fused shoes, more than two shoes, poorly drawn shoes, bad gloves, poorly drawn gloves, fused gloves, bad cum, poorly drawn cum, fused cum, bad hairs, poorly drawn hairs, fused hairs, big muscles, ugly, bad face, fused face, poorly drawn face, cloned face, big face, long face, bad eyes, fused eyes poorly drawn eyes, extra eyes, malformed limbs, "
+
+const myId = Cookies.get("user_id");
 
 const MyRequests = () => {
 	const [requestList, setRequestList] = useState(undefined);
@@ -222,10 +225,10 @@ const MyRequests = () => {
 	);
 }
 
-const downloadImage = (id) => {
+const downloadImage = (authorId, imageId) => {
 	const a = document.createElement('a');
-	a.href = `/api/ai-art-works/${id}.webp`;
-	a.download = `${id}.webp`;
+	a.href = `/api/ai-art-works/${authorId}/${imageId}.webp`;
+	a.download = `${imageId}.webp`;
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);
@@ -241,6 +244,7 @@ const GeneratedResults = () => {
 	const navigate = useNavigate();
 	
 	const [selectedImages, setSelectedImages] = useState(new Set());
+	
 	const [showMultipleDeletingDialog, setShowMultipleDeletingDialog] = useState(false);
 	const [isMultipleDeleting, setIsMultipleDeleting] = useState(false);
 	const [isBusy, setIsBusy] = useState(false);
@@ -406,7 +410,7 @@ const GeneratedResults = () => {
 									}
 									<img
 										alt="Generated images"
-										src={`/api/ai-art-works/${item.imageId}.webp`}
+										src={`/api/ai-art-works/${item.authorId}/${item.imageId}.webp`}
 										style={{borderRadius: "15px", pointerEvents: "none"}}
 									/>
 									{hoveredImage === item.imageId &&
@@ -566,7 +570,7 @@ const GeneratedResults = () => {
 						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
 						onClick={() => {
 							for (const id of selectedImages) {
-								downloadImage(id);
+								downloadImage(myId, id);
 							}
 						}}
 					>
@@ -630,7 +634,7 @@ const GeneratedResults = () => {
 					>
 						<Grow in={true}>
 							<img
-								src={`/api/ai-art-works/${imagePreviewData.imageId}.webp`}
+								src={`/api/ai-art-works/${imagePreviewData.authorId}/${imagePreviewData.imageId}.webp`}
 								alt="Image preview"
 								style={{
 									width: "100%",
@@ -723,7 +727,7 @@ const GeneratedResults = () => {
 							<Tooltip title="下载图片">
 								<IconButton
 									onClick={() => {
-										downloadImage(imagePreviewData.imageId);
+										downloadImage(imagePreviewData.authorId, imagePreviewData.imageId);
 									}}
 									style={{
 										color: "white",
@@ -862,7 +866,7 @@ const GeneratedResults = () => {
 				<DialogTitle>
 					要删除这张图片吗？
 				</DialogTitle>
-				<img src={`/api/ai-art-works/${deletingImageId}.webp`} alt="Deleting Image"/>
+				<img src={`/api/ai-art-works/${myId}/${deletingImageId}.webp`} alt="Deleting Image"/>
 				<DialogActions>
 					<Button onClick={() => setShowDeletingDialog(false)}>取消</Button>
 					<LoadingButton color="error" loading={isDeleting} onClick={() => {
@@ -1287,7 +1291,7 @@ const Community = () => {
 								>
 									<img
 										alt="Generated images"
-										src={`/api/ai-art-works/${item.imageId}.webp`}
+										src={`/api/ai-art-works/${item.authorId}/${item.imageId}.webp`}
 										style={{borderRadius: "15px", pointerEvents: "none"}}
 									/>
 									{hoveredImage === item.imageId &&
@@ -1351,7 +1355,7 @@ const Community = () => {
 						}}>
 							<Grow in={true}>
 								<img
-									src={`/api/ai-art-works/${imagePreviewData.imageId}.webp`}
+									src={`/api/ai-art-works/${imagePreviewData.authorId}/${imagePreviewData.imageId}.webp`}
 									alt="Image preview"
 									style={{
 										width: "100%",
@@ -1411,7 +1415,7 @@ const Community = () => {
 								<Tooltip title="下载图片">
 									<IconButton
 										onClick={() => {
-											downloadImage(imagePreviewData.imageId);
+											downloadImage(imagePreviewData.authorId, imagePreviewData.imageId);
 										}}
 										style={{
 											color: "white",
