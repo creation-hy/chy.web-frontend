@@ -16,6 +16,8 @@ export const ClientUserProvider = ({children}) => {
 			if (res.data && res.data.status !== 1) {
 				Cookies.remove("username");
 				Cookies.remove("user_token");
+			} else {
+				Cookies.set("user_id", res.data.user.id);
 			}
 		});
 	}, []);
