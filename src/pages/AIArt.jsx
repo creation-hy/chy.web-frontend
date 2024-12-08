@@ -153,70 +153,72 @@ const MyRequests = () => {
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
 	
 	return (
-		<Card variant="outlined" sx={{width: "100%"}}>
-			<List sx={{p: 0}}>
-				<TransitionGroup>
-					{requestList.map((item, index) => (
-						<Collapse key={item.id}>
-							{index > 0 && <Divider/>}
-							<ListItem>
-								<ListItemText
-									primary={<Typography noWrap>{item.positive}</Typography>}
-									secondary={convertDateToLocaleAbsoluteString(item.time)}
-								/>
-								<Tooltip title={item.status === 1 ? "正在生成中..." : "正在排队中..."}>
-									<IconButton disableTouchRipple>
-										{item.status === 1 ? <CircularProgress size={24}/> : <HourglassBottomOutlined/>}
+		<>
+			<Card variant="outlined" sx={{width: "100%"}}>
+				<List sx={{p: 0}}>
+					<TransitionGroup>
+						{requestList.map((item, index) => (
+							<Collapse key={item.id}>
+								{index > 0 && <Divider/>}
+								<ListItem>
+									<ListItemText
+										primary={<Typography noWrap>{item.positive}</Typography>}
+										secondary={convertDateToLocaleAbsoluteString(item.time)}
+									/>
+									<Tooltip title={item.status === 1 ? "正在生成中..." : "正在排队中..."}>
+										<IconButton disableTouchRipple>
+											{item.status === 1 ? <CircularProgress size={24}/> : <HourglassBottomOutlined/>}
+										</IconButton>
+									</Tooltip>
+									<IconButton onClick={() => {
+										setInfoData(item);
+										setShowInfo(true);
+									}}>
+										<Info/>
 									</IconButton>
-								</Tooltip>
-								<IconButton onClick={() => {
-									setInfoData(item);
-									setShowInfo(true);
-								}}>
-									<Info/>
-								</IconButton>
-								<IconButton color="error" disabled={item.status === 1} onClick={() => {
-									setDeletingId(item.id);
-									axios.post("/api/ai-art/request/delete", {id: item.id}, {
-										headers: {
-											"Content-Type": "application/json",
-										},
-									}).then(res => {
-										enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-										setDeletingId(null);
-										if (res.data.status === 1) {
-											setRequestList([...requestList].filter(current => current.id !== item.id));
-										}
-									});
-								}}>
-									{deletingId === item.id ? <CircularProgress size={24} color="error"/> : <DeleteOutlined/>}
-								</IconButton>
-							</ListItem>
-						</Collapse>
-					))}
-				</TransitionGroup>
-			</List>
-			<Dialog open={showInfo} onClose={() => setShowInfo(false)}>
-				<DialogTitle>详细信息</DialogTitle>
-				{Boolean(infoData) && <DialogContent>
-					模型：{modelDisplayNameList[modelList.indexOf(infoData.modelName)]}<br/>
-					尺寸：{infoData.width}*{infoData.height}<br/>
-					创建时间：{convertDateToLocaleOffsetString(infoData.time)}<br/>
-					迭代步数：{infoData.step}<br/>
-					CFG Scale：{infoData.cfg}<br/>
-					种子：{infoData.seed}<br/>
-					采样器：{`${samplerDisplayNameList[samplerList.indexOf(infoData.samplerName)]}
+									<IconButton color="error" disabled={item.status === 1} onClick={() => {
+										setDeletingId(item.id);
+										axios.post("/api/ai-art/request/delete", {id: item.id}, {
+											headers: {
+												"Content-Type": "application/json",
+											},
+										}).then(res => {
+											enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+											setDeletingId(null);
+											if (res.data.status === 1) {
+												setRequestList([...requestList].filter(current => current.id !== item.id));
+											}
+										});
+									}}>
+										{deletingId === item.id ? <CircularProgress size={24} color="error"/> : <DeleteOutlined/>}
+									</IconButton>
+								</ListItem>
+							</Collapse>
+						))}
+					</TransitionGroup>
+				</List>
+				<Dialog open={showInfo} onClose={() => setShowInfo(false)}>
+					<DialogTitle>详细信息</DialogTitle>
+					{Boolean(infoData) && <DialogContent>
+						模型：{modelDisplayNameList[modelList.indexOf(infoData.modelName)]}<br/>
+						尺寸：{infoData.width}*{infoData.height}<br/>
+						创建时间：{convertDateToLocaleOffsetString(infoData.time)}<br/>
+						迭代步数：{infoData.step}<br/>
+						CFG Scale：{infoData.cfg}<br/>
+						种子：{infoData.seed}<br/>
+						采样器：{`${samplerDisplayNameList[samplerList.indexOf(infoData.samplerName)]}
 								${infoData.scheduler[0].toUpperCase()}${infoData.scheduler.slice(1)}`}<br/>
-					图片数量：{infoData.batchSize}
-					<Divider sx={{my: 1}}/>
-					正面描述：{infoData.positive}<br/>
-					负面描述：{infoData.negative}
-				</DialogContent>}
-				<DialogActions>
-					<Button onClick={() => setShowInfo(false)}>关闭</Button>
-				</DialogActions>
-			</Dialog>
-		</Card>
+						图片数量：{infoData.batchSize}
+						<Divider sx={{my: 1}}/>
+						正面描述：{infoData.positive}<br/>
+						负面描述：{infoData.negative}
+					</DialogContent>}
+					<DialogActions>
+						<Button onClick={() => setShowInfo(false)}>关闭</Button>
+					</DialogActions>
+				</Dialog>
+			</Card>
+		</>
 	);
 }
 
@@ -250,12 +252,14 @@ const GeneratedResults = () => {
 	const pageNumberCurrent = useRef(0);
 	const pageNumberNew = useRef(0);
 	const lastImageRef = useRef(null);
+	const lastListenedImageRef = useRef(null);
 	const pageLoadingObserver = useRef(new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
 			pageNumberNew.current = pageNumberCurrent.current + 1;
 			axios.get(`/api/ai-art/work/${pageNumberNew.current}`).then(res => {
-				if (res.data.result && res.data.result.length > 0)
+				if (res.data.result && res.data.result.length > 0) {
 					setImageList(imageList => [...imageList, ...res.data.result]);
+				}
 			});
 		}
 	}));
@@ -290,12 +294,13 @@ const GeneratedResults = () => {
 	}, []);
 	
 	useEffect(() => {
-		if (lastImageRef.current) {
+		if (lastImageRef.current && lastImageRef.current !== lastListenedImageRef.current) {
+			lastListenedImageRef.current = lastImageRef.current;
 			pageNumberCurrent.current = pageNumberNew.current;
 			pageLoadingObserver.current.disconnect();
 			pageLoadingObserver.current.observe(lastImageRef.current);
 		}
-	}, [imageList, lastImageRef.current]);
+	}, [imageList]);
 	
 	useEffect(() => {
 		if (imageList === null) {
@@ -1201,7 +1206,7 @@ const Community = () => {
 			pageLoadingObserver.disconnect();
 			pageLoadingObserver.observe(lastImageRef.current);
 		}
-	}, [imageList, lastImageRef.current, pageLoadingObserver]);
+	}, [imageList, pageLoadingObserver]);
 	
 	if (isLoading || error || !imageList)
 		return null;
@@ -1555,7 +1560,7 @@ export default function AIArt() {
 	const {tab} = useParams();
 	const navigate = useNavigate();
 	
-	const tabs = ["text-to-image", "requests", "works", "community"];
+	const tabs = useMemo(() => ["text-to-image", "requests", "works", "community"], []);
 	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
 	
 	useEffect(() => {
@@ -1563,7 +1568,7 @@ export default function AIArt() {
 		if (tabs.indexOf(tab) === -1) {
 			navigate(`/ai-art`);
 		}
-	}, [tab]);
+	}, [tab, navigate, tabs]);
 	
 	return (
 		<Grid container direction="column" sx={{flex: 1}}>
