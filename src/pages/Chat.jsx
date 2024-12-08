@@ -704,9 +704,18 @@ const notify = (title, body, iconId, avatarVersion) => {
 	}
 };
 
-const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, sendFiles, setMessages, messagePageNumberNew, messagePageNumberCurrent}) {
+const ChatToolBar = memo(function ChatToolBar({
+	                                              inputField,
+	                                              setInputValue,
+	                                              setUsers,
+	                                              quote,
+	                                              setQuote,
+	                                              sendFiles,
+	                                              setMessages,
+	                                              messagePageNumberNew,
+	                                              messagePageNumberCurrent
+                                              }) {
 	const [binaryColorMode] = useBinaryColorMode();
-	const {clientUser} = useClientUser();
 	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("md"));
 	
 	const [onSpecialFont, handleSpecialFont] = useState(false);
@@ -762,11 +771,17 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 	
 	const insertText = useCallback((text, closeDialog) => {
 		const start = cursorSelection.current[0], end = cursorSelection.current[1];
-		inputField.current.value = inputField.current.value.slice(0, start) + text + inputField.current.value.slice(end);
-		flushSync(closeDialog);
+		flushSync(() => {
+			setInputValue(value => {
+				value = value.slice(0, start) + text + value.slice(end);
+				saveDraft(currentUserVar, value, setUsers);
+				return value;
+			});
+			closeDialog();
+		});
 		inputField.current.focus();
 		inputField.current.setSelectionRange(start + text.length, start + text.length);
-	}, [inputField]);
+	}, [inputField, setInputValue, setUsers]);
 	
 	useEffect(() => {
 		if (lastMatchedMessageRef.current) {
@@ -998,7 +1013,11 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 									end++;
 								}
 								
-								inputField.current.value = inputField.current.value.slice(0, start) + text + inputField.current.value.slice(end);
+								flushSync(() => setInputValue(value => {
+									value = value.slice(0, start) + text + value.slice(end);
+									saveDraft(currentUserVar, value, setUsers);
+									return value;
+								}));
 								inputField.current.setSelectionRange(start + text.length, start + text.length);
 								
 								document.execCommand("insertLineBreak");
@@ -1246,6 +1265,8 @@ const ChatToolBar = memo(function ChatToolBar({inputField, quote, setQuote, send
 
 ChatToolBar.propTypes = {
 	inputField: PropTypes.object.isRequired,
+	setInputValue: PropTypes.func.isRequired,
+	setUsers: PropTypes.func.isRequired,
 	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
 	sendFiles: PropTypes.object.isRequired,
@@ -1416,6 +1437,7 @@ export default function Chat() {
 	
 	const messageCard = useRef(null);
 	const messageInput = useRef(null);
+	const [inputValue, setInputValue] = useState("");
 	const userSearchField = useRef(null);
 	
 	const disconnectErrorBarKey = useRef(null);
@@ -1484,9 +1506,7 @@ export default function Chat() {
 				userItem.lastOnline ? "上次上线：" + convertDateToLocaleShortString(userItem.lastOnline) : "从未上线"));
 			setCurrentUserBadge(userItem.badge);
 			setCurrentUserMessageAllowed(userItem.isMessageAllowed);
-			if (messageInput.current) {
-				messageInput.current.value = userItem.draft ? userItem.draft : "";
-			}
+			setInputValue(userItem.draft ? userItem.draft : "");
 			setShowScrollTop(true);
 		}
 		
@@ -1539,9 +1559,7 @@ export default function Chat() {
 					});
 				}
 				
-				if (messageInput.current) {
-					messageInput.current.value = userInfo.draft ? userInfo.draft : "";
-				}
+				setInputValue(userInfo.draft ? userInfo.draft : "");
 			}
 			
 			if (!isCurrentUser && userInfo) {
@@ -1573,7 +1591,7 @@ export default function Chat() {
 			
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
-	}, [messageCardScrollTo, navigate, setClientUser]);
+	}, [matchList, messageCardScrollTo, navigate, setClientUser]);
 	
 	const messageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && messagePageNumberNew.current === messagePageNumberCurrent.current) {
@@ -1642,9 +1660,12 @@ export default function Chat() {
 		}
 		
 		if (content.length <= 2000) {
-			messageInput.current.focus();
-			document.execCommand("selectAll");
-			document.execCommand("delete");
+			flushSync(() => setInputValue(""));
+			
+			if (document.activeElement === messageInput.current) {
+				messageInput.current.focus();
+			}
+			
 			setQuote(null);
 			
 			stomp.send("/app/chat.message", {}, JSON.stringify({
@@ -2177,6 +2198,7 @@ export default function Chat() {
 						<TextField
 							inputRef={messageInput}
 							placeholder="Message"
+							value={inputValue}
 							multiline
 							fullWidth
 							maxRows={10}
@@ -2197,7 +2219,10 @@ export default function Chat() {
 										sendMessage();
 								}
 							}}
-							onChange={(event) => saveDraft(currentUserVar, event.target.value, setUsers)}
+							onChange={(event) => {
+								setInputValue(event.target.value);
+								saveDraft(currentUserVar, event.target.value, setUsers);
+							}}
 							onDragEnter={(event) => {
 								lastDragEntered.current = event.target;
 								setIsDragging(true);
@@ -2229,6 +2254,8 @@ export default function Chat() {
 						<Grid container justifyContent="space-between" alignItems="center">
 							<ChatToolBar
 								inputField={messageInput}
+								setInputValue={setInputValue}
+								setUsers={setUsers}
 								quote={quote}
 								setQuote={setQuote}
 								sendFiles={sendFiles}
