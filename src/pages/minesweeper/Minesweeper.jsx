@@ -126,7 +126,7 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 	const togglePageNumber = useCallback((page) => {
 		navigate(`/minesweeper/ranking/page/${page}`);
 		setPageNumber(page);
-	}, []);
+	}, [navigate]);
 	
 	const [rankingData, setRankingData] = useState([]);
 	
@@ -219,7 +219,7 @@ export const Minesweeper = memo(function Minesweeper({showRanking}) {
 		} else {
 			navigate("/minesweeper");
 		}
-	}, []);
+	}, [navigate]);
 	
 	const boxes = useRef([]);
 	

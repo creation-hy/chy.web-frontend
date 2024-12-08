@@ -206,7 +206,7 @@ export const Chybench = memo(function Chybench({showRanking}) {
 		} else {
 			navigate("/chybench");
 		}
-	}, []);
+	}, [navigate]);
 	
 	const benchmark = async (size, rounds) => {
 		let cpuSingleScore = 0, cpuMultiScore = 0, gpuScore = 0, memoryScore = 0;

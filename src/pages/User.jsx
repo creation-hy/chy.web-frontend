@@ -479,7 +479,7 @@ const UserPage = memo(function UserPage({username}) {
 		if (tabs.indexOf(tab) === -1) {
 			navigate(`/user/${username}`);
 		}
-	}, [tab]);
+	}, [navigate, tab, tabs, username]);
 	
 	if (isLoading) {
 		return null;

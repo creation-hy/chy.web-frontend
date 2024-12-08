@@ -387,7 +387,7 @@ export const Settings = () => {
 		if (!cardContent) {
 			navigate("/settings");
 		}
-	}, []);
+	}, [cardContent, navigate]);
 	
 	return (
 		<Container maxWidth="sm" sx={{p: 0, height: "100%"}}>
