@@ -1659,6 +1659,7 @@ export default function Chat() {
 		
 		if (content.length <= 2000) {
 			flushSync(() => setInputValue(""));
+			saveDraft(currentUserVar, "", setUsers);
 			
 			if (document.activeElement === messageInput.current) {
 				messageInput.current.focus();
