@@ -1,112 +1,124 @@
 import './App.css'
-import {BrowserRouter, Route, Routes} from "react-router-dom";
-import Blog from "src/pages/Blog.jsx";
-import SignIn from "src/pages/sign-in/SignIn.jsx";
-import SignUp from "src/pages/SignUp.jsx";
+import {Outlet, RouterProvider} from "react-router-dom";
 import Chat, {ChatNotificationClient} from "src/pages/Chat.jsx";
 import User from "src/pages/User.jsx";
-import AIArt from "src/pages/AIArt.jsx";
-import Container from "@mui/material/Container";
-import {MobileAppBar, PCAppBarLeft} from "src/components/AppAppBar.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
-import {Chybench} from "src/pages/chybench/Chybench.jsx";
-import Error from "src/pages/Error.jsx";
-import {Minesweeper} from "src/pages/minesweeper/Minesweeper.jsx";
-import Box from "@mui/material/Box";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
-import {memo, useEffect, useRef, useState} from "react";
+import {useRef, useState} from "react";
 import {Fab, useMediaQuery, Zoom} from "@mui/material";
 import Grid from "@mui/material/Grid2";
+import {createBrowserRouter} from "react-router";
+import {MobileAppBar, PCAppBarLeft} from "src/components/AppAppBar.jsx";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
 import {KeyboardArrowUpOutlined} from "@mui/icons-material";
+import SignUp from "src/pages/SignUp.jsx";
+import AIArt from "src/pages/AIArt.jsx";
+import {Chybench} from "src/pages/chybench/Chybench.jsx";
+import {Minesweeper} from "src/pages/minesweeper/Minesweeper.jsx";
+import Blog from "src/pages/Blog.jsx";
 import {Settings} from "src/pages/Settings.jsx";
+import SignIn from "src/pages/sign-in/SignIn.jsx";
+import Error from "src/pages/Error.jsx";
 
-const PageContainer = memo(function PageContainer() {
+const Layout = () => {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	const containerRef = useRef(null);
 	const scrollComponentRef = useRef(null);
 	
 	const [scrollTrigger, setScrollTrigger] = useState(false);
 	
-	const handleClick = () => {
-		containerRef.current.scrollTo({top: 0, behavior: "smooth"});
-	};
-	
-	useEffect(() => {
-		containerRef.current.addEventListener("scroll", () => {
-			if (containerRef.current.scrollTop >= 100)
-				setScrollTrigger(true);
-			else
-				setScrollTrigger(false);
-			scrollComponentRef.current.style.right = window.innerWidth - containerRef.current.clientWidth - containerRef.current.offsetLeft + 25 + "px";
-		});
-	}, []);
-	
 	return (
 		<Grid container width="100%" height="100%" overflow="hidden" justifyContent="center">
-			<BrowserRouter>
-				<ChatNotificationClient/>
-				{!isSmallScreen && <PCAppBarLeft/>}
-				<Box ref={containerRef} display="flex" flexDirection="column" sx={{height: "100%", maxWidth: 1200, flex: 1, overflow: "auto"}}>
-					{isSmallScreen && <MobileAppBar/>}
-					<Container
-						maxWidth="lg"
-						component="main"
+			<ChatNotificationClient/>
+			{!isSmallScreen && <PCAppBarLeft/>}
+			<Box
+				ref={containerRef}
+				display="flex"
+				flexDirection="column"
+				sx={{
+					height: "100%",
+					maxWidth: 1200,
+					flex: 1,
+					overflow: "auto",
+				}}
+				onScroll={() => {
+					if (containerRef.current.scrollTop >= 100) {
+						setScrollTrigger(true);
+					} else {
+						setScrollTrigger(false);
+					}
+					scrollComponentRef.current.style.right = window.innerWidth - containerRef.current.clientWidth - containerRef.current.offsetLeft + 25 + "px";
+				}}
+			>
+				{isSmallScreen && <MobileAppBar/>}
+				<Container
+					maxWidth="lg"
+					component="main"
+					sx={{
+						display: 'flex',
+						flexDirection: 'column',
+						flex: 1,
+						minHeight: 0,
+					}}
+				>
+					{!isSmallScreen && <Box minHeight={16}/>}
+					<Outlet/>
+					<Box minHeight={16}/>
+				</Container>
+				<Zoom in={scrollTrigger}>
+					<Box
+						ref={scrollComponentRef}
+						onClick={() => {
+							containerRef.current.scrollTo({top: 0, behavior: "smooth"});
+						}}
+						role="presentation"
 						sx={{
-							display: 'flex',
-							flexDirection: 'column',
-							flex: 1,
-							minHeight: 0,
+							position: "absolute",
+							bottom: 25,
+							zIndex: 1
 						}}
 					>
-						{!isSmallScreen && <Box minHeight={16}/>}
-						<Routes>
-							<Route path="/" element={<Chat/>}/>
-							<Route path="/blog" element={<Blog/>}/>
-							<Route path="/login" element={<SignIn/>}/>
-							<Route path="/register" element={<SignUp/>}/>
-							<Route path="/user/:username" element={<User/>}/>
-							<Route path="/user/:username/:tab" element={<User/>}/>
-							<Route path="/ai-art" element={<AIArt/>}/>
-							<Route path="/ai-art/:tab" element={<AIArt/>}/>
-							<Route path="/chybench" element={<Chybench showRanking={false}/>}/>
-							<Route path="/chybench/ranking" element={<Chybench showRanking={true}/>}/>
-							<Route path="/chybench/ranking/page/:pageNumber" element={<Chybench showRanking={true}/>}/>
-							<Route path="/minesweeper" element={<Minesweeper showRanking={false}/>}/>
-							<Route path="/minesweeper/ranking" element={<Minesweeper showRanking={true}/>}/>
-							<Route path="/minesweeper/ranking/page/:pageNumber" element={<Minesweeper showRanking={true}/>}/>
-							<Route path="/chat" element={<Chat/>}/>
-							<Route path="/chat/:username" element={<Chat/>}/>
-							<Route path="/settings" element={<Settings/>}/>
-							<Route path="/settings/:item1" element={<Settings/>}/>
-							<Route path="/settings/:item1/:item2" element={<Settings/>}/>
-							<Route path="*" element={<Error/>}/>
-						</Routes>
-						<Box minHeight={16}/>
-					</Container>
-					<Zoom in={scrollTrigger}>
-						<Box
-							ref={scrollComponentRef}
-							onClick={handleClick}
-							role="presentation"
-							sx={{
-								position: "absolute",
-								bottom: 25,
-								zIndex: 1
-							}}
-						>
-							<Fab size="small" aria-label="scroll back to top">
-								<KeyboardArrowUpOutlined/>
-							</Fab>
-						</Box>
-					</Zoom>
-				</Box>
-			</BrowserRouter>
+						<Fab size="small" aria-label="scroll back to top">
+							<KeyboardArrowUpOutlined/>
+						</Fab>
+					</Box>
+				</Zoom>
+			</Box>
 		</Grid>
-	);
-});
+	)
+}
+
+const router = createBrowserRouter([
+	{
+		path: "/",
+		element: <Layout/>,
+		children: [
+			{path: "/", element: <Chat/>},
+			{path: "/chat", element: <Chat/>},
+			{path: "/chat/:username", element: <Chat/>},
+			{path: "/user/:username", element: <User/>},
+			{path: "/user/:username/:tab", element: <User/>},
+			{path: "/login", element: <SignIn/>},
+			{path: "/register", element: <SignUp/>},
+			{path: "/ai-art", element: <AIArt/>},
+			{path: "/ai-art/:tab", element: <AIArt/>},
+			{path: "/chybench", element: <Chybench/>},
+			{path: "/chybench/ranking", element: <Chybench showRanking/>},
+			{path: "/chybench/ranking/page/:pageNumber", element: <Chybench showRanking/>},
+			{path: "/minesweeper", element: <Minesweeper/>},
+			{path: "/minesweeper/ranking", element: <Minesweeper showRanking/>},
+			{path: "/settings", element: <Settings/>},
+			{path: "/settings/:item1", element: <Settings/>},
+			{path: "/settings/:item1/:item2", element: <Settings/>},
+			{path: "/blog", element: <Blog/>},
+			{path: "*", element: <Error/>},
+		],
+	},
+]);
 
 export default function App() {
 	const [binaryColorMode] = useBinaryColorMode();
@@ -115,7 +127,7 @@ export default function App() {
 		<ThemeProvider theme={createTheme(getDefaultTheme(binaryColorMode))}>
 			<SnackbarProvider/>
 			<CssBaseline enableColorScheme/>
-			<PageContainer/>
+			<RouterProvider router={router}/>
 		</ThemeProvider>
 	);
 }

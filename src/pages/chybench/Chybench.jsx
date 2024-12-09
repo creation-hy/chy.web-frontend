@@ -369,7 +369,7 @@ export const Chybench = memo(function Chybench({showRanking}) {
 			</Grid>
 			<Button variant="contained" startIcon={<Leaderboard/>} onClick={() => toggleRanking(true)}>排行榜</Button>
 			<Dialog
-				open={showRanking}
+				open={Boolean(showRanking)}
 				maxWidth={false}
 				fullScreen={isSmallScreen}
 				onClose={() => toggleRanking(false)}
@@ -393,5 +393,5 @@ export const Chybench = memo(function Chybench({showRanking}) {
 });
 
 Chybench.propTypes = {
-	showRanking: PropTypes.bool.isRequired,
+	showRanking: PropTypes.bool,
 }

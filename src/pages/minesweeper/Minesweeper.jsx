@@ -160,7 +160,7 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 	
 	return (
 		<Dialog
-			open={showRanking}
+			open={Boolean(showRanking)}
 			onClose={() => setShowRanking(false)}
 			maxWidth="xl"
 		>
@@ -459,5 +459,5 @@ export const Minesweeper = memo(function Minesweeper({showRanking}) {
 });
 
 Minesweeper.propTypes = {
-	showRanking: PropTypes.bool.isRequired,
+	showRanking: PropTypes.bool,
 }
