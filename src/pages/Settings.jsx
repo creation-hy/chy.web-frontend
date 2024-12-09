@@ -1,5 +1,5 @@
 import {Badge, List, ListItemButton, ListItemIcon, ListItemText, Switch, Table, TableBody, TableCell, TableRow} from "@mui/material";
-import {AccountCircle, ArrowBack, ExitToApp, InfoOutlined, LockReset, LogoutOutlined, MailOutlined} from "@mui/icons-material";
+import {AccountCircle, ArrowBack, Block, InfoOutlined, LockReset, LogoutOutlined, MailOutlined} from "@mui/icons-material";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
 import CardContent from "@mui/material/CardContent";
@@ -87,6 +87,30 @@ const MainSettings = () => {
 	);
 }
 
+const AccountDeactivation = () => {
+	const navigate = useNavigate();
+	const location = useLocation();
+	
+	document.title = "停用账号 - chy.web";
+	
+	return (
+		<CardContent>
+			<Grid container alignItems="center" spacing={2} sx={{mb: 2}}>
+				<IconButton onClick={() => navigate(location.pathname.replace(/\/[^/]+\/?$/, ''))}>
+					<ArrowBack/>
+				</IconButton>
+				<Typography variant="h5">
+					停用账号
+				</Typography>
+			</Grid>
+			<Typography sx={{mt: 3}}>
+				请使用您的注册邮箱向 account@creation-hy.top 发送一封内容为“DEACTIVATE”的邮件，我们会在接收到邮件的 30 天后停用您的账号。<br/><br/>
+				在此期间内，如果您想取消停用请求，只需要发送一封内容为“REACTIVATE”的邮件即可。
+			</Typography>
+		</CardContent>
+	);
+}
+
 const AccountSettings = () => {
 	document.title = "账号设置 - chy.web";
 	
@@ -107,7 +131,7 @@ const AccountSettings = () => {
 			</CardContent>
 			<List>
 				<SettingsItemButton url={"/settings/account/reset-password"} icon={<LockReset/>} text={"重置密码"}/>
-				<SettingsItemButton onClick={() => alert("敬请期待！")} icon={<ExitToApp/>} text={"注销"}/>
+				<SettingsItemButton url={"/settings/account/deactivate"} icon={<Block/>} text={"停用账号"}/>
 			</List>
 		</>
 	);
@@ -377,6 +401,8 @@ export const Settings = () => {
 			cardContent = <AccountSettings/>;
 		} else if (item2 === "reset-password") {
 			cardContent = <ResetPassword/>;
+		} else if (item2 === "deactivate") {
+			cardContent = <AccountDeactivation/>
 		}
 	} else if (item1 === "chat") {
 		if (!item2) {
