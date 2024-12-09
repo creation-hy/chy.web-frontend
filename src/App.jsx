@@ -57,8 +57,6 @@ const Layout = () => {
 			)}
 			{isSmallScreen && <MobileAppBar/>}
 			<Container
-				display="flex"
-				flexDirection="column"
 				component="main"
 				maxWidth="lg"
 				sx={{

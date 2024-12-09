@@ -1513,7 +1513,7 @@ export default function Chat() {
 			}
 			setShowScrollTop(false);
 			currentUserVar = username;
-			flushSync(() => setCurrentUser(username));
+			setCurrentUser(username);
 			setQuote(null);
 			messagePageNumberNew.current = 0;
 			messagePageNumberCurrent.current = 0;
