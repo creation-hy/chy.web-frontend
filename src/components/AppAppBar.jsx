@@ -301,7 +301,7 @@ export const PCAppBarLeft = memo(function PCAppBarLeft() {
 	return (
 		<Box
 			sx={{
-				position: "relative",
+				position: "fixed",
 				height: "100%",
 				overflow: "auto",
 				width: 225,

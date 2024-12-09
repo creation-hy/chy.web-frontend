@@ -390,8 +390,8 @@ export const Settings = () => {
 	}, [cardContent, navigate]);
 	
 	return (
-		<Container maxWidth="sm" sx={{p: 0, height: "100%"}}>
-			<Card variant="outlined" sx={{height: "100%"}}>
+		<Container maxWidth="sm" sx={{p: 0, flex: 1, display: "flex", flexDirection: "column"}}>
+			<Card variant="outlined" sx={{flex: 1}}>
 				{cardContent}
 			</Card>
 		</Container>

@@ -1,5 +1,5 @@
 import './App.css'
-import {Outlet, RouterProvider} from "react-router-dom";
+import {Outlet, RouterProvider, ScrollRestoration} from "react-router-dom";
 import Chat, {ChatNotificationClient} from "src/pages/Chat.jsx";
 import User from "src/pages/User.jsx";
 import {createTheme, ThemeProvider} from "@mui/material/styles";
@@ -7,10 +7,9 @@ import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
-import {useRef, useState} from "react";
-import {Fab, useMediaQuery, Zoom} from "@mui/material";
-import Grid from "@mui/material/Grid2";
-import {createBrowserRouter} from "react-router";
+import {useEffect, useRef, useState} from "react";
+import {Fab, useMediaQuery, useScrollTrigger, Zoom} from "@mui/material";
+import {createBrowserRouter, useLocation} from "react-router";
 import {MobileAppBar, PCAppBarLeft} from "src/components/AppAppBar.jsx";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
@@ -23,71 +22,78 @@ import Blog from "src/pages/Blog.jsx";
 import {Settings} from "src/pages/Settings.jsx";
 import SignIn from "src/pages/sign-in/SignIn.jsx";
 import Error from "src/pages/Error.jsx";
+import Grid from "@mui/material/Grid2";
 
 const Layout = () => {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
-	const containerRef = useRef(null);
 	const scrollComponentRef = useRef(null);
 	
-	const [scrollTrigger, setScrollTrigger] = useState(false);
+	const [lockHeight, setLockHeight] = useState(false);
+	
+	const pathname = useLocation().pathname;
+	
+	const scrollTrigger = useScrollTrigger({
+		target: window,
+		disableHysteresis: true,
+		threshold: 100,
+	});
+	
+	useEffect(() => {
+		if (pathname === "/" || pathname.startsWith("/chat")) {
+			setLockHeight(true);
+		} else {
+			setLockHeight(false);
+		}
+	}, [pathname]);
 	
 	return (
-		<Grid container width="100%" height="100%" overflow="hidden" justifyContent="center">
+		<Grid container direction={isSmallScreen ? "column" : "row"} maxWidth={1425} mx="auto" minHeight="100%" height={lockHeight ? "100%" : "auto"}>
+			<ScrollRestoration/>
 			<ChatNotificationClient/>
-			{!isSmallScreen && <PCAppBarLeft/>}
-			<Box
-				ref={containerRef}
+			{!isSmallScreen && (
+				<Box width={225} component="header">
+					<PCAppBarLeft/>
+				</Box>
+			)}
+			{isSmallScreen && <MobileAppBar/>}
+			<Container
 				display="flex"
 				flexDirection="column"
+				component="main"
+				maxWidth="lg"
 				sx={{
-					height: "100%",
-					maxWidth: 1200,
+					display: 'flex',
+					flexDirection: 'column',
 					flex: 1,
+					minHeight: 0,
+					height: lockHeight ? "100%" : "auto",
 					overflow: "auto",
-				}}
-				onScroll={() => {
-					if (containerRef.current.scrollTop >= 100) {
-						setScrollTrigger(true);
-					} else {
-						setScrollTrigger(false);
-					}
-					scrollComponentRef.current.style.right = window.innerWidth - containerRef.current.clientWidth - containerRef.current.offsetLeft + 25 + "px";
+					borderRight: 1,
+					borderColor: "divider",
 				}}
 			>
-				{isSmallScreen && <MobileAppBar/>}
-				<Container
-					maxWidth="lg"
-					component="main"
+				{!isSmallScreen && <Box minHeight={16}/>}
+				<Outlet/>
+				<Box minHeight={16}/>
+			</Container>
+			<Zoom in={scrollTrigger}>
+				<Box
+					ref={scrollComponentRef}
+					onClick={() => {
+						window.scrollTo({top: 0, behavior: "smooth"});
+					}}
 					sx={{
-						display: 'flex',
-						flexDirection: 'column',
-						flex: 1,
-						minHeight: 0,
+						position: "fixed",
+						bottom: 25,
+						right: 25,
+						zIndex: 1,
 					}}
 				>
-					{!isSmallScreen && <Box minHeight={16}/>}
-					<Outlet/>
-					<Box minHeight={16}/>
-				</Container>
-				<Zoom in={scrollTrigger}>
-					<Box
-						ref={scrollComponentRef}
-						onClick={() => {
-							containerRef.current.scrollTo({top: 0, behavior: "smooth"});
-						}}
-						role="presentation"
-						sx={{
-							position: "absolute",
-							bottom: 25,
-							zIndex: 1
-						}}
-					>
-						<Fab size="small" aria-label="scroll back to top">
-							<KeyboardArrowUpOutlined/>
-						</Fab>
-					</Box>
-				</Zoom>
-			</Box>
+					<Fab size="small" aria-label="scroll back to top">
+						<KeyboardArrowUpOutlined/>
+					</Fab>
+				</Box>
+			</Zoom>
 		</Grid>
 	)
 }
