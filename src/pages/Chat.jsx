@@ -1507,7 +1507,6 @@ export default function Chat() {
 			setCurrentUserBadge(userItem.badge);
 			setCurrentUserMessageAllowed(userItem.isMessageAllowed);
 			setInputValue(userItem.draft ? userItem.draft : "");
-			setShowScrollTop(true);
 		}
 		
 		if (!isCurrentUser) {
@@ -1560,6 +1559,7 @@ export default function Chat() {
 				}
 				
 				setInputValue(userInfo.draft ? userInfo.draft : "");
+				setShowScrollTop(true);
 			}
 			
 			if (!isCurrentUser && userInfo) {
