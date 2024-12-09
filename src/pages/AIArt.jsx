@@ -1576,7 +1576,7 @@ export default function AIArt({fixedTab}) {
 	const tab = useParams().tab ?? fixedTab;
 	const navigate = useNavigate();
 	
-	const tabs = useMemo(() => ["text-to-image", "requests", "works", "community"], []);
+	const tabs = useMemo(() => [undefined, "requests", "works", "community"], []);
 	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
 	
 	useEffect(() => {
