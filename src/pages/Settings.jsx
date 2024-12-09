@@ -238,7 +238,7 @@ const ChatSettings = () => {
 	
 	const [settings, setSettings] = useState(JSON.parse(localStorage.getItem("chatSettings")) ?? {});
 	
-	const {clientUser} = useClientUser();
+	const {clientUser, setClientUser} = useClientUser();
 	
 	useEffect(() => {
 		if (clientUser) {
@@ -301,6 +301,11 @@ const ChatSettings = () => {
 										localStorage.setItem("chatSettings", JSON.stringify(newSettings));
 										return newSettings;
 									});
+									
+									setClientUser(clientUser => ({
+										...clientUser,
+										allowMessageFrom: event.target.value,
+									}));
 									
 									axios.post(`/api/account/allow-message-from/modify`, {allowMessageFrom: event.target.value}, {
 										headers: {
