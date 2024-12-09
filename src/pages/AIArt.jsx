@@ -73,6 +73,7 @@ import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import {isIOS13} from "react-device-detect";
 import {useNavigate, useParams} from "react-router";
 import Cookies from "js-cookie";
+import PropTypes from "prop-types";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -126,6 +127,8 @@ const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers: 
 const myId = Cookies.get("user_id");
 
 const MyRequests = () => {
+	document.title = `我的请求 - AI绘图 - chy.web`;
+	
 	const [requestList, setRequestList] = useState(undefined);
 	const [showInfo, setShowInfo] = useState(false);
 	const [infoData, setInfoData] = useState(null);
@@ -235,6 +238,8 @@ const downloadImage = (authorId, imageId) => {
 }
 
 const GeneratedResults = () => {
+	document.title = `我的作品 - AI绘图 - chy.web`;
+	
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
 	const [showDeletingDialog, setShowDeletingDialog] = useState(false);
@@ -898,6 +903,8 @@ const GeneratedResults = () => {
 }
 
 const TextToImageUI = () => {
+	document.title = `文生图 - AI绘图 - chy.web`;
+	
 	const drawingParams = useMemo(() => JSON.parse(localStorage.getItem("aiArtDrawing")) || {}, []);
 	const updateDrawingParams = useCallback(() => localStorage.setItem("aiArtDrawing", JSON.stringify(drawingParams)), [drawingParams]);
 	
@@ -1109,7 +1116,7 @@ const TextToImageUI = () => {
 					</Grid>
 				</Grid>
 			</Card>
-			<Card variant="outlined" sx={{padding: 2.5, flex: 1}}>
+			<Card variant="outlined" sx={{padding: 2.5, flex: isSmallScreen ? "normal" : 1}}>
 				<Grid container direction="column" spacing={2}>
 					<TextField
 						name="positive"
@@ -1168,6 +1175,10 @@ const TextToImageUI = () => {
 }
 
 const Community = () => {
+	document.title = `创意工坊 - AI绘图 - chy.web`;
+	
+	const {workId} = useParams();
+	
 	const communityParams = useMemo(() => JSON.parse(localStorage.getItem("aiArtCommunity")) || {}, []);
 	const updateCommunityParams = useCallback(() => localStorage.setItem("aiArtCommunity", JSON.stringify(communityParams)), [communityParams]);
 	
@@ -1198,6 +1209,9 @@ const Community = () => {
 			});
 		}
 	}), [viewRange, sortMethod]);
+	
+	useEffect(() => {
+	}, [workId]);
 	
 	useEffect(() => {
 		if (data)
@@ -1558,10 +1572,8 @@ const Community = () => {
 	);
 }
 
-export default function AIArt() {
-	document.title = "AI绘图 - chy.web";
-	
-	const {tab} = useParams();
+export default function AIArt({fixedTab}) {
+	const tab = useParams().tab ?? fixedTab;
 	const navigate = useNavigate();
 	
 	const tabs = useMemo(() => ["text-to-image", "requests", "works", "community"], []);
@@ -1595,4 +1607,8 @@ export default function AIArt() {
 			{tabValue === 0 ? <TextToImageUI/> : (tabValue === 1 ? <MyRequests/> : (tabValue === 2 ? <GeneratedResults/> : <Community/>))}
 		</Grid>
 	);
+}
+
+AIArt.propTypes = {
+	fixedTab: PropTypes.string,
 }

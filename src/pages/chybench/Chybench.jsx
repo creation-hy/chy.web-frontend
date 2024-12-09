@@ -187,7 +187,7 @@ workerCode = workerCode.substring(workerCode.indexOf("{") + 1, workerCode.lastIn
 const workerScript = URL.createObjectURL(new Blob([workerCode], {type: "application/javascript"}));
 
 export const Chybench = memo(function Chybench({showRanking}) {
-	document.title = "Chybench - chy.web";
+	document.title = `${showRanking ? "排行榜 - " : ""}Chybench - chy.web`;
 	
 	const navigate = useNavigate();
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));

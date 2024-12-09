@@ -112,8 +112,6 @@ RankingTable.propTypes = {
 }
 
 export const ChybenchRanking = memo(function ChybenchRanking() {
-	document.title = "排行榜 - Chybench - chy.web";
-	
 	const navigate = useNavigate();
 	
 	const rankingParams = useMemo(() => JSON.parse(localStorage.getItem("chybenchRanking")) || {}, []);

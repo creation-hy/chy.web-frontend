@@ -207,6 +207,8 @@ Ranking.propTypes = {
 }
 
 export const Minesweeper = memo(function Minesweeper({showRanking}) {
+	document.title = `${showRanking ? "排行榜 - " : ""}扫雷 - chy.web`;
+	
 	const navigate = useNavigate();
 	
 	const [isGameStarted, setIsGameStarted] = useState(false);

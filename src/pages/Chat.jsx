@@ -1409,8 +1409,6 @@ export const ChatNotificationClient = memo(function ChatNotificationClient() {
 });
 
 export default function Chat() {
-	document.title = "Chat - chy.web";
-	
 	const {username} = useParams();
 	const navigate = useNavigate();
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -1941,6 +1939,8 @@ export default function Chat() {
 	if (logged === false) {
 		return <SignUp/>;
 	}
+	
+	document.title = (currentUserDisplayName ? `和 ${currentUserDisplayName} 的聊天` : "聊天") + " - chy.web";
 	
 	return (
 		<Grid container sx={{flex: 1, display: !users ? "none" : "flex", minHeight: 0}} gap={2}>

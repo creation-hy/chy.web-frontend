@@ -377,17 +377,21 @@ Follows.propTypes = {
 
 const TabPanel = memo(function TabPanel({value, username, displayName, avatarVersion}) {
 	if (value === 0) {
+		document.title = `${displayName} (@${username}) 的动态 - chy.web`;
 		return <News username={username} displayName={displayName} avatarVersion={avatarVersion}/>;
 	}
 	
 	if (value === 1) {
+		document.title = `${displayName} (@${username}) 的关注列表 - chy.web`;
 		return <Follows username={username} type="following"/>;
 	}
 	
 	if (value === 2) {
+		document.title = `${displayName} (@${username}) 的粉丝列表 - chy.web`;
 		return <Follows username={username} type="followers"/>;
 	}
 	
+	document.title = `${displayName} (@${username}) 的屏蔽列表 - chy.web`;
 	return <Follows username={username} type="blocking"/>;
 });
 
@@ -477,8 +481,6 @@ const UserPage = memo(function UserPage({username}) {
 	if (!data || !data.username) {
 		return <Alert severity="error">用户不存在！</Alert>;
 	}
-	
-	document.title = `${data.displayName} (@${data.username}) 的主页 - chy.web`;
 	
 	return (
 		<Box maxWidth="md" alignSelf="center" width="100%">
