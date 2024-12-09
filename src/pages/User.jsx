@@ -29,7 +29,7 @@ import Grid from "@mui/material/Grid2";
 import Cookies from "js-cookie";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
-import {useQuery} from "@tanstack/react-query";
+import {useInfiniteQuery, useQuery, useQueryClient} from "@tanstack/react-query";
 import {
 	Block,
 	BlockSharp,
@@ -67,102 +67,93 @@ import {MessageFile} from "src/pages/Chat.jsx";
 const myname = Cookies.get("username");
 
 const News = memo(function News({username, displayName, avatarVersion}) {
-	const {data} = useQuery({
-		queryKey: ["news", username],
-		queryFn: () => axios.get(`/api/user/${username}/chat/0`).then(res => res.data),
-		staleTime: Infinity,
+	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
+		queryKey: ["user", username, "news"],
+		queryFn: ({pageParam = 0}) => axios.get(`/api/user/${username}/chat/${pageParam}`).then(res => res.data.result),
+		getNextPageParam: (lastPage, allPages) => lastPage.length === 0 ? undefined : allPages.length,
 	});
 	
-	const [chatList, setChatList] = useState(null);
-	
-	const pageNumberCurrent = useRef(0);
-	const pageNumberNew = useRef(0);
-	const lastMessageRef = useRef(null);
-	const pageLoadingObserver = useRef(new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
-			pageNumberNew.current = pageNumberCurrent.current + 1;
-			axios.get(`/api/user/${username}/chat/${pageNumberNew.current}`).then(res => {
-				if (res.data.result.length > 0) {
-					setChatList(chatList => [...chatList, ...res.data.result]);
-				}
-			});
-		}
-	}));
+	const loadMoreRef = useRef(null);
 	
 	useEffect(() => {
-		if (data && data.result) {
-			setChatList([...data.result]);
+		const pageLoadingObserver = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting && !isFetching && hasNextPage) {
+				fetchNextPage();
+			}
+		});
+		
+		pageLoadingObserver.observe(loadMoreRef.current);
+		
+		return () => {
+			pageLoadingObserver.disconnect();
 		}
-	}, [data]);
-	
-	useEffect(() => {
-		if (lastMessageRef.current) {
-			pageNumberCurrent.current = pageNumberNew.current;
-			pageLoadingObserver.current.disconnect();
-			pageLoadingObserver.current.observe(lastMessageRef.current);
-		}
-	}, [chatList]);
+	}, [fetchNextPage, hasNextPage, isFetching]);
 	
 	return (
 		<Box sx={{mt: -0.5}}>
-			{!chatList && (
-				<Box textAlign="center" mt={4}>
-					<CircularProgress/>
-				</Box>
-			)}
-			{chatList && chatList.map((chat, chatIndex) => (
-				<Grid
-					container
-					key={chat.id}
-					ref={chatIndex === chatList.length - 1 ? lastMessageRef : undefined}
-					justifyContent='flex-start'
-					alignItems="flex-start"
-					sx={{my: 3}}
-				>
-					<IconButton sx={{mr: 1.5, p: 0}}>
-						<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
-					</IconButton>
-					<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-start' spacing={0.7}>
-						{chat.type === 1 ? (
-							<Paper
-								elevation={3}
-								sx={{
-									padding: '8px 11px',
-									px: chat.type === 1 ? undefined : 0,
-									pt: chat.type === 1 ? undefined : 0,
-									borderRadius: '10px',
-									wordBreak: 'break-word',
-									maxWidth: "100%",
-								}}
-							>
-								<Box sx={{fontSize: 15}}>
-									<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
-								</Box>
-								<Typography variant="caption" display="block" textAlign="right" mt={1} mr={chat.type === 1 ? undefined : "11px"}>
-									{convertDateToLocaleAbsoluteString(chat.time)}
-								</Typography>
-							</Paper>
-						) : (
-							<MessageFile
-								url={chat.file.url}
-								fileName={chat.file.fileName}
-								fileSize={chat.file.fileSize}
-								deleted={chat.file.deleted}
-								onContextMenu={(event) => event.preventDefault()}
-							/>
-						)}
-						{chat.quote != null &&
-							<Chip
-								variant="outlined"
-								avatar={<UserAvatar username={chat.quote.username} displayName={chat.quote.displayName}
-								                    avatarVersion={chat.quote.avatarVersion}/>}
-								label={chat.quote.displayName + ": " + chat.quote.content}
-								clickable
-							/>
-						}
-					</Grid>
-				</Grid>
+			{data?.pages?.map((page, pageIndex) => (
+				<Fragment key={pageIndex}>
+					{page.map((chat) => (
+						<Grid
+							container
+							key={chat.id}
+							justifyContent='flex-start'
+							alignItems="flex-start"
+							sx={{my: 3}}
+						>
+							<IconButton sx={{mr: 1.5, p: 0}}>
+								<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
+							</IconButton>
+							<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-start' spacing={0.7}>
+								{chat.type === 1 ? (
+									<Paper
+										elevation={3}
+										sx={{
+											padding: '8px 11px',
+											px: chat.type === 1 ? undefined : 0,
+											pt: chat.type === 1 ? undefined : 0,
+											borderRadius: '10px',
+											wordBreak: 'break-word',
+											maxWidth: "100%",
+										}}
+									>
+										<Box sx={{fontSize: 15}}>
+											<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
+										</Box>
+										<Typography variant="caption" display="block" textAlign="right" mt={1} mr={chat.type === 1 ? undefined : "11px"}>
+											{convertDateToLocaleAbsoluteString(chat.time)}
+										</Typography>
+									</Paper>
+								) : (
+									<MessageFile
+										url={chat.file.url}
+										fileName={chat.file.fileName}
+										fileSize={chat.file.fileSize}
+										deleted={chat.file.deleted}
+										onContextMenu={(event) => event.preventDefault()}
+									/>
+								)}
+								{chat.quote != null &&
+									<Chip
+										variant="outlined"
+										avatar={<UserAvatar username={chat.quote.username} displayName={chat.quote.displayName}
+										                    avatarVersion={chat.quote.avatarVersion}/>}
+										label={chat.quote.displayName + ": " + chat.quote.content}
+										clickable
+									/>
+								}
+							</Grid>
+						</Grid>
+					))}
+				</Fragment>
 			))}
+			<Box ref={loadMoreRef} height={isFetching ? "auto" : 0} mt={isLoading ? 4 : 0}>
+				{isFetching && (
+					<Box textAlign="center" mt={3}>
+						<CircularProgress/>
+					</Box>
+				)}
+			</Box>
 		</Box>
 	);
 });
@@ -173,7 +164,20 @@ News.propTypes = {
 	avatarVersion: PropTypes.number.isRequired,
 }
 
-const UserItem = memo(function UserItem({username, displayName, avatarVersion, badge, introduction, isFollowing, isFollowedBy, isBlocking, showBlockButton}) {
+const UserItem = memo(function UserItem({
+	                                        username,
+	                                        displayName,
+	                                        avatarVersion,
+	                                        badge,
+	                                        introduction,
+	                                        isFollowing,
+	                                        isFollowedBy,
+	                                        isBlocking,
+	                                        showBlockButton,
+	                                        queryKey
+                                        }) {
+	const queryClient = useQueryClient();
+	
 	const [isFollowingState, setIsFollowing] = useState(isFollowing);
 	const [isBlockingState, setIsBlocking] = useState(isBlocking);
 	
@@ -219,10 +223,18 @@ const UserItem = memo(function UserItem({username, displayName, avatarVersion, b
 							startIcon={isFollowedBy && isFollowingState ? <SwapHoriz/> : (isFollowingState ? <PersonOutlined/> : <PersonAdd/>)}
 							onClick={() => {
 								axios.post("/api/user/" + username + "/follow").then(res => {
-									if (res.data.status === 1) {
-										setIsFollowing(true);
-									} else if (res.data.status === 2) {
-										setIsFollowing(false);
+									if (res.data.status === 1 || res.data.status === 2) {
+										const newIsFollowing = res.data.status === 1;
+										setIsFollowing(newIsFollowing);
+										queryClient.setQueryData(queryKey, (old) => ({
+											pages: old?.pages?.map(page => page.map(item => (
+												item.username !== username ? item : {
+													...item,
+													isFollowing: newIsFollowing,
+												}
+											))),
+											pageParams: old.pageParams,
+										}));
 									} else {
 										enqueueSnackbar(res.data.content, {variant: "error"});
 									}
@@ -240,10 +252,18 @@ const UserItem = memo(function UserItem({username, displayName, avatarVersion, b
 							startIcon={<Block/>}
 							onClick={() => {
 								axios.post("/api/user/" + username + "/block").then(res => {
-									if (res.data.status === 1) {
-										setIsBlocking(true);
-									} else if (res.data.status === 2) {
-										setIsBlocking(false);
+									if (res.data.status === 1 || res.data.status === 2) {
+										const newIsBlocking = res.data.status === 1;
+										setIsBlocking(newIsBlocking);
+										queryClient.setQueryData(queryKey, (old) => ({
+											pages: old?.pages?.map(page => page.map(item => (
+												item.username !== username ? item : {
+													...item,
+													isBlocking: newIsBlocking,
+												}
+											))),
+											pageParams: old.pageParams,
+										}));
 									} else {
 										enqueueSnackbar(res.data.content, {variant: "error"});
 									}
@@ -288,98 +308,64 @@ UserItem.propTypes = {
 	isFollowedBy: PropTypes.bool,
 	isBlocking: PropTypes.bool,
 	showBlockButton: PropTypes.bool.isRequired,
+	queryKey: PropTypes.array.isRequired,
 }
 
 const Follows = memo(function Follows({username, type}) {
-	const [followingList, setFollowingList] = useState(null);
-	const [followersList, setFollowersList] = useState(null);
-	const [blockingList, setBlockingList] = useState(null);
-	const [userList, setUserList] = useState(null);
+	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
+		queryKey: ["user", username, type],
+		queryFn: ({pageParam = 0}) => axios.get(`/api/user/${username}/${type}/${pageParam}`).then(res => res.data.result),
+		getNextPageParam: (lastPage, allPages) => lastPage.length === 0 ? undefined : allPages.length,
+	});
 	
-	const [showBlockButton, setShowBlockButton] = useState(false);
-	
-	const pageNumberCurrent = useRef(0);
-	const pageNumberNew = useRef(0);
-	const lastUserRef = useRef(null);
-	const pageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
-			pageNumberNew.current = pageNumberCurrent.current + 1;
-			axios.get(`/api/user/${username}/${type}/${pageNumberNew.current}`).then(res => {
-				if (res.data.result.length > 0) {
-					setUserList(userList => [...userList, ...res.data.result]);
-				}
-			});
-		}
-	}), [username, type]);
+	const loadMoreRef = useRef(null);
 	
 	useEffect(() => {
-		axios.get(`/api/user/${username}/${type}/0`).then(res => {
-			pageNumberNew.current = 0;
-			pageNumberCurrent.current = 0;
-			if (type === "following") {
-				setFollowingList([...res.data.result]);
-			} else if (type === "followers") {
-				setFollowersList([...res.data.result]);
-			} else {
-				setBlockingList([...res.data.result]);
+		const pageLoadingObserver = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting && !isFetching && hasNextPage) {
+				fetchNextPage();
 			}
 		});
-	}, [username, type]);
-	
-	useEffect(() => {
-		if (type === "following") {
-			setShowBlockButton(false);
-			setUserList(followingList);
-		}
-	}, [followingList, type]);
-	
-	useEffect(() => {
-		if (type === "followers") {
-			setShowBlockButton(false);
-			setUserList(followersList);
-		}
-	}, [followersList, type]);
-	
-	useEffect(() => {
-		if (type === "blocking") {
-			setShowBlockButton(true);
-			setUserList(blockingList);
-		}
-	}, [blockingList, type]);
-	
-	useEffect(() => {
-		if (lastUserRef.current) {
-			pageNumberCurrent.current = pageNumberNew.current;
+		
+		pageLoadingObserver.observe(loadMoreRef.current);
+		
+		return () => {
 			pageLoadingObserver.disconnect();
-			pageLoadingObserver.observe(lastUserRef.current);
 		}
-	}, [pageLoadingObserver, userList]);
+	}, [fetchNextPage, hasNextPage, isFetching]);
 	
 	return (
 		<List sx={{pt: 0, mt: -1}}>
-			{!userList && (
-				<Box textAlign="center" mt={4}>
-					<CircularProgress/>
-				</Box>
-			)}
-			{userList && userList.map((user, userIndex) => (
-				<Fragment key={user.username}>
-					{userIndex !== 0 && <Divider/>}
-					<Box sx={{px: 2, py: 2.5}} ref={userIndex === userList.length - 1 ? lastUserRef : undefined}>
-						<UserItem
-							username={user.username}
-							displayName={user.displayName}
-							avatarVersion={user.avatarVersion}
-							badge={user.badge}
-							introduction={user.introduction}
-							isFollowing={user.isFollowing}
-							isFollowedBy={user.isFollowedBy}
-							isBlocking={user.isBlocking}
-							showBlockButton={showBlockButton}
-						/>
-					</Box>
+			{data?.pages?.map((page, pageIndex) => (
+				<Fragment key={pageIndex}>
+					{page.map((user) => (
+						<Fragment key={user.username}>
+							<Box sx={{px: 2, py: 2.5}}>
+								<UserItem
+									username={user.username}
+									displayName={user.displayName}
+									avatarVersion={user.avatarVersion}
+									badge={user.badge}
+									introduction={user.introduction}
+									isFollowing={user.isFollowing}
+									isFollowedBy={user.isFollowedBy}
+									isBlocking={user.isBlocking}
+									showBlockButton={type === "blocking"}
+									queryKey={[username, type]}
+								/>
+							</Box>
+							<Divider/>
+						</Fragment>
+					))}
 				</Fragment>
 			))}
+			<Box ref={loadMoreRef} height={isFetching ? "auto" : 0} mt={isLoading ? 4 : 0}>
+				{isFetching && (
+					<Box textAlign="center" mt={3}>
+						<CircularProgress/>
+					</Box>
+				)}
+			</Box>
 		</List>
 	);
 });
@@ -432,7 +418,10 @@ const UserPage = memo(function UserPage({username}) {
 	const navigate = useNavigate();
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
-	const tabs = username === myname ? [undefined, "following", "followers", "blocking"] : [undefined, "following", "followers"];
+	const tabs = useMemo(() => {
+		return username === myname ? [undefined, "following", "followers", "blocking"] : [undefined, "following", "followers"];
+	}, [username]);
+	
 	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
 	const [followingCount, setFollowingCount] = useState(0);
 	const [followersCount, setFollowersCount] = useState(0);
@@ -452,16 +441,16 @@ const UserPage = memo(function UserPage({username}) {
 	const [avatarSrc, setAvatarSrc] = useState();
 	const avatarCropper = useRef(null);
 	
-	const [data, setData] = useState(null);
-	const [isLoading, setIsLoading] = useState(true);
 	const [dataVersion, setDataVersion] = useState(0);
 	
+	const {data, isLoading, refetch} = useQuery({
+		queryKey: ["user", username, "info"],
+		queryFn: () => axios.get(`/api/user/${username}/info`).then(res => res.data),
+	});
+	
 	useEffect(() => {
-		axios.get(`/api/user/${username}/info`).then(res => {
-			setData(res.data);
-			setIsLoading(false);
-		});
-	}, [username, dataVersion]);
+		refetch();
+	}, [dataVersion, refetch]);
 	
 	useLayoutEffect(() => {
 		if (data && data.username) {
@@ -474,7 +463,7 @@ const UserPage = memo(function UserPage({username}) {
 		}
 	}, [data]);
 	
-	useEffect(() => {
+	useLayoutEffect(() => {
 		setTabValue(Math.max(tabs.indexOf(tab), 0));
 		if (tabs.indexOf(tab) === -1) {
 			navigate(`/user/${username}`);
