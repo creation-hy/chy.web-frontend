@@ -351,7 +351,7 @@ const Follows = memo(function Follows({username, type}) {
 									isFollowedBy={user.isFollowedBy}
 									isBlocking={user.isBlocking}
 									showBlockButton={type === "blocking"}
-									queryKey={[username, type]}
+									queryKey={["user", username, type]}
 								/>
 							</Box>
 							<Divider/>
