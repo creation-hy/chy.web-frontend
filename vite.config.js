@@ -45,9 +45,14 @@ export default defineConfig({
 					const match = id.match(/node_modules\/([^/]*)/);
 					
 					if (match) {
-						if (match[1] === "highlight.js" || match[1] === "@mui" || match[1] === "react-syntax-highlighter") {
+						if (id.includes("node_modules/@mui/")) {
+							return "mui";
+						}
+						
+						if (match[1] === "highlight.js" || match[1] === "react-syntax-highlighter") {
 							return match[1];
 						}
+						
 						return "vendor";
 					}
 				},
