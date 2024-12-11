@@ -62,6 +62,7 @@ import {supportedBadges, UserAvatar, UserBadge, UsernameWithBadge} from "src/com
 import {NavigateButtonBase, NavigateIconButton, NavigateLink} from "src/components/NavigateComponents.jsx";
 import Divider from "@mui/material/Divider";
 import {MessageFile} from "src/pages/Chat.jsx";
+import {LoadMoreIndicator} from "src/components/LoadMoreIndicator.jsx";
 
 const myname = localStorage.getItem("username");
 
@@ -144,12 +145,8 @@ const News = memo(function News({username, displayName, avatarVersion}) {
 					))}
 				</Fragment>
 			))}
-			<Box ref={loadMoreRef} height={isFetching ? "auto" : 0} mt={isLoading ? 4 : 0}>
-				{isFetching && (
-					<Box textAlign="center" mt={3}>
-						<CircularProgress/>
-					</Box>
-				)}
+			<Box ref={loadMoreRef}>
+				<LoadMoreIndicator isLoading={isLoading} isFetching={isFetching}/>
 			</Box>
 		</Box>
 	);
@@ -354,12 +351,8 @@ const Follows = memo(function Follows({username, type}) {
 					))}
 				</Fragment>
 			))}
-			<Box ref={loadMoreRef} height={isFetching ? "auto" : 0} mt={isLoading ? 4 : 0}>
-				{isFetching && (
-					<Box textAlign="center" mt={3}>
-						<CircularProgress/>
-					</Box>
-				)}
+			<Box ref={loadMoreRef}>
+				<LoadMoreIndicator isLoading={isLoading} isFetching={isFetching}/>
 			</Box>
 		</List>
 	);
