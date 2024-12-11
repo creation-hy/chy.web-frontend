@@ -12,7 +12,7 @@ import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import {DataGrid} from "@mui/x-data-grid";
 import Pagination from "@mui/material/Pagination";
 import PropTypes from "prop-types";
-import {useQuery} from "@tanstack/react-query";
+import {keepPreviousData, useQuery} from "@tanstack/react-query";
 import {useNavigate, useParams} from "react-router";
 import {debounce} from "lodash";
 
@@ -126,13 +126,16 @@ export const ChybenchRanking = memo(function ChybenchRanking() {
 		setPageNumber(page);
 	}, [navigate]);
 	
-	const [rankingData, setRankingData] = useState([]);
-	
-	const [dataCount, setDataCount] = useState(0);
-	
-	const {data, isLoading} = useQuery({
-		queryKey: [rankingItem, rankingSize, pageNumber],
+	const {data, isFetching} = useQuery({
+		queryKey: ["chybench", rankingItem, rankingSize, pageNumber],
 		queryFn: () => axios.get(`/api/chybench/ranking/${rankingItem}/${rankingSize}/${pageNumber}`).then(res => res.data.result),
+		placeholderData: keepPreviousData,
+	});
+	
+	const countData = useQuery({
+		queryKey: ["minesweeper-ranking", "count", rankingItem, rankingSize],
+		queryFn: () => axios.get(`/api/chybench/ranking/count/${rankingItem}/${rankingSize}`).then(res => res.data.result),
+		placeholderData: keepPreviousData,
 	});
 	
 	const [showLoadingProgress, setShowLoadingProgress] = useState(false);
@@ -142,20 +145,8 @@ export const ChybenchRanking = memo(function ChybenchRanking() {
 	}, 100));
 	
 	useEffect(() => {
-		axios.get(`/api/chybench/ranking/count/${rankingItem}/${rankingSize}`).then(res => {
-			setDataCount(res.data.result);
-		});
-	}, [rankingItem, rankingSize]);
-	
-	useEffect(() => {
-		if (data) {
-			setRankingData(data);
-		}
-	}, [data]);
-	
-	useEffect(() => {
-		toggleShowLoading.current(isLoading);
-	}, [isLoading]);
+		toggleShowLoading.current(isFetching);
+	}, [isFetching]);
 	
 	return (
 		<Grid container direction="column" sx={{minHeight: "100%", justifyContent: "space-between", maxWidth: "100%"}}>
@@ -207,12 +198,12 @@ export const ChybenchRanking = memo(function ChybenchRanking() {
 					</Select>
 				</FormControl>
 			</Grid>
-			<RankingTable data={rankingData}/>
+			<RankingTable data={data ?? []}/>
 			<Grid container sx={{mt: 2}} justifyContent="center" alignItems="flex-end" flex={1}>
 				<Pagination
 					page={pageNumber + 1}
 					color="primary"
-					count={Math.ceil(dataCount / 10.0)}
+					count={Math.ceil(countData.data / 10.0)}
 					onChange={(event, value) => togglePageNumber(value - 1)}
 				/>
 			</Grid>
