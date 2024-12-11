@@ -79,13 +79,11 @@ const News = memo(function News({username, displayName, avatarVersion}) {
 			if (entries[0].isIntersecting && !isFetching && hasNextPage) {
 				fetchNextPage();
 			}
+		}, {
+			rootMargin: "200px",
 		});
-		
 		pageLoadingObserver.observe(loadMoreRef.current);
-		
-		return () => {
-			pageLoadingObserver.disconnect();
-		}
+		return () => pageLoadingObserver.disconnect();
 	}, [fetchNextPage, hasNextPage, isFetching]);
 	
 	return (
@@ -324,13 +322,11 @@ const Follows = memo(function Follows({username, type}) {
 			if (entries[0].isIntersecting && !isFetching && hasNextPage) {
 				fetchNextPage();
 			}
+		}, {
+			rootMargin: "200px",
 		});
-		
 		pageLoadingObserver.observe(loadMoreRef.current);
-		
-		return () => {
-			pageLoadingObserver.disconnect();
-		}
+		return () => pageLoadingObserver.disconnect();
 	}, [fetchNextPage, hasNextPage, isFetching]);
 	
 	return (
