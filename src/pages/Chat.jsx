@@ -5,6 +5,7 @@ import {
 	Badge,
 	ButtonBase,
 	CircularProgress,
+	Collapse,
 	Fab,
 	InputLabel,
 	List,
@@ -2029,30 +2030,32 @@ export default function Chat() {
 						}
 					</List>
 					<Divider/>
-					<List sx={{display: matchList ? "none" : "block"}}>
-						{users != null && users.map((user, userIndex) => (user.username !== "ChatRoomSystem" &&
-							<Box
-								key={user.username}
-								ref={userIndex === users.length - 1 ? lastContactRef : undefined}
-							>
-								<UserItem
-									username={user.username}
-									displayName={user.displayName}
-									displayNameString={user.displayName}
-									avatarVersion={user.avatarVersion}
-									badge={user.badge}
-									isOnline={user.isOnline}
-									newMessageCount={user.newMessageCount}
-									lastMessageTime={user.lastMessageTime}
-									lastMessageText={user.lastMessageText || "\u00A0"}
-									draft={user.draft}
-									selected={currentUser === user.username}
-									isMessageAllowed={user.isMessageAllowed}
-								/>
-							</Box>
-						))}
-					</List>
-					{matchList && <List>
+					<Collapse in={!matchList}>
+						<List>
+							{users != null && users.map((user, userIndex) => (user.username !== "ChatRoomSystem" &&
+								<Box
+									key={user.username}
+									ref={userIndex === users.length - 1 ? lastContactRef : undefined}
+								>
+									<UserItem
+										username={user.username}
+										displayName={user.displayName}
+										displayNameString={user.displayName}
+										avatarVersion={user.avatarVersion}
+										badge={user.badge}
+										isOnline={user.isOnline}
+										newMessageCount={user.newMessageCount}
+										lastMessageTime={user.lastMessageTime}
+										lastMessageText={user.lastMessageText || "\u00A0"}
+										draft={user.draft}
+										selected={currentUser === user.username}
+										isMessageAllowed={user.isMessageAllowed}
+									/>
+								</Box>
+							))}
+						</List>
+					</Collapse>
+					{Boolean(matchList) && <List>
 						{matchList.map((user, userIndex) => {
 							const regex = new RegExp(`(${userSearchField.current?.value?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i");
 							
@@ -2061,10 +2064,7 @@ export default function Chat() {
 							}
 							
 							return (
-								<Box
-									key={user.username}
-									ref={userIndex === matchList.length - 1 ? lastUserFindingRef : undefined}
-								>
+								<Box key={user.username} ref={userIndex === matchList.length - 1 ? lastUserFindingRef : undefined}>
 									<UserItem
 										username={user.username}
 										displayName={
