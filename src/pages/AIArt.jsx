@@ -25,7 +25,7 @@ import {
 	VisibilityOutlined
 } from "@mui/icons-material";
 import Box from "@mui/material/Box";
-import {useQuery} from "@tanstack/react-query";
+import {useInfiniteQuery, useQuery, useQueryClient} from "@tanstack/react-query";
 import {
 	Accordion,
 	AccordionDetails,
@@ -52,7 +52,7 @@ import {
 	Tooltip,
 	useMediaQuery
 } from "@mui/material";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleOffsetString} from "src/assets/DateUtils.jsx";
 import Dialog from "@mui/material/Dialog";
 import IconButton from "@mui/material/IconButton";
@@ -73,6 +73,8 @@ import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import {isIOS13} from "react-device-detect";
 import {useNavigate, useParams} from "react-router";
 import PropTypes from "prop-types";
+import {LoadMoreIndicator} from "src/components/LoadMoreIndicator.jsx";
+import {debounce} from "lodash";
 
 const modelList = [
 	"SweetSugarSyndrome_v15.safetensors",
@@ -232,6 +234,8 @@ const downloadImage = (authorId, imageId) => {
 const GeneratedResults = () => {
 	document.title = `我的作品 - AI绘图 - chy.web`;
 	
+	const queryClient = useQueryClient();
+	
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
 	const [showDeletingDialog, setShowDeletingDialog] = useState(false);
@@ -249,20 +253,32 @@ const GeneratedResults = () => {
 	const contextMenuTimeout = useRef(null);
 	const isLongPress = useRef(false);
 	
-	const pageNumberCurrent = useRef(0);
-	const pageNumberNew = useRef(0);
-	const lastImageRef = useRef(null);
-	const lastListenedImageRef = useRef(null);
-	const pageLoadingObserver = useRef(new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
-			pageNumberNew.current = pageNumberCurrent.current + 1;
-			axios.get(`/api/ai-art/work/${pageNumberNew.current}`).then(res => {
-				if (res.data.result && res.data.result.length > 0) {
-					setImageList(imageList => [...imageList, ...res.data.result]);
+	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
+		queryKey: ["ai-art", "work"],
+		queryFn: ({pageParam}) => axios.get(`/api/ai-art/work/${pageParam}`).then(res => res.data.result),
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages) => lastPage.length === 0 ? undefined : allPages.length,
+	});
+	
+	const loadMoreRef = useRef(null);
+	
+	useEffect(() => {
+		if (loadMoreRef.current) {
+			const pageLoadingObserver = new IntersectionObserver((entries) => {
+				if (entries[0].isIntersecting && !isFetching && hasNextPage) {
+					fetchNextPage();
 				}
+			}, {
+				rootMargin: "200px",
 			});
+			pageLoadingObserver.observe(loadMoreRef.current);
+			return () => pageLoadingObserver.disconnect();
 		}
-	}));
+	}, [fetchNextPage, hasNextPage, isFetching]);
+	
+	useLayoutEffect(() => {
+		setImageList(data?.pages?.flat());
+	}, [data]);
 	
 	const toggleSelectImage = (id) => {
 		setSelectedImages(prevSelected => {
@@ -277,37 +293,30 @@ const GeneratedResults = () => {
 	};
 	
 	useEffect(() => {
-		axios.get(`/api/ai-art/work/0`).then(res => {
-			if (res.data.status === 0) {
-				setImageList(null);
-			} else {
-				setImageList(res.data.result ?? []);
+		window.addEventListener("keydown", (event) => {
+			if (event.key === "Escape") {
+				setSelectedImages(new Set());
 			}
 		});
 	}, []);
 	
-	useEffect(() => {
-		window.addEventListener("keydown", (event) => {
-			if (event.key === "Escape")
-				setSelectedImages(new Set());
-		});
-	}, []);
+	const updateImageList = useCallback((func) => {
+		setImageList(imageList => imageList.map(func));
+		queryClient.setQueryData(["ai-art", "work"], (data) => ({
+			pages: data?.pages.map(page => page.map(func)),
+			pageParams: data.pageParams,
+		}));
+	}, [queryClient]);
 	
-	useEffect(() => {
-		if (lastImageRef.current && lastImageRef.current !== lastListenedImageRef.current) {
-			lastListenedImageRef.current = lastImageRef.current;
-			pageNumberCurrent.current = pageNumberNew.current;
-			pageLoadingObserver.current.disconnect();
-			pageLoadingObserver.current.observe(lastImageRef.current);
-		}
-	}, [imageList]);
+	const toggleIsBusy = useRef(debounce(isBusy => setIsBusy(isBusy), 100));
 	
 	if (!imageList) {
-		return null;
+		return <LoadMoreIndicator isLoading={false} isFetching={true}/>;
 	}
 	
-	if (imageList.length === 0)
+	if (imageList.length === 0) {
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
+	}
 	
 	return (
 		<Box>
@@ -321,10 +330,9 @@ const GeneratedResults = () => {
 				className="my-masonry-grid"
 				columnClassName="my-masonry-grid_column"
 			>
-				{imageList.map((item, imageIndex) => (
+				{imageList.map((item) => (
 					<Grow in={true} key={item.imageId}>
 						<Box
-							ref={imageIndex === imageList.length - 1 ? lastImageRef : undefined}
 							sx={{position: "relative"}}
 							onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredImage(item.imageId)}
 							onPointerLeave={(event) => event.pointerType === "mouse" && setHoveredImage(null)}
@@ -447,6 +455,9 @@ const GeneratedResults = () => {
 					</Grow>
 				))}
 			</Masonry>
+			<Box ref={loadMoreRef}>
+				<LoadMoreIndicator isLoading={isLoading} isFetching={isFetching}/>
+			</Box>
 			<Backdrop open={isBusy} sx={{zIndex: 8964}}>
 				<CircularProgress size={50}/>
 			</Backdrop>
@@ -498,28 +509,31 @@ const GeneratedResults = () => {
 					<IconButton
 						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
 						onClick={() => {
-							setIsBusy(true);
+							toggleIsBusy.current(true);
+							
 							axios.post("/api/ai-art/toggle-visibility", {idList: [...selectedImages], visibility: 1}, {
 								headers: {
 									"Content-Type": "application/json",
 								},
 							}).then(res => {
-								setIsBusy(false);
+								toggleIsBusy.current(false);
+								
 								if (res.data.status === 0) {
 									enqueueSnackbar(res.data.content, {variant: "error"});
 								} else if (res.data.status === 1) {
 									const succeededList = res.data.succeededList;
-									enqueueSnackbar(`成功公开了 ${succeededList.length} 张图片，失败了 ${selectedImages.size - succeededList.length} 张`, {variant: "info"});
+									
 									for (const id of succeededList) {
 										setSelectedImages(selectedImages => {
 											selectedImages.delete(id);
 											return selectedImages;
 										});
 									}
-									setImageList(imageList => [...imageList].map(item => succeededList.includes(item.imageId) ? {
+									
+									updateImageList(item => succeededList.includes(item.imageId) ? {
 										...item,
 										visibility: 1,
-									} : item));
+									} : item);
 								}
 							});
 						}}
@@ -528,28 +542,30 @@ const GeneratedResults = () => {
 						<Typography fontSize={14}>公开</Typography>
 					</IconButton>
 					<IconButton sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}} onClick={() => {
-						setIsBusy(true);
+						toggleIsBusy.current(true);
 						axios.post("/api/ai-art/toggle-visibility", {idList: [...selectedImages], visibility: 0}, {
 							headers: {
 								"Content-Type": "application/json",
 							},
 						}).then(res => {
-							setIsBusy(false);
+							toggleIsBusy.current(false);
+							
 							if (res.data.status === 0) {
 								enqueueSnackbar(res.data.content, {variant: "error"});
 							} else if (res.data.status === 1) {
 								const succeededList = res.data.succeededList;
-								enqueueSnackbar(`成功隐藏了 ${succeededList.length} 张图片，失败了 ${selectedImages.size - succeededList.length} 张`, {variant: "info"});
+								
 								for (const id of succeededList) {
 									setSelectedImages(selectedImages => {
 										selectedImages.delete(id);
 										return selectedImages;
 									});
 								}
-								setImageList(imageList => [...imageList].map(item => succeededList.includes(item.imageId) ? {
+								
+								updateImageList(item => succeededList.includes(item.imageId) ? {
 									...item,
 									visibility: 0,
-								} : item));
+								} : item);
 							}
 						});
 					}}>
@@ -584,16 +600,23 @@ const GeneratedResults = () => {
 								enqueueSnackbar(res.data.content, {variant: "error"});
 							} else if (res.data.status === 1) {
 								const succeededList = res.data.succeededList;
-								enqueueSnackbar(`成功删除了 ${succeededList.length} 张图片，失败了 ${selectedImages.size - succeededList.length} 张`, {variant: "info"});
+								
 								for (const id of succeededList) {
 									setSelectedImages(selectedImages => {
 										selectedImages.delete(id);
 										return selectedImages;
 									});
 								}
-								setImageList(imageList => [...imageList].filter(item => !succeededList.includes(item.imageId)));
+								
+								setImageList(imageList => imageList.filter(item => !succeededList.includes(item.imageId)));
+								
 								setIsMultipleDeleting(false);
 								setShowMultipleDeletingDialog(false);
+								
+								queryClient.setQueryData(["ai-art", "work"], (data) => ({
+									pages: data?.pages.map(page => page.filter(item => !succeededList.includes(item.imageId))),
+									pageParams: data.pageParams,
+								}));
 							}
 						});
 					}}>删除</LoadingButton>
@@ -700,9 +723,9 @@ const GeneratedResults = () => {
 													...imagePreviewData,
 													promptVisibility: newVisibility,
 												};
+												
 												setImagePreviewData(newImagePreviewData);
-												setImageList(imageList =>
-													imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+												updateImageList(item => item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item);
 											}
 										});
 									}}
@@ -776,8 +799,7 @@ const GeneratedResults = () => {
 														dislikes: imagePreviewData.dislikes - imagePreviewData.alreadyDisliked,
 													};
 													setImagePreviewData(newImagePreviewData);
-													setImageList(imageList =>
-														imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+													updateImageList(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item));
 												}
 											});
 										}}
@@ -815,8 +837,7 @@ const GeneratedResults = () => {
 														likes: imagePreviewData.likes - imagePreviewData.alreadyLiked,
 													};
 													setImagePreviewData(newImagePreviewData);
-													setImageList(imageList =>
-														imageList.map(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item)));
+													updateImageList(item => (item.imageId === newImagePreviewData.imageId ? newImagePreviewData : item));
 												}
 											});
 										}}
@@ -870,13 +891,16 @@ const GeneratedResults = () => {
 								enqueueSnackbar(res.data.content, {variant: "error"});
 							} else if (res.data.status === 1) {
 								if (res.data.succeededList.length === 1) {
-									enqueueSnackbar("删除成功！", {variant: "success"});
-									setImageList([...imageList].filter((item) => item.imageId !== deletingImageId));
+									setImageList(imageList => imageList.filter(item => item.imageId !== deletingImageId));
+									
+									queryClient.setQueryData(["ai-art", "work"], (data) => ({
+										pages: data?.pages.map(page => page.filter(item => item.imageId !== deletingImageId)),
+										pageParams: data.pageParams,
+									}));
+									``
 									setIsDeleting(false);
 									setShowDeletingDialog(false);
 									setShowImagePreview(false);
-								} else {
-									enqueueSnackbar("删除失败！", {variant: "error"});
 								}
 							}
 						});

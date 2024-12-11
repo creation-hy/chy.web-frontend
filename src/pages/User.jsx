@@ -69,7 +69,8 @@ const myname = localStorage.getItem("username");
 const News = memo(function News({username, displayName, avatarVersion}) {
 	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
 		queryKey: ["user", username, "news"],
-		queryFn: ({pageParam = 0}) => axios.get(`/api/user/${username}/chat/${pageParam}`).then(res => res.data.result),
+		queryFn: ({pageParam}) => axios.get(`/api/user/${username}/chat/${pageParam}`).then(res => res.data.result),
+		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages) => lastPage.length === 0 ? undefined : allPages.length,
 	});
 	
@@ -308,7 +309,8 @@ UserItem.propTypes = {
 const Follows = memo(function Follows({username, type}) {
 	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
 		queryKey: ["user", username, type],
-		queryFn: ({pageParam = 0}) => axios.get(`/api/user/${username}/${type}/${pageParam}`).then(res => res.data.result),
+		queryFn: ({pageParam}) => axios.get(`/api/user/${username}/${type}/${pageParam}`).then(res => res.data.result),
+		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages) => lastPage.length === 0 ? undefined : allPages.length,
 	});
 	
