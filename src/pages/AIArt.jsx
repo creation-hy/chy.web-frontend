@@ -130,27 +130,29 @@ const myId = localStorage.getItem("user_id");
 const MyRequests = () => {
 	document.title = `我的请求 - AI绘图 - chy.web`;
 	
+	const queryClient = useQueryClient();
+	
 	const [requestList, setRequestList] = useState(undefined);
 	const [showInfo, setShowInfo] = useState(false);
 	const [infoData, setInfoData] = useState(null);
 	const [deletingId, setDeletingId] = useState(null);
 	
-	useEffect(() => {
-		axios.get("/api/ai-art/request").then(res => {
-			if (res.data.status === 0) {
-				setRequestList(null);
-			} else {
-				setRequestList(res.data.result ?? []);
-			}
-		});
-	}, []);
+	const {data} = useQuery({
+		queryKey: ["ai-art", "requests"],
+		queryFn: () => axios.get("/api/ai-art/request").then(res => res.data?.result ?? []),
+	});
+	
+	useLayoutEffect(() => {
+		setRequestList(data);
+	}, [data]);
 	
 	if (!requestList) {
-		return null;
+		return <LoadMoreIndicator isLoading={false} isFetching={true}/>;
 	}
 	
-	if (requestList.length === 0)
+	if (requestList.length === 0) {
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
+	}
 	
 	return (
 		<>
@@ -176,20 +178,26 @@ const MyRequests = () => {
 									}}>
 										<Info/>
 									</IconButton>
-									<IconButton color="error" disabled={item.status === 1} onClick={() => {
-										setDeletingId(item.id);
-										axios.post("/api/ai-art/request/delete", {id: item.id}, {
-											headers: {
-												"Content-Type": "application/json",
-											},
-										}).then(res => {
-											enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
-											setDeletingId(null);
-											if (res.data.status === 1) {
-												setRequestList([...requestList].filter(current => current.id !== item.id));
-											}
-										});
-									}}>
+									<IconButton
+										color="error"
+										disabled={item.status === 1}
+										onClick={() => {
+											setDeletingId(item.id);
+											axios.post("/api/ai-art/request/delete", {id: item.id}, {
+												headers: {
+													"Content-Type": "application/json",
+												},
+											}).then(res => {
+												enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
+												setDeletingId(null);
+												if (res.data.status === 1) {
+													setRequestList(requestList => requestList.filter(current => current.id !== item.id));
+													queryClient.setQueryData(["ai-art", "requests"],
+														data => data.filter(current => current.id !== item.id));
+												}
+											});
+										}}
+									>
 										{deletingId === item.id ? <CircularProgress size={24} color="error"/> : <DeleteOutlined/>}
 									</IconButton>
 								</ListItem>
