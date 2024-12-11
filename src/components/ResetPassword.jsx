@@ -29,7 +29,7 @@ const ResetPassword = memo(function ResetPassword({open, handleClose}) {
 					我们需要验证你的邮箱。<br/>
 					重置成功后，所有登录此账号的设备都将强制注销。
 				</DialogContentText>
-				<Grid container gap={0.5}>
+				<Grid container gap={1}>
 					<TextField
 						autoComplete="email"
 						inputRef={emailText}

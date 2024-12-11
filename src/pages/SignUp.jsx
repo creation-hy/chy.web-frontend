@@ -184,7 +184,7 @@ export default function SignUp() {
 					/>
 				</FormControl>
 				<FormControl>
-					<Grid container spacing={0.5} flexWrap="nowrap">
+					<Grid container gap={1} flexWrap="nowrap">
 						<Grid flexGrow={1}>
 							<TextField
 								required

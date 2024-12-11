@@ -201,7 +201,7 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 });
 
 Ranking.propTypes = {
-	showRanking: PropTypes.bool.isRequired,
+	showRanking: PropTypes.bool,
 	setShowRanking: PropTypes.func.isRequired,
 }
 

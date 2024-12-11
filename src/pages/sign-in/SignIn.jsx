@@ -138,7 +138,7 @@ export default function SignIn() {
 					gap: 2,
 				}}
 			>
-				<FormControl sx={{display: "flex", flexDirection: "row", gap: 0.5}}>
+				<FormControl sx={{display: "flex", flexDirection: "row", gap: 1}}>
 					{loginMethod === 0 ?
 						<TextField
 							error={usernameError}
