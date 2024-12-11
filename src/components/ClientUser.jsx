@@ -43,7 +43,7 @@ export const ClientUserProvider = ({children}) => {
 	
 	return (
 		<ClientUserContext.Provider value={{clientUser, setClientUser, isClientUserLoading: !isFetched}}>
-			<Dialog open={(isFetched || isError) && !clientUser && location.pathname !== "/register" && location.pathname !== "/login"}>
+			<Dialog open={isError && location.pathname !== "/register" && location.pathname !== "/login"}>
 				<SignUp/>
 			</Dialog>
 			{children}

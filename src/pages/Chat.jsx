@@ -74,7 +74,6 @@ import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {useLocation, useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
-import SignUp from "src/pages/SignUp.jsx";
 import {debounce, throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
@@ -1415,7 +1414,6 @@ export default function Chat() {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
 	const [users, setUsers] = useState(null);
-	const [logged, setLogged] = useState(null);
 	const [currentUser, setCurrentUser] = useState(null);
 	const [currentUserDisplayName, setCurrentUserDisplayName] = useState(null);
 	const [currentUserBadge, setCurrentUserBadge] = useState(null);
@@ -1603,12 +1601,6 @@ export default function Chat() {
 	
 	useEffect(() => {
 		axios.get("/api/chat/contacts/0", {params: {extraContactName: username}}).then(res => {
-			if (res.data.status !== 1) {
-				setLogged(false);
-				return;
-			}
-			
-			setLogged(true);
 			contactPageNumberNew.current = 0;
 			contactPageNumberCurrent.current = 0;
 			contactFetchSuccess.current = true;
@@ -1897,10 +1889,10 @@ export default function Chat() {
 			}
 		};
 		
-		if (logged && !stomp) {
+		if (!stomp) {
 			stompConnect();
 		}
-	}, [logged, stompOnConnect]);
+	}, [stompOnConnect]);
 	
 	useEffect(() => {
 		if (lastMessageRef.current) {
@@ -1940,10 +1932,6 @@ export default function Chat() {
 			document.getElementById("app-bar").style.display = username && isSmallScreen ? "none" : "flex";
 		}
 	}, [isSmallScreen, username]);
-	
-	if (logged === false) {
-		return <SignUp/>;
-	}
 	
 	document.title = (currentUserDisplayName ? `和 ${currentUserDisplayName} 的聊天` : "聊天") + " - chy.web";
 	

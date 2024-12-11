@@ -238,7 +238,6 @@ const GeneratedResults = () => {
 	const [deletingImageId, setDeletingImageId] = useState(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [imageList, setImageList] = useState(undefined);
-	const navigate = useNavigate();
 	
 	const [selectedImages, setSelectedImages] = useState(new Set());
 	
