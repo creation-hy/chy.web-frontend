@@ -88,6 +88,7 @@ export default function SignUp() {
 		} else if (/[^a-zA-Z]/.test(username.value[0])) {
 			setNameError(true);
 			setNameErrorMessage('用户名首位必须是字母。');
+			isValid = false;
 		} else {
 			setNameError(false);
 			setNameErrorMessage('');
