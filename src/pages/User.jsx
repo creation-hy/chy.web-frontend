@@ -26,7 +26,6 @@ import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid2";
-import Cookies from "js-cookie";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useInfiniteQuery, useQuery, useQueryClient} from "@tanstack/react-query";
@@ -64,7 +63,7 @@ import {NavigateButtonBase, NavigateIconButton, NavigateLink} from "src/componen
 import Divider from "@mui/material/Divider";
 import {MessageFile} from "src/pages/Chat.jsx";
 
-const myname = Cookies.get("username");
+const myname = localStorage.getItem("username");
 
 const News = memo(function News({username, displayName, avatarVersion}) {
 	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({

@@ -58,7 +58,6 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import SockJS from "sockjs-client";
 import {Stomp} from "@stomp/stompjs";
-import Cookies from "js-cookie";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
@@ -82,7 +81,7 @@ import Link from "@mui/material/Link";
 import {LoadingButton} from "@mui/lab";
 import {isIOS13, isMobile} from "react-device-detect";
 
-const myname = Cookies.get("username"), myToken = Cookies.get("user_token");
+const myname = localStorage.getItem("username");
 
 let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {useMarkdown: false};
 let usersVar = [], messagesVar = [];
@@ -1384,10 +1383,11 @@ export const ChatNotificationClient = memo(function ChatNotificationClient() {
 			stomp.current.heartbeat.incoming = 10000;
 			stomp.current.heartbeat.outgoing = 10000;
 			
-			stomp.current.connect({
-				"username": myname,
-				"user-token": myToken,
-			}, stompOnConnect.current, null, stompReconnect);
+			if (myname) {
+				stomp.current.connect({
+					Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+				}, stompOnConnect.current, null, stompReconnect);
+			}
 		};
 		
 		const stompReconnect = async () => {
@@ -1871,10 +1871,13 @@ export default function Chat() {
 		const stompConnect = () => {
 			socket = new SockJS(window.location.origin + "/api/websocket");
 			stomp = Stomp.over(() => socket);
-			stomp.connect({
-				"username": myname,
-				"user-token": myToken,
-			}, stompOnConnect, null, stompReconnect);
+			
+			if (myname) {
+				stomp.connect({
+					Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+				}, stompOnConnect, null, stompReconnect);
+			}
+			
 			socket.onclose = stompReconnect;
 		};
 		

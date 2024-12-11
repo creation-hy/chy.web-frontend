@@ -72,7 +72,6 @@ import {TransitionGroup} from "react-transition-group";
 import {SimpleUserItem} from "src/components/UserComponents.jsx";
 import {isIOS13} from "react-device-detect";
 import {useNavigate, useParams} from "react-router";
-import Cookies from "js-cookie";
 import PropTypes from "prop-types";
 
 const modelList = [
@@ -124,7 +123,7 @@ const samplerDisplayNameList = [
 const optimizationPositiveTags = "masterpiece, best quality, Amazing, finely detail, Depth of field, extremely detailed CG unity 8k wallpaper, ";
 const optimizationNegativeTags = "multiple breasts, (mutated hands and fingers: 1.5), (long body: 1.3), (mutation, poorly drawn: 1.2) , black-white, bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated, anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers, lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body, fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts, heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand, missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs, fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears, fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears, heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers, one hand with more than 5 fingers, one hand with less than 5 fingers, one hand owith more than 5 digit, one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit, colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts, signature, 3D, 3D game, 3D game scene, 3D character, malformed feet, extra feet, bad feet, poorly drawn feet, fused feet, missing feet, extra shoes, bad shoes, fused shoes, more than two shoes, poorly drawn shoes, bad gloves, poorly drawn gloves, fused gloves, bad cum, poorly drawn cum, fused cum, bad hairs, poorly drawn hairs, fused hairs, big muscles, ugly, bad face, fused face, poorly drawn face, cloned face, big face, long face, bad eyes, fused eyes poorly drawn eyes, extra eyes, malformed limbs, "
 
-const myId = Cookies.get("user_id");
+const myId = localStorage.getItem("user_id");
 
 const MyRequests = () => {
 	document.title = `我的请求 - AI绘图 - chy.web`;
@@ -133,7 +132,6 @@ const MyRequests = () => {
 	const [showInfo, setShowInfo] = useState(false);
 	const [infoData, setInfoData] = useState(null);
 	const [deletingId, setDeletingId] = useState(null);
-	const navigate = useNavigate();
 	
 	useEffect(() => {
 		axios.get("/api/ai-art/request").then(res => {
@@ -144,12 +142,6 @@ const MyRequests = () => {
 			}
 		});
 	}, []);
-	
-	useEffect(() => {
-		if (requestList === null) {
-			navigate("/register");
-		}
-	}, [requestList, navigate]);
 	
 	if (!requestList) {
 		return null;
@@ -310,12 +302,6 @@ const GeneratedResults = () => {
 			pageLoadingObserver.current.observe(lastImageRef.current);
 		}
 	}, [imageList]);
-	
-	useEffect(() => {
-		if (imageList === null) {
-			navigate("/register");
-		}
-	}, [imageList, navigate]);
 	
 	if (!imageList) {
 		return null;

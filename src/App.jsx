@@ -23,6 +23,8 @@ import {Settings} from "src/pages/Settings.jsx";
 import SignIn from "src/pages/sign-in/SignIn.jsx";
 import Error from "src/pages/Error.jsx";
 import Grid from "@mui/material/Grid2";
+import {ClientUserProvider} from "src/components/ClientUser.jsx";
+import axios from "axios";
 
 const Layout = () => {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -47,52 +49,54 @@ const Layout = () => {
 	}, [pathname]);
 	
 	return (
-		<Grid container direction={isSmallScreen ? "column" : "row"} maxWidth={1425} mx="auto" minHeight="100%" height={lockHeight ? "100%" : "auto"}>
-			<ScrollRestoration/>
-			<ChatNotificationClient/>
-			{!isSmallScreen && (
-				<Box width={225} component="header">
-					<PCAppBarLeft/>
-				</Box>
-			)}
-			{isSmallScreen && <MobileAppBar/>}
-			<Container
-				component="main"
-				maxWidth="lg"
-				sx={{
-					display: 'flex',
-					flexDirection: 'column',
-					flex: 1,
-					minHeight: 0,
-					height: lockHeight ? "100%" : "auto",
-					overflow: "auto",
-					borderRight: 1,
-					borderColor: "divider",
-				}}
-			>
-				{!isSmallScreen && <Box minHeight={16}/>}
-				<Outlet/>
-				<Box minHeight={16}/>
-			</Container>
-			<Zoom in={scrollTrigger}>
-				<Box
-					ref={scrollComponentRef}
-					onClick={() => {
-						window.scrollTo({top: 0, behavior: "smooth"});
-					}}
+		<ClientUserProvider>
+			<Grid container direction={isSmallScreen ? "column" : "row"} maxWidth={1425} mx="auto" minHeight="100%" height={lockHeight ? "100%" : "auto"}>
+				<ScrollRestoration/>
+				<ChatNotificationClient/>
+				{!isSmallScreen && (
+					<Box width={225} component="header">
+						<PCAppBarLeft/>
+					</Box>
+				)}
+				{isSmallScreen && <MobileAppBar/>}
+				<Container
+					component="main"
+					maxWidth="lg"
 					sx={{
-						position: "fixed",
-						bottom: 25,
-						right: 25,
-						zIndex: 1,
+						display: 'flex',
+						flexDirection: 'column',
+						flex: 1,
+						minHeight: 0,
+						height: lockHeight ? "100%" : "auto",
+						overflow: "auto",
+						borderRight: 1,
+						borderColor: "divider",
 					}}
 				>
-					<Fab size="small" aria-label="scroll back to top">
-						<KeyboardArrowUpOutlined/>
-					</Fab>
-				</Box>
-			</Zoom>
-		</Grid>
+					{!isSmallScreen && <Box minHeight={16}/>}
+					<Outlet/>
+					<Box minHeight={16}/>
+				</Container>
+				<Zoom in={scrollTrigger}>
+					<Box
+						ref={scrollComponentRef}
+						onClick={() => {
+							window.scrollTo({top: 0, behavior: "smooth"});
+						}}
+						sx={{
+							position: "fixed",
+							bottom: 25,
+							right: 25,
+							zIndex: 1,
+						}}
+					>
+						<Fab size="small" aria-label="scroll back to top">
+							<KeyboardArrowUpOutlined/>
+						</Fab>
+					</Box>
+				</Zoom>
+			</Grid>
+		</ClientUserProvider>
 	)
 }
 
@@ -126,6 +130,12 @@ const router = createBrowserRouter([
 
 export default function App() {
 	const [binaryColorMode] = useBinaryColorMode();
+	
+	const authToken = localStorage.getItem("auth_token");
+	
+	if (authToken) {
+		axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
+	}
 	
 	return (
 		<ThemeProvider theme={createTheme(getDefaultTheme(binaryColorMode))}>

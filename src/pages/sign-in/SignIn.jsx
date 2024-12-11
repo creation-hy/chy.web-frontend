@@ -12,7 +12,6 @@ import {GoogleIcon} from './CustomIcons';
 import axios from "axios";
 import {enqueueSnackbar} from 'notistack';
 import {Apple, LoginOutlined} from "@mui/icons-material";
-import Cookies from "js-cookie";
 import ResetPassword from "src/components/ResetPassword.jsx";
 import {Tab, Tabs} from "@mui/material";
 import {useClientUser} from "src/components/ClientUser.jsx";
@@ -91,18 +90,21 @@ export default function SignIn() {
 		
 		if (isValid) {
 			setLoginLoading(true);
-			axios.post("/api/login/" + (loginMethod === 0 ? "password-login" : "verification-code-login"),
-				new FormData(document.getElementById('data-form')), {
-					headers: {
-						'Content-Type': 'application/json',
-					},
-				}).then(res => {
+			
+			const formData = new FormData(document.getElementById('data-form'));
+			
+			axios.post("/api/login/" + (loginMethod === 0 ? "password-login" : "verification-code-login"), formData, {
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			}).then(res => {
 				const data = res.data;
 				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
 				setLoginLoading(false);
 				if (data.status === 1) {
-					Cookies.set("username", data.username, {path: "/", expires: 30});
-					Cookies.set("user_token", data["userToken"], {path: "/", expires: 30});
+					localStorage.setItem("user_id", data.userId);
+					localStorage.setItem("username", data.username);
+					localStorage.setItem("auth_token", data.token);
 					window.location.href = "/";
 				}
 			});

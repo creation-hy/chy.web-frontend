@@ -12,7 +12,6 @@ import {Apple, HowToRegOutlined} from "@mui/icons-material";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import Cookies from "js-cookie";
 import {LoadingButton} from "@mui/lab";
 import {useNavigate} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
@@ -105,8 +104,9 @@ export default function SignUp() {
 				enqueueSnackbar(data.content, {variant: data.status === 1 ? "success" : "error"});
 				setRegisterLoading(false);
 				if (data.status === 1) {
-					Cookies.set("username", data.username, {expires: 30, path: "/"});
-					Cookies.set("user_token", data["userToken"], {expires: 30, path: "/"});
+					localStorage.setItem("user_id", data.userId);
+					localStorage.setItem("username", data.username);
+					localStorage.setItem("auth_token", data.token);
 					window.location.href = "/";
 				}
 			});

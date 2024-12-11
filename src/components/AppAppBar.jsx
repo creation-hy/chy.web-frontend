@@ -27,7 +27,6 @@ import Container from "@mui/material/Container";
 import {useLocation, useNavigate} from "react-router";
 import PropTypes from "prop-types";
 import Button from "@mui/material/Button";
-import Cookies from "js-cookie";
 import {UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateLink} from "src/components/NavigateComponents.jsx";
 import axios from "axios";
@@ -48,7 +47,7 @@ const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	padding: '8px 12px',
 }));
 
-const myName = Cookies.get("username");
+const myName = localStorage.getItem("username");
 let myInformation = JSON.parse(localStorage.getItem("myInformation")) ?? {};
 
 const LeftBar = memo(function LeftBar({navigateCallback}) {

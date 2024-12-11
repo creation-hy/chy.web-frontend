@@ -12,7 +12,6 @@ import TextField from "@mui/material/TextField";
 import {LoadingButton} from "@mui/lab";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import Cookies from "js-cookie";
 import PropTypes from "prop-types";
 import {NavigateButtonBase, NavigateLink} from "src/components/NavigateComponents.jsx";
 import Box from "@mui/material/Box";
@@ -75,8 +74,9 @@ const MainSettings = () => {
 				<SettingsItemButton url={"/settings/about"} icon={<InfoOutlined/>} text={"关于"}/>
 				<SettingsItemButton
 					onClick={() => {
-						Cookies.remove("username");
-						Cookies.remove("user_token");
+						localStorage.removeItem("user_id");
+						localStorage.removeItem("username");
+						localStorage.removeItem("auth_token");
 						window.location.href = "/login";
 					}}
 					icon={<LogoutOutlined/>}
@@ -237,8 +237,9 @@ const ResetPassword = () => {
 							
 							enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 							if (res.data.status === 1) {
-								Cookies.remove("username");
-								Cookies.remove("user_token");
+								localStorage.removeItem("user_id");
+								localStorage.removeItem("username");
+								localStorage.removeItem("auth_token");
 								setTimeout(() => window.location.href = "/login", 1000);
 							}
 						});

@@ -7,7 +7,6 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import axios from "axios";
 import FormControl from "@mui/material/FormControl";
 import {SimpleUserItem} from "src/components/UserComponents.jsx";
-import Cookies from "js-cookie";
 import Typography from "@mui/material/Typography";
 import {convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import {DataGrid} from "@mui/x-data-grid";
@@ -17,7 +16,7 @@ import {useQuery} from "@tanstack/react-query";
 import {useNavigate, useParams} from "react-router";
 import {debounce} from "lodash";
 
-const myname = Cookies.get("username");
+const myname = localStorage.getItem("username");
 
 const RankingTable = memo(function RankingTable({data}) {
 	if (!data) {

@@ -11,7 +11,6 @@ import axios from "axios";
 import {memo, useRef, useState} from "react";
 import {enqueueSnackbar} from "notistack";
 import {LoadingButton} from "@mui/lab";
-import Cookies from "js-cookie";
 
 const ResetPassword = memo(function ResetPassword({open, handleClose}) {
 	const emailText = useRef(null);
@@ -97,8 +96,9 @@ const ResetPassword = memo(function ResetPassword({open, handleClose}) {
 					}).then(res => {
 						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 						if (res.data.status === 1) {
-							Cookies.remove("username");
-							Cookies.remove("user_token");
+							localStorage.removeItem("user_id");
+							localStorage.removeItem("username");
+							localStorage.removeItem("auth_token");
 							setTimeout(() => window.location.href = "/login", 1000);
 						}
 					});

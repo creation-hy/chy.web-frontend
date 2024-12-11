@@ -18,14 +18,13 @@ import IconButton from "@mui/material/IconButton";
 import Pagination from "@mui/material/Pagination";
 import {useQuery} from "@tanstack/react-query";
 import {flushSync} from "react-dom";
-import Cookies from "js-cookie";
 import {isIOS13} from "react-device-detect";
 import {useNavigate, useParams} from "react-router";
 import {debounce} from "lodash";
 
 let flippedCount = 0, passedTimeInterval;
 let startTime = 0, rows = 10, mines = 10;
-const myname = Cookies.get("username");
+const myname = localStorage.getItem("username");
 
 const generateGrid = (rows, mines) => {
 	const grid = Array.from({length: rows}, () => new Array(rows).fill(0));
