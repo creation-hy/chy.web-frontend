@@ -435,16 +435,10 @@ const UserPage = memo(function UserPage({username}) {
 	const [avatarSrc, setAvatarSrc] = useState();
 	const avatarCropper = useRef(null);
 	
-	const [dataVersion, setDataVersion] = useState(0);
-	
 	const {data, isLoading, refetch} = useQuery({
 		queryKey: ["user", username, "info"],
 		queryFn: () => axios.get(`/api/user/${username}/info`).then(res => res.data),
 	});
-	
-	useEffect(() => {
-		refetch();
-	}, [dataVersion, refetch]);
 	
 	useLayoutEffect(() => {
 		if (data && data.username) {
@@ -623,7 +617,7 @@ const UserPage = memo(function UserPage({username}) {
 										<Tooltip title="取消关注">
 											<IconButton onClick={() => {
 												doFollow(data.username, setIsFollowing).then(() => {
-													setDataVersion(version => version + 1);
+													refetch();
 												});
 											}}>
 												<PersonOffOutlined/>
@@ -633,7 +627,7 @@ const UserPage = memo(function UserPage({username}) {
 										<Tooltip title="关注">
 											<IconButton onClick={() => {
 												doFollow(data.username, setIsFollowing).then(() => {
-													setDataVersion(version => version + 1);
+													refetch();
 												});
 											}}>
 												<PersonAddOutlined/>
@@ -704,7 +698,7 @@ const UserPage = memo(function UserPage({username}) {
 					}).then(res => {
 						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 						if (res.data.status === 1) {
-							setTimeout(() => window.location.reload(), 500);
+							refetch();
 						}
 					});
 					setModifying(false);
