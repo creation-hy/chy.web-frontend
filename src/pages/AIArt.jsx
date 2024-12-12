@@ -150,13 +150,12 @@ const MyRequests = () => {
 		return <LoadMoreIndicator isLoading={false} isFetching={true}/>;
 	}
 	
-	if (requestList.length === 0) {
-		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
-	}
-	
 	return (
 		<>
-			<Card variant="outlined" sx={{width: "100%"}}>
+			{requestList.length === 0 && (
+				<Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>
+			)}
+			<Card variant="outlined" sx={{width: "100%", display: requestList.length > 0 ? "block" : "none"}}>
 				<List sx={{p: 0}}>
 					<TransitionGroup>
 						{requestList.map((item, index) => (
@@ -263,9 +262,9 @@ const GeneratedResults = () => {
 	
 	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
 		queryKey: ["ai-art", "work"],
-		queryFn: ({pageParam}) => axios.get(`/api/ai-art/work/${pageParam}`).then(res => res.data.result),
+		queryFn: ({pageParam}) => axios.get(`/api/ai-art/work/${pageParam}`).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
-		getNextPageParam: (lastPage, allPages) => lastPage.length === 0 ? undefined : allPages.length,
+		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
 	});
 	
 	const loadMoreRef = useRef(null);
@@ -1202,58 +1201,53 @@ const Community = () => {
 	const [viewRange, setViewRange] = useState(communityParams.viewRange ?? "get-all");
 	const [sortMethod, setSortMethod] = useState(communityParams.sortMethod ?? "latest");
 	
-	const {data, isLoading, error} = useQuery({
-		queryKey: [`ai-art-community-${viewRange}-${sortMethod}`],
-		queryFn: () => axios.get(`/api/ai-art/community/${viewRange}/${sortMethod}/0`).then(res => res.data),
-		staleTime: Infinity,
-	});
-	
 	const [imageList, setImageList] = useState(null);
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	const [imagePreviewData, setImagePreviewData] = useState(null);
 	const [hoveredImage, setHoveredImage] = useState(null);
 	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("lg"));
 	
-	const pageNumberCurrent = useRef(0);
-	const pageNumberNew = useRef(0);
-	const lastImageRef = useRef(null);
-	const pageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && pageNumberNew.current === pageNumberCurrent.current) {
-			pageNumberNew.current = pageNumberCurrent.current + 1;
-			axios.get(`/api/ai-art/community/${viewRange}/${sortMethod}/${pageNumberNew.current}`).then(res => {
-				if (res.data.result && res.data.result.length > 0)
-					setImageList(imageList => [...imageList, ...res.data.result]);
+	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
+		queryKey: ["ai-art", "community", viewRange, sortMethod],
+		queryFn: ({pageParam}) => axios.get(`/api/ai-art/community/${viewRange}/${sortMethod}/${pageParam}`).then(res => res.data?.result ?? []),
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
+	});
+	
+	const loadMoreRef = useRef(null);
+	
+	useEffect(() => {
+		if (loadMoreRef.current) {
+			const pageLoadingObserver = new IntersectionObserver((entries) => {
+				if (entries[0].isIntersecting && !isFetching && hasNextPage) {
+					fetchNextPage();
+				}
+			}, {
+				rootMargin: "200px",
 			});
+			pageLoadingObserver.observe(loadMoreRef.current);
+			return () => pageLoadingObserver.disconnect();
 		}
-	}), [viewRange, sortMethod]);
+	}, [fetchNextPage, hasNextPage, isFetching]);
+	
+	useLayoutEffect(() => {
+		setImageList(data?.pages.flat());
+	}, [data]);
 	
 	useEffect(() => {
 	}, [workId]);
 	
-	useEffect(() => {
-		if (data)
-			setImageList(data.result);
-	}, [data]);
-	
-	useEffect(() => {
-		if (lastImageRef.current) {
-			pageNumberCurrent.current = pageNumberNew.current;
-			pageLoadingObserver.disconnect();
-			pageLoadingObserver.observe(lastImageRef.current);
-		}
-	}, [imageList, pageLoadingObserver]);
-	
-	if (isLoading || error || !imageList)
-		return null;
+	if (!imageList) {
+		return <LoadMoreIndicator isLoading={false} isFetching={true}/>;
+	}
 	
 	return (
 		<Grid container direction="column" alignItems="flex-end" wrap="nowrap" width="100%">
-			<Grid container spacing={1} sx={{mt: isSmallScreen ? 0 : -7, mb: isSmallScreen ? 1 : 2}}>
+			<Grid container spacing={1} sx={{mt: isSmallScreen ? 0 : -8, mb: 1, mr: 1}}>
 				<FormControl>
 					<InputLabel id="sort-method-label">排序规则</InputLabel>
 					<Select
 						variant="outlined"
-						size={isSmallScreen ? "medium" : "small"}
 						labelId="sort-method-label"
 						label="排序规则"
 						value={sortMethod}
@@ -1271,7 +1265,6 @@ const Community = () => {
 					<InputLabel id="view-range-label">查看范围</InputLabel>
 					<Select
 						variant="outlined"
-						size={isSmallScreen ? "medium" : "small"}
 						labelId="view-range-label"
 						label="查看范围"
 						value={viewRange}
@@ -1279,8 +1272,6 @@ const Community = () => {
 							setViewRange(event.target.value);
 							communityParams.viewRange = event.target.value;
 							updateCommunityParams();
-							pageNumberNew.current = 0;
-							pageNumberCurrent.current = 0;
 						}}
 					>
 						<MenuItem value="get-all">所有人</MenuItem>
@@ -1301,10 +1292,9 @@ const Community = () => {
 					className="my-masonry-grid"
 					columnClassName="my-masonry-grid_column"
 				>
-					{imageList.map((item, imageIndex) => (
+					{imageList.map((item) => (
 						<Grow in={true} key={item.imageId}>
 							<ButtonBase
-								ref={imageIndex === imageList.length - 1 ? lastImageRef : undefined}
 								sx={{borderRadius: "15px", m: 0.5}}
 								onClick={() => {
 									setImagePreviewData(item);
@@ -1363,6 +1353,9 @@ const Community = () => {
 						</Grow>
 					))}
 				</Masonry>
+				<Box ref={loadMoreRef} width="100%">
+					<LoadMoreIndicator isLoading={isLoading} isFetching={isFetching}/>
+				</Box>
 				<Dialog
 					open={showImagePreview}
 					onClose={() => setShowImagePreview(false)}
