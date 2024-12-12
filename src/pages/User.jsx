@@ -33,13 +33,18 @@ import {
 	Block,
 	BlockSharp,
 	EditOutlined,
+	Female,
+	HowToReg,
 	MailOutlined,
+	Male,
 	PersonAdd,
 	PersonAddOutlined,
 	PersonOffOutlined,
 	PersonOutlined,
+	QuestionMark,
 	Restore,
 	SwapHoriz,
+	Transgender,
 	Upload,
 	VerifiedOutlined
 } from "@mui/icons-material";
@@ -406,6 +411,25 @@ const doFollow = (username, setIsFollowing) => {
 
 const LEVEL_THRESHOLDS = [0, 50, 300, 1000, 3650, 10000, 50000, 350000, 1e9];
 
+const GENDERS = [
+	{name: "未知", icon: <QuestionMark color="action"/>},
+	{name: "男", icon: <Male sx={{color: "#5bcefa"}}/>},
+	{name: "女", icon: <Female sx={{color: "#f5a9b8"}}/>},
+	{name: "男の娘", icon: <Male sx={{color: "#5bcefa"}}/>},
+	{name: "假小子", icon: <Female sx={{color: "#f5a9b8"}}/>},
+	{name: "Futanari", icon: <Female sx={{color: "#f5a9b8"}}/>},
+	{name: "MtF", icon: <Transgender sx={{color: "#f5a9b8"}}/>},
+	{name: "MtX", icon: <Transgender sx={{color: "#f5a9b8"}}/>},
+	{name: "FtM", icon: <Transgender sx={{color: "#5bcefa"}}/>},
+	{name: "FtX", icon: <Transgender sx={{color: "#5bcefa"}}/>},
+	{name: "Non-binary", icon: <Transgender color="action"/>},
+	{name: "无", icon: <QuestionMark color="action"/>},
+	{name: "汉堡王", icon: <QuestionMark color="action"/>},
+	{name: "西瓜霜", icon: <QuestionMark color="action"/>},
+	{name: "北洋军阀", icon: <QuestionMark color="action"/>},
+	{name: "其它", icon: <QuestionMark color="action"/>},
+];
+
 const UserPage = memo(function UserPage({username}) {
 	const {clientUser, setClientUser} = useClientUser();
 	const {tab} = useParams();
@@ -658,10 +682,20 @@ const UserPage = memo(function UserPage({username}) {
 							)}
 						</Grid>
 					</Grid>
-					<Typography fontSize={14} color="text.secondary">
-						注册于{convertDateToLocaleDateString(data.registrationTime)}<br/>
-						性别：{data.gender}
-					</Typography>
+					<Grid container direction="column" gap={0.25}>
+						<Grid container alignItems="center" gap={0.5}>
+							{GENDERS.find(gender => gender.name === data.gender)?.icon}
+							<Typography fontSize={14} color="textSecondary">
+								{data.gender}
+							</Typography>
+						</Grid>
+						<Grid container alignItems="center" gap={0.5}>
+							<HowToReg color="action"/>
+							<Typography fontSize={14} color="textSecondary">
+								注册于{convertDateToLocaleDateString(data.registrationTime)}
+							</Typography>
+						</Grid>
+					</Grid>
 					<Box sx={{fontSize: 15, maxWidth: "100%"}}>
 						<ChatMarkdown useMarkdown={true}>{data["introduction"]}</ChatMarkdown>
 					</Box>
@@ -696,7 +730,6 @@ const UserPage = memo(function UserPage({username}) {
 							"Content-Type": "application/json",
 						},
 					}).then(res => {
-						enqueueSnackbar(res.data.content, {variant: res.data.status === 1 ? "success" : "error"});
 						if (res.data.status === 1) {
 							refetch();
 						}
@@ -724,22 +757,16 @@ const UserPage = memo(function UserPage({username}) {
 								defaultValue={data["gender"]}
 								name="gender"
 							>
-								<MenuItem value="未知">未知</MenuItem>
-								<MenuItem value="男">男</MenuItem>
-								<MenuItem value="女">女</MenuItem>
-								<MenuItem value="男の娘">男の娘</MenuItem>
-								<MenuItem value="假小子">假小子</MenuItem>
-								<MenuItem value="Futanari">Futanari</MenuItem>
-								<MenuItem value="MtF">MtF</MenuItem>
-								<MenuItem value="MtX">MtX</MenuItem>
-								<MenuItem value="FtM">FtM</MenuItem>
-								<MenuItem value="FtX">FtX</MenuItem>
-								<MenuItem value="Non-binary">Non-binary</MenuItem>
-								<MenuItem value="无">无</MenuItem>
-								<MenuItem value="汉堡王">汉堡王</MenuItem>
-								<MenuItem value="西瓜霜">西瓜霜</MenuItem>
-								<MenuItem value="北洋军阀">北洋军阀</MenuItem>
-								<MenuItem value="其它">其它</MenuItem>
+								{GENDERS.map(gender => (
+									<MenuItem key={gender.name} value={gender.name} sx={{pl: 1.25, height: 40}}>
+										<Grid container alignItems="center" gap={1}>
+											{gender.icon}
+											<Typography>
+												{gender.name}
+											</Typography>
+										</Grid>
+									</MenuItem>
+								))}
 							</Select>
 						</FormControl>
 					</Grid>
