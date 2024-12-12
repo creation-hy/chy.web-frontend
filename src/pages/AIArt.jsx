@@ -147,7 +147,7 @@ const MyRequests = () => {
 	}, [data]);
 	
 	if (!requestList) {
-		return <LoadMoreIndicator isLoading={false} isFetching={true}/>;
+		return <LoadMoreIndicator isFetching={true} sx={{mt: 2}}/>;
 	}
 	
 	return (
@@ -260,7 +260,7 @@ const GeneratedResults = () => {
 	const contextMenuTimeout = useRef(null);
 	const isLongPress = useRef(false);
 	
-	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
+	const {data, fetchNextPage, isFetching, hasNextPage} = useInfiniteQuery({
 		queryKey: ["ai-art", "work"],
 		queryFn: ({pageParam}) => axios.get(`/api/ai-art/work/${pageParam}`).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
@@ -318,7 +318,7 @@ const GeneratedResults = () => {
 	const toggleIsBusy = useRef(debounce(isBusy => setIsBusy(isBusy), 100));
 	
 	if (!imageList) {
-		return <LoadMoreIndicator isLoading={false} isFetching={true}/>;
+		return <LoadMoreIndicator isFetching={true} sx={{mt: 2}}/>;
 	}
 	
 	if (imageList.length === 0) {
@@ -462,8 +462,8 @@ const GeneratedResults = () => {
 					</Grow>
 				))}
 			</Masonry>
-			<Box ref={loadMoreRef}>
-				<LoadMoreIndicator isLoading={isLoading} isFetching={isFetching}/>
+			<Box ref={loadMoreRef} sx={{mt: 2, mb: -1}}>
+				<LoadMoreIndicator isFetching={isFetching}/>
 			</Box>
 			<Backdrop open={isBusy} sx={{zIndex: 8964}}>
 				<CircularProgress size={50}/>
@@ -1207,7 +1207,7 @@ const Community = () => {
 	const [hoveredImage, setHoveredImage] = useState(null);
 	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("lg"));
 	
-	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
+	const {data, fetchNextPage, isFetching, hasNextPage} = useInfiniteQuery({
 		queryKey: ["ai-art", "community", viewRange, sortMethod],
 		queryFn: ({pageParam}) => axios.get(`/api/ai-art/community/${viewRange}/${sortMethod}/${pageParam}`).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
@@ -1238,7 +1238,7 @@ const Community = () => {
 	}, [workId]);
 	
 	if (!imageList) {
-		return <LoadMoreIndicator isLoading={false} isFetching={true}/>;
+		return <LoadMoreIndicator isFetching={true} sx={{mt: 2}}/>;
 	}
 	
 	return (
@@ -1353,8 +1353,8 @@ const Community = () => {
 						</Grow>
 					))}
 				</Masonry>
-				<Box ref={loadMoreRef} width="100%">
-					<LoadMoreIndicator isLoading={isLoading} isFetching={isFetching}/>
+				<Box ref={loadMoreRef} width="100%" sx={{mt: 2, mb: -1}}>
+					<LoadMoreIndicator isFetching={isFetching}/>
 				</Box>
 				<Dialog
 					open={showImagePreview}

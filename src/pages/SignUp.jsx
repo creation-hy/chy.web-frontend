@@ -159,6 +159,7 @@ export default function SignUp() {
 			>
 				<FormControl>
 					<TextField
+						autoFocus
 						autoComplete="username"
 						name="username"
 						required

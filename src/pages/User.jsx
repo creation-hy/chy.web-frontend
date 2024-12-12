@@ -94,65 +94,63 @@ const News = memo(function News({username, displayName, avatarVersion}) {
 	}, [fetchNextPage, hasNextPage, isFetching]);
 	
 	return (
-		<Box sx={{mt: -0.5}}>
-			{data?.pages?.map((page, pageIndex) => (
-				<Fragment key={pageIndex}>
-					{page.map((chat) => (
-						<Grid
-							container
-							key={chat.id}
-							justifyContent='flex-start'
-							alignItems="flex-start"
-							sx={{my: 3}}
-						>
-							<IconButton sx={{mr: 1.5, p: 0}}>
-								<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
-							</IconButton>
-							<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-start' spacing={0.7}>
-								{chat.type === 1 ? (
-									<Paper
-										elevation={3}
-										sx={{
-											padding: '8px 11px',
-											px: chat.type === 1 ? undefined : 0,
-											pt: chat.type === 1 ? undefined : 0,
-											borderRadius: '10px',
-											wordBreak: 'break-word',
-											maxWidth: "100%",
-										}}
-									>
-										<Box sx={{fontSize: 15}}>
-											<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
-										</Box>
-										<Typography variant="caption" display="block" textAlign="right" mt={1} mr={chat.type === 1 ? undefined : "11px"}>
-											{convertDateToLocaleAbsoluteString(chat.time)}
-										</Typography>
-									</Paper>
-								) : (
-									<MessageFile
-										url={chat.file.url}
-										fileName={chat.file.fileName}
-										fileSize={chat.file.fileSize}
-										deleted={chat.file.deleted}
-										onContextMenu={(event) => event.preventDefault()}
-									/>
-								)}
-								{chat.quote != null &&
-									<Chip
-										variant="outlined"
-										avatar={<UserAvatar username={chat.quote.username} displayName={chat.quote.displayName}
-										                    avatarVersion={chat.quote.avatarVersion}/>}
-										label={chat.quote.displayName + ": " + chat.quote.content}
-										clickable
-									/>
-								}
-							</Grid>
+		<Box sx={{mt: 2}}>
+			<Box sx={{mt: -0.5}}>
+				{data?.pages.map(page => page.map(chat => (
+					<Grid
+						container
+						key={chat.id}
+						justifyContent='flex-start'
+						alignItems="flex-start"
+						sx={{my: 3}}
+					>
+						<IconButton sx={{mr: 1.5, p: 0}}>
+							<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
+						</IconButton>
+						<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems='flex-start' spacing={0.7}>
+							{chat.type === 1 ? (
+								<Paper
+									elevation={3}
+									sx={{
+										padding: '8px 11px',
+										px: chat.type === 1 ? undefined : 0,
+										pt: chat.type === 1 ? undefined : 0,
+										borderRadius: '10px',
+										wordBreak: 'break-word',
+										maxWidth: "100%",
+									}}
+								>
+									<Box sx={{fontSize: 15}}>
+										<ChatMarkdown useMarkdown={chat.useMarkdown}>{chat.content}</ChatMarkdown>
+									</Box>
+									<Typography variant="caption" display="block" textAlign="right" mt={1} mr={chat.type === 1 ? undefined : "11px"}>
+										{convertDateToLocaleAbsoluteString(chat.time)}
+									</Typography>
+								</Paper>
+							) : (
+								<MessageFile
+									url={chat.file.url}
+									fileName={chat.file.fileName}
+									fileSize={chat.file.fileSize}
+									deleted={chat.file.deleted}
+									onContextMenu={(event) => event.preventDefault()}
+								/>
+							)}
+							{chat.quote != null &&
+								<Chip
+									variant="outlined"
+									avatar={<UserAvatar username={chat.quote.username} displayName={chat.quote.displayName}
+									                    avatarVersion={chat.quote.avatarVersion}/>}
+									label={chat.quote.displayName + ": " + chat.quote.content}
+									clickable
+								/>
+							}
 						</Grid>
-					))}
-				</Fragment>
-			))}
-			<Box ref={loadMoreRef}>
-				<LoadMoreIndicator isLoading={isLoading} isFetching={isFetching}/>
+					</Grid>
+				)))}
+			</Box>
+			<Box ref={loadMoreRef} sx={{pt: 1.5}}>
+				<LoadMoreIndicator isFetching={isFetching}/>
 			</Box>
 		</Box>
 	);
@@ -312,7 +310,7 @@ UserItem.propTypes = {
 }
 
 const Follows = memo(function Follows({username, type}) {
-	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
+	const {data, fetchNextPage, isFetching, hasNextPage} = useInfiniteQuery({
 		queryKey: ["user", username, type],
 		queryFn: ({pageParam}) => axios.get(`/api/user/${username}/${type}/${pageParam}`).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
@@ -334,34 +332,36 @@ const Follows = memo(function Follows({username, type}) {
 	}, [fetchNextPage, hasNextPage, isFetching]);
 	
 	return (
-		<List sx={{pt: 0, mt: -1}}>
-			{data?.pages?.map((page, pageIndex) => (
-				<Fragment key={pageIndex}>
-					{page.map((user) => (
-						<Fragment key={user.username}>
-							<Box sx={{px: 2, py: 2.5}}>
-								<UserItem
-									username={user.username}
-									displayName={user.displayName}
-									avatarVersion={user.avatarVersion}
-									badge={user.badge}
-									introduction={user.introduction}
-									isFollowing={user.isFollowing}
-									isFollowedBy={user.isFollowedBy}
-									isBlocking={user.isBlocking}
-									showBlockButton={type === "blocking"}
-									queryKey={["user", username, type]}
-								/>
-							</Box>
-							<Divider/>
-						</Fragment>
-					))}
-				</Fragment>
-			))}
-			<Box ref={loadMoreRef}>
-				<LoadMoreIndicator isLoading={isLoading} isFetching={isFetching}/>
+		<>
+			<List sx={{pt: 0, mt: -1}}>
+				{data?.pages?.map((page, pageIndex) => (
+					<Fragment key={pageIndex}>
+						{page.map((user) => (
+							<Fragment key={user.username}>
+								<Box sx={{px: 2, py: 2.5}}>
+									<UserItem
+										username={user.username}
+										displayName={user.displayName}
+										avatarVersion={user.avatarVersion}
+										badge={user.badge}
+										introduction={user.introduction}
+										isFollowing={user.isFollowing}
+										isFollowedBy={user.isFollowedBy}
+										isBlocking={user.isBlocking}
+										showBlockButton={type === "blocking"}
+										queryKey={["user", username, type]}
+									/>
+								</Box>
+								<Divider/>
+							</Fragment>
+						))}
+					</Fragment>
+				))}
+			</List>
+			<Box ref={loadMoreRef} sx={{pt: !data || data.pages.flat().length === 0 ? 2 : 1}}>
+				<LoadMoreIndicator isFetching={isFetching}/>
 			</Box>
-		</List>
+		</>
 	);
 });
 
