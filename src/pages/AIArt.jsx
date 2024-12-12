@@ -317,11 +317,7 @@ const GeneratedResults = () => {
 	
 	const toggleIsBusy = useRef(debounce(isBusy => setIsBusy(isBusy), 100));
 	
-	if (!imageList) {
-		return <LoadMoreIndicator isFetching={true} sx={{mt: 2}}/>;
-	}
-	
-	if (imageList.length === 0) {
+	if (imageList?.length === 0) {
 		return <Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>;
 	}
 	
@@ -337,7 +333,7 @@ const GeneratedResults = () => {
 				className="my-masonry-grid"
 				columnClassName="my-masonry-grid_column"
 			>
-				{imageList.map((item) => (
+				{imageList?.map((item) => (
 					<Grow in={true} key={item.imageId}>
 						<Box
 							sx={{position: "relative"}}
@@ -494,7 +490,7 @@ const GeneratedResults = () => {
 					<IconButton
 						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
 						onClick={() => {
-							if (selectedImages.size !== imageList.length) {
+							if (selectedImages.size !== imageList?.length) {
 								setSelectedImages(new Set(imageList.map((item) => item.imageId)));
 							} else {
 								setSelectedImages(new Set());
@@ -502,7 +498,7 @@ const GeneratedResults = () => {
 						}}
 					>
 						<SelectAllOutlined fontSize="large"/>
-						<Typography fontSize={14}>{selectedImages.size === imageList.length && "取消"}全选</Typography>
+						<Typography fontSize={14}>{selectedImages.size === imageList?.length && "取消"}全选</Typography>
 					</IconButton>
 					<IconButton
 						sx={{flexDirection: "column", borderRadius: "50%", width: 100, height: 100, gap: 0.5}}
@@ -904,7 +900,7 @@ const GeneratedResults = () => {
 										pages: data?.pages.map(page => page.filter(item => item.imageId !== deletingImageId)),
 										pageParams: data.pageParams,
 									}));
-									``
+									
 									setIsDeleting(false);
 									setShowDeletingDialog(false);
 									setShowImagePreview(false);
@@ -1237,10 +1233,6 @@ const Community = () => {
 	useEffect(() => {
 	}, [workId]);
 	
-	if (!imageList) {
-		return <LoadMoreIndicator isFetching={true} sx={{mt: 2}}/>;
-	}
-	
 	return (
 		<Grid container direction="column" alignItems="flex-end" wrap="nowrap" width="100%">
 			<Grid container spacing={1} sx={{mt: isSmallScreen ? 0 : -8, mb: 1, mr: 1}}>
@@ -1279,7 +1271,7 @@ const Community = () => {
 					</Select>
 				</FormControl>
 			</Grid>
-			{imageList.length === 0 ? (
+			{imageList?.length === 0 ? (
 				<Typography alignSelf="center" sx={{mt: 2}} color="text.secondary">这里还空空如也呢~</Typography>
 			) : (<>
 				<Masonry
@@ -1292,7 +1284,7 @@ const Community = () => {
 					className="my-masonry-grid"
 					columnClassName="my-masonry-grid_column"
 				>
-					{imageList.map((item) => (
+					{imageList?.map((item) => (
 						<Grow in={true} key={item.imageId}>
 							<ButtonBase
 								sx={{borderRadius: "15px", m: 0.5}}
