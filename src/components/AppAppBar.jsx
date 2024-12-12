@@ -78,6 +78,11 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 		localStorage.setItem("myInformation", JSON.stringify(myInformation));
 	}
 	
+	const checkIsToday = (date) => {
+		const options = {timeZone: "Asia/Shanghai"};
+		return new Date(date).toLocaleDateString("zh-CN", options) === new Date().toLocaleDateString("zh-CN", options);
+	};
+	
 	return (
 		<>
 			<Box sx={{mt: 2.5, mb: 1}}>
@@ -264,29 +269,36 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 				>
 					{colorMode === "auto" ? <AutoAwesome/> : (colorMode === "light" ? <LightMode/> : <DarkMode/>)}
 				</IconButton>
-				{(isClientUserLoading && myName || !isClientUserLoading && clientUser) && <IconButton
-					color={isClientUserLoading && myInformation.lastCheckInTime && new Date(myInformation.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ||
-					clientUser && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ? "success" : "warning"}
-					onClick={() => {
-						axios.post("/api/account/check-in").then(res => {
-							if (res.data.status === 1) {
-								enqueueSnackbar("签到成功", {variant: "success"});
-								setClientUser(clientUser => ({
-									...clientUser,
-									lastCheckInTime: new Date(),
-								}));
-							} else if (res.data.status === 2) {
-								enqueueSnackbar("今天已经签过到了喵～", {variant: "error"});
-							} else {
-								enqueueSnackbar("登录状态错误", {variant: "error"});
-							}
-						});
-					}}
-				>
-					{isClientUserLoading && myInformation.lastCheckInTime && new Date(myInformation.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ||
-					clientUser && clientUser.lastCheckInTime && new Date(clientUser.lastCheckInTime).toLocaleDateString() === new Date().toLocaleDateString() ?
-						<EventAvailable/> : <CalendarMonth/>}
-				</IconButton>}
+				{(isClientUserLoading && myName || !isClientUserLoading && clientUser) && (
+					<IconButton
+						color={
+							isClientUserLoading && myInformation.lastCheckInTime && checkIsToday(myInformation.lastCheckInTime) ||
+							clientUser && clientUser.lastCheckInTime && checkIsToday(clientUser.lastCheckInTime) ? "success" : "warning"
+						}
+						onClick={() => {
+							axios.post("/api/account/check-in").then(res => {
+								if (res.data.status === 1) {
+									enqueueSnackbar("签到成功", {variant: "success"});
+									setClientUser(clientUser => ({
+										...clientUser,
+										lastCheckInTime: new Date(),
+									}));
+								} else if (res.data.status === 2) {
+									enqueueSnackbar("今天已经签过到了喵～", {variant: "error"});
+								} else {
+									enqueueSnackbar("登录状态错误", {variant: "error"});
+								}
+							});
+						}}
+					>
+						{isClientUserLoading && myInformation.lastCheckInTime && checkIsToday(myInformation.lastCheckInTime) ||
+						clientUser && clientUser.lastCheckInTime && checkIsToday(clientUser.lastCheckInTime) ? (
+							<EventAvailable/>
+						) : (
+							<CalendarMonth/>
+						)}
+					</IconButton>
+				)}
 			</Grid>
 		</>
 	);
