@@ -7,13 +7,7 @@ import {StrictMode} from "react";
 
 createRoot(document.getElementById('root')).render(
 	<StrictMode>
-		<QueryClientProvider client={new QueryClient({
-			defaultOptions: {
-				queries: {
-					staleTime: 60 * 1000,
-				},
-			},
-		})}>
+		<QueryClientProvider client={new QueryClient()}>
 			<ColorModeProvider>
 				<App/>
 			</ColorModeProvider>
