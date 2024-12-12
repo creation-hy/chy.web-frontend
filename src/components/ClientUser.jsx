@@ -1,4 +1,4 @@
-import {createContext, useContext, useState} from "react";
+import {createContext, useContext, useLayoutEffect, useState} from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import {useLocation, useNavigate} from "react-router";
@@ -14,36 +14,38 @@ export const ClientUserProvider = ({children}) => {
 	
 	const [clientUser, setClientUser] = useState(null);
 	
-	const {isFetched, isError} = useQuery({
+	const {data, error, isFetched} = useQuery({
 		queryKey: ["accountCheck"],
 		queryFn: () => (
-			axios.get("/api/account/check")
-				.then(res => {
-					setClientUser(res.data.user);
-					localStorage.setItem("user_id", res.data.user?.id);
-					localStorage.setItem("username", res.data.user?.username);
-					localStorage.setItem("auth_token", res.data.token);
-					return res.data;
-				})
-				.catch((error) => {
-					if (error.status === 403) {
-						setClientUser(null);
-						localStorage.removeItem("user_id");
-						localStorage.removeItem("username");
-						localStorage.removeItem("auth_token");
-						if (window.location.pathname !== "/login") {
-							navigate("/register");
-						}
-					}
-					throw error;
-				})
+			axios.get("/api/account/check").then(res => res.data)
 		),
 		retry: false,
 	});
 	
+	useLayoutEffect(() => {
+		if (error?.status === 403) {
+			setClientUser(null);
+			localStorage.removeItem("user_id");
+			localStorage.removeItem("username");
+			localStorage.removeItem("auth_token");
+			if (window.location.pathname !== "/login") {
+				navigate("/register");
+			}
+		}
+	}, [error, navigate]);
+	
+	useLayoutEffect(() => {
+		if (data) {
+			setClientUser(data.user);
+			localStorage.setItem("user_id", data.user?.id);
+			localStorage.setItem("username", data.user?.username);
+			localStorage.setItem("auth_token", data.token);
+		}
+	}, [data]);
+	
 	return (
 		<ClientUserContext.Provider value={{clientUser, setClientUser, isClientUserLoading: !isFetched}}>
-			<Dialog open={isError && location.pathname !== "/register" && location.pathname !== "/login"}>
+			<Dialog open={error?.status === 403 && location.pathname !== "/register" && location.pathname !== "/login"}>
 				<SignUp/>
 			</Dialog>
 			{children}
