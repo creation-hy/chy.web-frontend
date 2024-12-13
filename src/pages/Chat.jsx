@@ -80,7 +80,7 @@ import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
 import {LoadingButton} from "@mui/lab";
 import {isIOS13, isMobile} from "react-device-detect";
-import {useInfiniteQuery} from "@tanstack/react-query";
+import {useInfiniteQuery, useQueryClient} from "@tanstack/react-query";
 import {LoadMoreIndicator} from "src/components/LoadMoreIndicator.jsx";
 
 const myname = localStorage.getItem("username");
@@ -1392,12 +1392,17 @@ export const ChatNotificationClient = memo(function ChatNotificationClient() {
 	return null;
 });
 
+const PAGE_SIZE = 20;
+
 export default function Chat() {
 	const {username} = useParams();
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	
-	const [users, setUsers] = useState(null);
+	const initialUsername = useRef(username);
+	
+	const [users, setUsersState] = useState(null);
 	const [currentUser, setCurrentUser] = useState(null);
 	const [currentUserDisplayName, setCurrentUserDisplayName] = useState(null);
 	const [currentUserBadge, setCurrentUserBadge] = useState(null);
@@ -1410,7 +1415,6 @@ export default function Chat() {
 	const [matchList, setMatchList] = useState(null);
 	const [abortController, setAbortController] = useState(null);
 	const [showScrollTop, setShowScrollTop] = useState(false);
-	const [contactsVersion, setContactsVersion] = useState(1);
 	
 	const [isDragging, setIsDragging] = useState(false);
 	const sendFiles = useRef(null);
@@ -1429,6 +1433,32 @@ export default function Chat() {
 	const messagePageNumberNew = useRef(0);
 	const lastMessageRef = useRef(null);
 	
+	const setUsers = useCallback((param) => {
+		setUsersState(users => {
+			const newUsers = param instanceof Function ? param(users) : param;
+			const pages = [];
+			
+			while (newUsers?.length > PAGE_SIZE) {
+				pages.push(newUsers.splice(0, PAGE_SIZE));
+			}
+			
+			if (newUsers?.length > 0) {
+				if (pages.length > 0) {
+					pages[0] = pages[0].concat(newUsers);
+				} else {
+					pages.push(newUsers);
+				}
+			}
+			
+			queryClient.setQueryData(["chat", "contacts", initialUsername.current], data => ({
+				pages: pages,
+				pageParams: data?.pageParams,
+			}));
+			
+			return newUsers;
+		});
+	}, [queryClient]);
+	
 	const userFindPageNumberCurrent = useRef(0);
 	const userFindPageNumberNew = useRef(0);
 	const lastUserFindingRef = useRef(null);
@@ -1443,25 +1473,36 @@ export default function Chat() {
 		}
 	}));
 	
-	const contactPageNumberCurrent = useRef(0);
-	const contactPageNumberNew = useRef(0);
-	const lastContactRef = useRef(null);
-	const contactFetchSuccess = useRef(true);
-	const contactPageObserver = useRef(new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && contactPageNumberNew.current === contactPageNumberCurrent.current) {
-			contactPageNumberNew.current = contactPageNumberCurrent.current + 1;
-			const fetchedPageNumber = contactPageNumberNew.current;
-			axios.get(`/api/chat/contacts/${fetchedPageNumber}`).then(res => {
-				if (res.data.result.length > 0 && fetchedPageNumber === contactPageNumberNew.current) {
-					contactFetchSuccess.current = true;
-					setUsers(users => {
-						usersVar = [...users, ...res.data.result];
-						return usersVar;
-					});
-				}
-			});
+	const contactsData = useInfiniteQuery({
+		queryKey: ["chat", "contacts", initialUsername],
+		queryFn: ({pageParam}) => axios.get(`/api/chat/contacts/${pageParam}`,
+			{params: {extraContactName: initialUsername.current}}).then(res => res.data?.result ?? []),
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
+		staleTime: 60 * 1000,
+		refetchOnMount: "always",
+	});
+	
+	const contactsLoadMoreRef = useRef(null);
+	
+	useEffect(() => {
+		const pageLoadingObserver = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting && !contactsData.isFetching && contactsData.hasNextPage) {
+				contactsData.fetchNextPage();
+			}
+		}, {
+			rootMargin: "200px",
+		});
+		if (contactsLoadMoreRef.current) {
+			pageLoadingObserver.observe(contactsLoadMoreRef.current);
 		}
-	}));
+		return () => pageLoadingObserver.disconnect();
+	}, [contactsData, contactsData.fetchNextPage, contactsData.hasNextPage, contactsData.isFetching]);
+	
+	useLayoutEffect(() => {
+		usersVar = contactsData.data?.pages?.flat();
+		setUsers(usersVar ? [...usersVar] : null);
+	}, [contactsData.data?.pages, setUsers]);
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
@@ -1572,7 +1613,7 @@ export default function Chat() {
 			
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
-	}, [matchList, messageCardScrollTo, navigate, setClientUser]);
+	}, [matchList, messageCardScrollTo, navigate, setClientUser, setUsers]);
 	
 	const messageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && messagePageNumberNew.current === messagePageNumberCurrent.current) {
@@ -1581,29 +1622,15 @@ export default function Chat() {
 		}
 	}), [getMessages]);
 	
-	const [isContactsLoading, setIsContactsLoading] = useState(true);
-	
-	useEffect(() => {
-		axios.get("/api/chat/contacts/0", {params: {extraContactName: username}}).then(res => {
-			contactPageNumberNew.current = 0;
-			contactPageNumberCurrent.current = 0;
-			contactFetchSuccess.current = true;
-			setIsContactsLoading(false);
-			
-			usersVar = res.data.result;
-			setUsers([...usersVar]);
-		});
-	}, [contactsVersion]);
-	
 	useLayoutEffect(() => {
-		if (!isContactsLoading) {
+		if (!contactsData.isLoading) {
 			currentUserVar = null;
 			setCurrentUser(null);
 			if (username) {
 				getMessages(username, 0, true);
 			}
 		}
-	}, [getMessages, isContactsLoading, username]);
+	}, [getMessages, contactsData.isLoading, username]);
 	
 	useEffect(() => {
 		return () => {
@@ -1653,7 +1680,7 @@ export default function Chat() {
 		} else {
 			enqueueSnackbar("消息长度不能超过 2000 字", {variant: "error"});
 		}
-	}, [quote, isCurrentUserMessageAllowed]);
+	}, [isCurrentUserMessageAllowed, setUsers, quote?.id]);
 	
 	const updateUserItem = useCallback((username, displayName, avatarVersion, badge, content, time, isCurrent, sender) => {
 		const userItem = usersVar.find(item => item.username === username);
@@ -1689,7 +1716,7 @@ export default function Chat() {
 				newMessageCount: clientUser.newMessageCount + 1,
 			}));
 		}
-	}, [setClientUser]);
+	}, [setClientUser, setUsers]);
 	
 	const newMessage = useCallback((data) => {
 		axios.post("/api/chat/update-viewed", {target: currentUserVar}, {
@@ -1739,7 +1766,7 @@ export default function Chat() {
 			if (messagePageNumberNew.current === 0) {
 				getMessages(currentUserVar, 0, true);
 			}
-			setContactsVersion(version => version + 1);
+			contactsData.refetch();
 			disconnectErrorBarKey.current = null;
 		}
 		
@@ -1815,7 +1842,7 @@ export default function Chat() {
 			}
 			
 			if (data["isLatest"]) {
-				const userItem = usersVar.find(item => item.username === (data.sender === myname ? data.recipient : data.sender));
+				const userItem = usersVar.find(item => item.username === (data.sender === myname`` ? data.recipient : data.sender));
 				if (userItem) {
 					userItem.lastMessageText = "消息已撤回";
 					setUsers([...usersVar]);
@@ -1842,7 +1869,7 @@ export default function Chat() {
 				}
 			}
 		});
-	}, [getMessages, newMessage, updateUserItem]);
+	}, [contactsData, getMessages, newMessage, setUsers, updateUserItem]);
 	
 	useEffect(() => {
 		const stompConnect = () => {
@@ -1893,15 +1920,6 @@ export default function Chat() {
 			userFindingObserver.current.observe(lastUserFindingRef.current);
 		}
 	}, [matchList]);
-	
-	useEffect(() => {
-		if (!isContactsLoading && contactFetchSuccess.current && lastContactRef.current) {
-			contactPageNumberCurrent.current = contactPageNumberNew.current;
-			contactPageObserver.current.disconnect();
-			contactPageObserver.current.observe(lastContactRef.current);
-			contactFetchSuccess.current = false;
-		}
-	}, [users, isContactsLoading]);
 	
 	useLayoutEffect(() => {
 		if (!username) {
@@ -1984,7 +2002,7 @@ export default function Chat() {
 				/>
 				<Box sx={{overflowY: "auto"}}>
 					<List>
-						{users != null &&
+						{users != null && (
 							<UserItem
 								username="ChatRoomSystem"
 								displayName="公共"
@@ -1999,33 +2017,32 @@ export default function Chat() {
 								selected={currentUser === "ChatRoomSystem"}
 								isMessageAllowed={users.find(item => item.username === "ChatRoomSystem").isMessageAllowed}
 							/>
-						}
+						)}
 					</List>
 					<Divider/>
 					<Collapse in={!matchList}>
 						<List>
-							{users != null && users.map((user, userIndex) => (user.username !== "ChatRoomSystem" &&
-								<Box
+							{users != null && users.map(user => user.username !== "ChatRoomSystem" && (
+								<UserItem
 									key={user.username}
-									ref={userIndex === users.length - 1 ? lastContactRef : undefined}
-								>
-									<UserItem
-										username={user.username}
-										displayName={user.displayName}
-										displayNameString={user.displayName}
-										avatarVersion={user.avatarVersion}
-										badge={user.badge}
-										isOnline={user.isOnline}
-										newMessageCount={user.newMessageCount}
-										lastMessageTime={user.lastMessageTime}
-										lastMessageText={user.lastMessageText || "\u00A0"}
-										draft={user.draft}
-										selected={currentUser === user.username}
-										isMessageAllowed={user.isMessageAllowed}
-									/>
-								</Box>
+									username={user.username}
+									displayName={user.displayName}
+									displayNameString={user.displayName}
+									avatarVersion={user.avatarVersion}
+									badge={user.badge}
+									isOnline={user.isOnline}
+									newMessageCount={user.newMessageCount}
+									lastMessageTime={user.lastMessageTime}
+									lastMessageText={user.lastMessageText || "\u00A0"}
+									draft={user.draft}
+									selected={currentUser === user.username}
+									isMessageAllowed={user.isMessageAllowed}
+								/>
 							))}
 						</List>
+						<Box ref={contactsLoadMoreRef} sx={{pb: 1}}>
+							<LoadMoreIndicator isFetching={contactsData.isFetching}/>
+						</Box>
 					</Collapse>
 					{Boolean(matchList) && <List>
 						{matchList.map((user, userIndex) => {
