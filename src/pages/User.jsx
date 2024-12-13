@@ -448,20 +448,14 @@ const UserPage = memo(function UserPage({username}) {
 	}, [username]);
 	
 	const [tabValue, setTabValue] = useState(Math.max(tabs.indexOf(tab), 0));
-	const [followingCount, setFollowingCount] = useState(0);
-	const [followersCount, setFollowersCount] = useState(0);
 	
 	const [modifying, setModifying] = useState(false);
-	const [isFollowing, setIsFollowing] = useState(null);
-	const [isBlocking, setIsBlocking] = useState(null);
 	
 	const [isManagingBadges, setIsManagingBadges] = useState(false);
-	const [myBadge, setMyBadge] = useState(null);
 	
 	const [openAvatarModifyDialog, setOpenAvatarModifyDialog] = useState(false);
 	const [avatarProcessing, setAvatarProcessing] = useState(false);
 	
-	const [avatarVersion, setAvatarVersion] = useState(1);
 	const [showAvatarCropper, setShowAvatarCropper] = useState(false);
 	const [avatarSrc, setAvatarSrc] = useState();
 	const avatarCropper = useRef(null);
@@ -470,17 +464,6 @@ const UserPage = memo(function UserPage({username}) {
 		queryKey: ["user", username, "info"],
 		queryFn: () => axios.get(`/api/user/${username}/info`).then(res => res.data),
 	});
-	
-	useLayoutEffect(() => {
-		if (data && data.username) {
-			setFollowingCount(data.followingCount);
-			setFollowersCount(data.followerCount);
-			setIsFollowing(data.isFollowing);
-			setIsBlocking(data.isBlocking);
-			setAvatarVersion(data.avatarVersion);
-			setMyBadge(data.badge);
-		}
-	}, [data]);
 	
 	useLayoutEffect(() => {
 		setTabValue(Math.max(tabs.indexOf(tab), 0));
@@ -508,11 +491,11 @@ const UserPage = memo(function UserPage({username}) {
 								sx={{width: 100, height: 100}}
 							>
 								<UserAvatar username={data.username} displayName={data.displayName}
-								            avatarVersion={avatarVersion} width={100} height={100}/>
+								            avatarVersion={data.avatarVersion} width={100} height={100}/>
 							</IconButton>
 						) : (
 							<Badge
-								badgeContent={isBlocking ? <Block fontSize="large"/> : undefined}
+								badgeContent={data.isBlocking ? <Block fontSize="large"/> : undefined}
 								overlap="circular"
 								color="error"
 								anchorOrigin={{vertical: "bottom", horizontal: "right"}}
@@ -525,7 +508,7 @@ const UserPage = memo(function UserPage({username}) {
 								}}
 							>
 								<UserAvatar username={data.username} displayName={data.displayName}
-								            avatarVersion={avatarVersion} width={100} height={100}/>
+								            avatarVersion={data.avatarVersion} width={100} height={100}/>
 							</Badge>
 						)}
 						<input
@@ -586,16 +569,10 @@ const UserPage = memo(function UserPage({username}) {
 											if (res.data.status === 1) {
 												setOpenAvatarModifyDialog(false);
 												setAvatarProcessing(false);
-												
-												setAvatarVersion(version => {
-													const newVersion = -(Math.abs(version) + 1);
-													
-													setClientUser({
-														...clientUser,
-														avatarVersion: newVersion,
-													});
-													
-													return newVersion;
+												refetch();
+												setClientUser({
+													...clientUser,
+													avatarVersion: clientUser.avatarVersion + 1,
 												});
 											}
 										});
@@ -607,7 +584,7 @@ const UserPage = memo(function UserPage({username}) {
 						</Dialog>
 						<Grid container direction="column" justifyContent="center">
 							<Grid container alignItems="center" wrap="nowrap" maxWidth="100%">
-								<UsernameWithBadge username={data.displayName} badge={myBadge} fontSize={20} size={22}/>
+								<UsernameWithBadge username={data.displayName} badge={data.badge} fontSize={20} size={22}/>
 								<Box ml={1.5} mb={0.5} width="max-content" minWidth={60}>
 									<Grid container alignItems="center" justifyContent="space-between" gap={1} wrap={"nowrap"}>
 										<Typography fontWeight={"bold"} fontSize={14}>
@@ -644,10 +621,10 @@ const UserPage = memo(function UserPage({username}) {
 								</Box>
 							) : (
 								<Box flexShrink={0}>
-									{isFollowing == null ? null : (isFollowing ? (
+									{data.isFollowing == null ? null : (data.isFollowing ? (
 										<Tooltip title="取消关注">
 											<IconButton onClick={() => {
-												doFollow(data.username, setIsFollowing).then(() => {
+												doFollow(data.username, refetch).then(() => {
 													refetch();
 													queryClient.invalidateQueries({queryKey: ["user", data.username, "followers"]});
 												});
@@ -658,7 +635,7 @@ const UserPage = memo(function UserPage({username}) {
 									) : (
 										<Tooltip title="关注">
 											<IconButton onClick={() => {
-												doFollow(data.username, setIsFollowing).then(() => {
+												doFollow(data.username, refetch).then(() => {
 													refetch();
 													queryClient.invalidateQueries({queryKey: ["user", data.username, "followers"]});
 												});
@@ -672,19 +649,19 @@ const UserPage = memo(function UserPage({username}) {
 											<MailOutlined/>
 										</NavigateIconButton>
 									</Tooltip>
-									<Tooltip title={isBlocking ? "取消屏蔽" : "屏蔽"}>
+									<Tooltip title={data.isBlocking ? "取消屏蔽" : "屏蔽"}>
 										<IconButton onClick={() => {
 											axios.post(`/api/user/${data.username}/block`).then(res => {
 												if (res.data.status === 1) {
-													setIsBlocking(true);
+													refetch();
 												} else if (res.data.status === 2) {
-													setIsBlocking(false);
+													refetch();
 												} else {
 													enqueueSnackbar(res.data.content, {variant: "error"});
 												}
 											});
 										}}>
-											<Block color={isBlocking ? "inherit" : "error"}/>
+											<Block color={data.isBlocking ? "inherit" : "error"}/>
 										</IconButton>
 									</Tooltip>
 								</Box>
@@ -719,12 +696,12 @@ const UserPage = memo(function UserPage({username}) {
 					}}
 				>
 					<Tab label="动态"/>
-					<Tab label={`关注(${followingCount})`}/>
-					<Tab label={`粉丝(${followersCount})`}/>
+					<Tab label={`关注(${data.followingCount})`}/>
+					<Tab label={`粉丝(${data.followerCount})`}/>
 					{username === myname && <Tab label={`屏蔽(${data.blockingCount})`}/>}
 				</Tabs>
 			</Box>
-			<TabPanel value={tabValue} username={data.username} displayName={data.displayName} avatarVersion={avatarVersion}/>
+			<TabPanel value={tabValue} username={data.username} displayName={data.displayName} avatarVersion={data.avatarVersion}/>
 			<Dialog
 				open={modifying}
 				onClose={() => setModifying(false)}
@@ -806,26 +783,26 @@ const UserPage = memo(function UserPage({username}) {
 								size={isSmallScreen ? 6 : 4}
 								sx={{
 									height: 100,
-									border: myBadge === item.id ? 2 : 0,
+									border: data.badge === item.id ? 2 : 0,
 									borderColor: theme => theme.palette.primary.main,
 									borderRadius: 1,
 								}}
 							>
 								<ButtonBase
 									sx={{
-										borderRadius: myBadge === item.id ? 0 : 1,
+										borderRadius: data.badge === item.id ? 0 : 1,
 										width: "100%",
 										height: "100%",
 									}}
 									onClick={() => {
-										if (data.level >= item.levelRequirement && myBadge !== item.id) {
+										if (data.level >= item.levelRequirement && data.badge !== item.id) {
 											axios.post("/api/account/badge/modify", {badge: item.id}, {
 												headers: {
 													"Content-Type": "application/json",
 												},
 											}).then(res => {
 												if (res.data.status === 1) {
-													setMyBadge(item.id);
+													refetch();
 													setClientUser(clientUser => ({
 														...clientUser,
 														badge: item.id,
@@ -889,16 +866,10 @@ const UserPage = memo(function UserPage({username}) {
 									if (res.data.status === 1) {
 										setOpenAvatarModifyDialog(false);
 										setAvatarProcessing(false);
-										
-										setAvatarVersion(version => {
-											const newVersion = -(Math.abs(version) + 1);
-											
-											setClientUser({
-												...clientUser,
-												avatarVersion: newVersion,
-											});
-											
-											return newVersion;
+										refetch();
+										setClientUser({
+											...clientUser,
+											avatarVersion: clientUser.avatarVersion + 1,
 										});
 									}
 								}, 2000);
