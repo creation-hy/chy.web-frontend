@@ -80,6 +80,8 @@ import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
 import {LoadingButton} from "@mui/lab";
 import {isIOS13, isMobile} from "react-device-detect";
+import {useInfiniteQuery} from "@tanstack/react-query";
+import {LoadMoreIndicator} from "src/components/LoadMoreIndicator.jsx";
 
 const myname = localStorage.getItem("username");
 
@@ -258,9 +260,9 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 						display: "grid",
 						borderRadius: 0.5,
 					}}
-					onClick={!disableMediaEvent && (() => {
+					onClick={disableMediaEvent ? undefined : () => {
 						setShowImagePreview(true);
-					})}
+					}}
 					disableRipple={disableMediaEvent}
 				>
 					<img
@@ -368,13 +370,13 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 			<ListItemButton
 				disableTouchRipple={disableMediaEvent}
 				sx={{borderRadius: "8px"}}
-				onClick={!disableMediaEvent && (() => {
+				onClick={disableMediaEvent ? undefined : () => {
 					if (!deleted) {
 						window.open(url);
 					} else {
 						setShowBrokenDialog(true);
 					}
-				})}
+				}}
 			>
 				<Grid container gap={1.5} wrap="nowrap" alignItems="center">
 					{!deleted ? <InsertDriveFileOutlined fontSize="large"/> : <BrokenImageOutlined fontSize="large"/>}
@@ -712,7 +714,8 @@ const ChatToolBar = memo(function ChatToolBar({
 	                                              sendFiles,
 	                                              setMessages,
 	                                              messagePageNumberNew,
-	                                              messagePageNumberCurrent
+	                                              messagePageNumberCurrent,
+	                                              currentUser
                                               }) {
 	const [binaryColorMode] = useBinaryColorMode();
 	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("md"));
@@ -722,7 +725,6 @@ const ChatToolBar = memo(function ChatToolBar({
 	const fontTextRef = useRef(null);
 	
 	const [onMessageSearching, setOnMessageSearching] = useState(false);
-	const [messageSearchResults, setMessageSearchResults] = useState(null);
 	const [isMessageSearchScrollLoading, setIsMessageSearchScrollLoading] = useState(false);
 	const toggleMessageSearchScrollLoading = useRef(debounce((isLoading) => {
 		setIsMessageSearchScrollLoading(isLoading);
@@ -738,19 +740,33 @@ const ChatToolBar = memo(function ChatToolBar({
 		return new RegExp(`(${messageSearchKeywords === "" ? "?!" : messageSearchKeywords?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i");
 	}, [messageSearchKeywords]);
 	
-	const messageSearchPageNumberCurrent = useRef(0);
-	const messageSearchPageNumberNew = useRef(0);
-	const lastMatchedMessageRef = useRef(null);
-	const messageSearchObserver = useRef(new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && messageSearchPageNumberNew.current === messageSearchPageNumberCurrent.current) {
-			messageSearchPageNumberNew.current = messageSearchPageNumberCurrent.current + 1;
-			axios.get(`/api/chat/message/match/${currentUserVar}/${messageSearchPageNumberNew.current}`, {params: {key: messageSearchInputRef.current.value}}).then(res => {
-				if (res.data?.result?.length > 0) {
-					setMessageSearchResults(result => result ? [...result, ...res.data.result] : res.data.result);
-				}
-			});
-		}
-	}));
+	const {data, fetchNextPage, isFetching, isFetched, hasNextPage} = useInfiniteQuery({
+		queryKey: ["chat", "message", "match", currentUser, messageSearchKeywords],
+		queryFn: ({pageParam}) => messageSearchKeywords === "" ? [] : axios.get(`/api/chat/message/match/${currentUser}/${pageParam}`,
+			{params: {key: messageSearchKeywords}}).then(res => res.data?.result ?? []),
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
+	});
+	
+	const loadMoreRef = useRef(null);
+	
+	useEffect(() => {
+		const pageLoadingObserver = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting && !isFetching && hasNextPage) {
+				fetchNextPage();
+			}
+		}, {
+			rootMargin: "200px",
+		});
+		
+		setTimeout(() => {
+			if (loadMoreRef.current) {
+				pageLoadingObserver.observe(loadMoreRef.current);
+			}
+		}, 0);
+		
+		return () => pageLoadingObserver.disconnect();
+	}, [fetchNextPage, hasNextPage, isFetching, onMessageSearching]);
 	
 	const [showUploadFileConfirmation, setShowUploadFileConfirmation] = useState(false);
 	const [isFileUploading, setIsFileUploading] = useState(false);
@@ -782,14 +798,6 @@ const ChatToolBar = memo(function ChatToolBar({
 		inputField.current.setSelectionRange(start + text.length, start + text.length);
 	}, [inputField, setInputValue, setUsers]);
 	
-	useEffect(() => {
-		if (lastMatchedMessageRef.current) {
-			messageSearchPageNumberCurrent.current = messageSearchPageNumberNew.current;
-			messageSearchObserver.current.disconnect();
-			messageSearchObserver.current.observe(lastMatchedMessageRef.current);
-		}
-	}, [messageSearchResults]);
-	
 	const MarkdownChecker = memo(function MarkdownChecker() {
 		return settings.useMarkdown === false && (
 			<Typography color="error">
@@ -808,32 +816,9 @@ const ChatToolBar = memo(function ChatToolBar({
 				return;
 			}
 		}
-		
 		setFiles(files);
 		setShowUploadFileConfirmation(true);
 	}, []);
-	
-	const searchMessage = useRef(debounce((key) => {
-		const currentTime = Date.now();
-		lastMessageSearchTime.current = currentTime;
-		
-		if (!key || key === "") {
-			setMessageSearchResults(null);
-			setMessageSearchKeywords("");
-		} else {
-			axios.get(`/api/chat/message/match/${currentUserVar}/0`, {params: {key: key}}).then(res => {
-				if (lastMessageSearchTime.current !== currentTime) {
-					return;
-				}
-				messageSearchPageNumberNew.current = 0;
-				messageSearchPageNumberCurrent.current = 0;
-				flushSync(() => setMessageSearchResults(res.data.result));
-				if (messageSearchResultBodyRef.current) {
-					messageSearchResultBodyRef.current.scrollTo({top: 0, behavior: "instant"});
-				}
-			});
-		}
-	}, 200));
 	
 	const closeMessageSearchDialog = () => {
 		messageSearchResultBodyScrollTop.current = messageSearchResultBodyRef.current?.scrollTop ?? 0;
@@ -891,19 +876,14 @@ const ChatToolBar = memo(function ChatToolBar({
 						sx={{m: 0.5}}
 						onClick={() => {
 							flushSync(() => setOnMessageSearching(true));
-							if (lastMatchedMessageRef.current) {
-								messageSearchResultBodyRef.current?.scrollTo({top: messageSearchResultBodyScrollTop.current});
-								
+							if (messageSearchResultBodyRef.current) {
+								messageSearchResultBodyRef.current.scrollTo({top: messageSearchResultBodyScrollTop.current});
 								[...messageSearchResultBodyRef.current.getElementsByTagName("img"), ...messageSearchResultBodyRef.current.getElementsByTagName("video")].map(element => {
 									const resizeObserver = new ResizeObserver(() => {
 										messageSearchResultBodyRef.current?.scrollTo({top: messageSearchResultBodyScrollTop.current});
 									});
 									resizeObserver.observe(element);
 								});
-								
-								messageSearchPageNumberCurrent.current = messageSearchPageNumberNew.current;
-								messageSearchObserver.current.disconnect();
-								messageSearchObserver.current.observe(lastMatchedMessageRef.current);
 							}
 						}}
 					>
@@ -1064,107 +1044,110 @@ const ChatToolBar = memo(function ChatToolBar({
 											onClick={() => {
 												lastMessageSearchTime.current = -1;
 												setMessageSearchKeywords("");
-												searchMessage.current("");
-												setMessageSearchResults(null);
 											}}
 										/>}
 									</InputAdornment>
 								}
 								onChange={(event) => {
 									setMessageSearchKeywords(event.target.value);
-									searchMessage.current(event.target.value);
 								}}
 							/>
 						</Grid>
 					</DialogTitle>
-					{messageSearchResults && messageSearchResults.length > 0 && <Divider/>}
-					{messageSearchResults && (
-						messageSearchResults.length === 0 ? (
-							<Typography align={"center"} color={"textSecondary"} sx={{py: 1}}>
+					{messageSearchKeywords !== "" && (isFetched ? (
+						data.pages.flat().length === 0 ? (
+							<Typography align={"center"} color={"textSecondary"} sx={{py: 2}}>
 								没有找到相关消息呢……
 							</Typography>
 						) : (
-							<DialogContent ref={messageSearchResultBodyRef} sx={{py: 1}}>
-								<List sx={{py: 0}}>
-									{messageSearchResults.map((message, messageIndex) => (
-										<ListItemButton
-											key={message.id}
-											ref={messageIndex === messageSearchResults.length - 1 ? lastMatchedMessageRef : null}
-											sx={{borderRadius: 1, px: 1}}
-											onClick={async () => {
-												if (!messagesVar.find(item => item.id === message.id)) {
-													toggleMessageSearchScrollLoading.current(true);
+							<>
+								<Divider/>
+								<DialogContent ref={messageSearchResultBodyRef} sx={{py: 1}}>
+									<List sx={{py: 0}}>
+										{data?.pages?.map(page => page.map(message => (
+											<ListItemButton
+												key={message.id}
+												sx={{borderRadius: 1, px: 1}}
+												onClick={async () => {
+													if (!messagesVar.find(item => item.id === message.id)) {
+														toggleMessageSearchScrollLoading.current(true);
+														
+														let currentMessageList;
+														
+														do {
+															messagePageNumberNew.current = messagePageNumberCurrent.current = messagePageNumberCurrent.current + 1;
+															currentMessageList = await axios.get(`/api/chat/message/${currentUserVar}/${messagePageNumberNew.current}`)
+																.then(res => res.data.result.message);
+															messagesVar = [...currentMessageList, ...messagesVar];
+														} while (!currentMessageList.find(item => item.id === message.id));
+														
+														flushSync(() => setMessages([...messagesVar]));
+														
+														toggleMessageSearchScrollLoading.current(false);
+													}
 													
-													let currentMessageList;
-													
-													do {
-														messagePageNumberNew.current = messagePageNumberCurrent.current = messagePageNumberCurrent.current + 1;
-														currentMessageList = await axios.get(`/api/chat/message/${currentUserVar}/${messagePageNumberNew.current}`)
-															.then(res => res.data.result.message);
-														messagesVar = [...currentMessageList, ...messagesVar];
-													} while (!currentMessageList.find(item => item.id === message.id));
-													
-													flushSync(() => setMessages([...messagesVar]));
-													
-													toggleMessageSearchScrollLoading.current(false);
-												}
-												
-												if (document.getElementById(`message-${message.id}`)) {
-													document.getElementById(`message-${message.id}`).scrollIntoView({behavior: "smooth"});
-													closeMessageSearchDialog();
-												} else {
-													enqueueSnackbar("消息不存在", {variant: "error"});
-												}
-											}}
-										>
-											<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.5}}>
-												<UserAvatar username={message.username} avatarVersion={message.avatarVersion}/>
-											</ListItemAvatar>
-											<Grid container direction="column" width="100%">
-												<Grid container justifyContent="space-between" wrap="nowrap">
-													<UsernameWithBadge
-														username={
-															message.displayName.split(messageSearchRegex).map((content, index) => {
-																if (messageSearchRegex?.test(content)) {
-																	return (
-																		<Typography key={index} component="span" color="primary" fontSize="inherit"
-																		            fontWeight="inherit">
-																			{content}
-																		</Typography>
-																	);
-																}
-																return content;
-															})
-														}
-														badge={message.badge}
-													/>
-													<Typography fontSize={13} color="textSecondary">
-														{convertDateToLocaleAbsoluteString(message.time)}
-													</Typography>
-												</Grid>
-												<Box fontSize={15} maxWidth="100%" sx={{wordBreak: "break-word"}}>
-													{message.type === 1 ? (
-														<ChatMarkdown useMarkdown={message.useMarkdown} keyword={messageSearchKeywords}>
-															{message.content}
-														</ChatMarkdown>
-													) : (
-														<MessageFile
-															url={message.file.url}
-															fileName={message.file.fileName}
-															fileSize={message.file.fileSize}
-															deleted={message.file.deleted}
-															disableMediaEvent
+													if (document.getElementById(`message-${message.id}`)) {
+														document.getElementById(`message-${message.id}`).scrollIntoView({behavior: "smooth"});
+														closeMessageSearchDialog();
+													} else {
+														enqueueSnackbar("消息不存在", {variant: "error"});
+													}
+												}}
+											>
+												<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.5}}>
+													<UserAvatar username={message.username} avatarVersion={message.avatarVersion}/>
+												</ListItemAvatar>
+												<Grid container direction="column" width="100%">
+													<Grid container justifyContent="space-between" wrap="nowrap">
+														<UsernameWithBadge
+															username={
+																message.displayName.split(messageSearchRegex).map((content, index) => {
+																	if (messageSearchRegex?.test(content)) {
+																		return (
+																			<Typography key={index} component="span" color="primary" fontSize="inherit"
+																			            fontWeight="inherit">
+																				{content}
+																			</Typography>
+																		);
+																	}
+																	return content;
+																})
+															}
+															badge={message.badge}
 														/>
-													)}
-												</Box>
-											</Grid>
-										</ListItemButton>
-									))}
-								</List>
-							</DialogContent>
+														<Typography fontSize={13} color="textSecondary">
+															{convertDateToLocaleAbsoluteString(message.time)}
+														</Typography>
+													</Grid>
+													<Box fontSize={15} maxWidth="100%" sx={{wordBreak: "break-word"}}>
+														{message.type === 1 ? (
+															<ChatMarkdown useMarkdown={message.useMarkdown} keyword={messageSearchKeywords}>
+																{message.content}
+															</ChatMarkdown>
+														) : (
+															<MessageFile
+																url={message.file.url}
+																fileName={message.file.fileName}
+																fileSize={message.file.fileSize}
+																deleted={message.file.deleted}
+																disableMediaEvent
+															/>
+														)}
+													</Box>
+												</Grid>
+											</ListItemButton>
+										)))}
+									</List>
+									<Box ref={loadMoreRef} sx={{mt: 1}}>
+										<LoadMoreIndicator isFetching={isFetching}/>
+									</Box>
+								</DialogContent>
+								<Divider/>
+							</>
 						)
-					)}
-					{messageSearchResults && messageSearchResults.length > 0 && <Divider/>}
+					) : (
+						<LoadMoreIndicator isFetching={true} sx={{mt: 2, mb: 2}}/>
+					))}
 					<DialogActions>
 						<Button onClick={closeMessageSearchDialog}>关闭</Button>
 					</DialogActions>
@@ -1272,6 +1255,7 @@ ChatToolBar.propTypes = {
 	setMessages: PropTypes.func.isRequired,
 	messagePageNumberNew: PropTypes.any.isRequired,
 	messagePageNumberCurrent: PropTypes.any.isRequired,
+	currentUser: PropTypes.string,
 }
 
 const ScrollTop = memo(function ScrollTop({children, messageCard}) {
@@ -2254,6 +2238,7 @@ export default function Chat() {
 								setMessages={setMessages}
 								messagePageNumberNew={messagePageNumberNew}
 								messagePageNumberCurrent={messagePageNumberCurrent}
+								currentUser={currentUser}
 							/>
 							<Dialog open={showMessageBlockAlert} onClose={() => setShowMessageBlockAlert(false)}>
 								<DialogTitle>
