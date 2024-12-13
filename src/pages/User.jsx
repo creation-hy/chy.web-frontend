@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import {useNavigate, useParams} from "react-router";
-import {Fragment, memo, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
+import {memo, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import {
 	Alert,
 	Badge,
@@ -65,14 +65,14 @@ import "cropperjs/dist/cropper.css";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {supportedBadges, UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateButtonBase, NavigateIconButton, NavigateLink} from "src/components/NavigateComponents.jsx";
-import Divider from "@mui/material/Divider";
 import {MessageFile} from "src/pages/Chat.jsx";
 import {LoadMoreIndicator} from "src/components/LoadMoreIndicator.jsx";
+import {AnimatePresence, motion} from "framer-motion";
 
 const myname = localStorage.getItem("username");
 
 const News = memo(function News({username, displayName, avatarVersion}) {
-	const {data, fetchNextPage, isLoading, isFetching, hasNextPage} = useInfiniteQuery({
+	const {data, fetchNextPage, isFetching, hasNextPage} = useInfiniteQuery({
 		queryKey: ["user", username, "news"],
 		queryFn: ({pageParam}) => axios.get(`/api/user/${username}/chat/${pageParam}`).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
@@ -172,127 +172,124 @@ const UserItem = memo(function UserItem({
 	                                        isFollowedBy,
 	                                        isBlocking,
 	                                        showBlockButton,
-	                                        queryKey
+	                                        type,
+	                                        queryKeyUserName,
+	                                        disableAnimation,
                                         }) {
 	const queryClient = useQueryClient();
 	
 	const [isFollowingState, setIsFollowing] = useState(isFollowing);
 	const [isBlockingState, setIsBlocking] = useState(isBlocking);
 	
+	const queryKey = ["user", queryKeyUserName, type];
+	
 	return (
-		<>
-			<ListItem sx={{p: 0}}>
-				<ListItemAvatar>
-					<NavigateButtonBase
-						href={`/user/${username}`}
-						sx={{borderRadius: "50%"}}
+		<motion.div
+			initial={{opacity: disableAnimation ? 1 : 0, height: disableAnimation ? "auto" : 0}}
+			animate={{opacity: 1, height: "auto"}}
+			exit={{opacity: 0, height: 0}}
+			transition={{duration: disableAnimation ? 0 : 0.3}}
+		>
+			<Box sx={{px: 2, py: 2.5, borderBottom: 1, borderColor: "divider"}}>
+				<ListItem sx={{p: 0}}>
+					<ListItemAvatar>
+						<NavigateButtonBase
+							href={`/user/${username}`}
+							sx={{borderRadius: "50%"}}
+						>
+							<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
+						</NavigateButtonBase>
+					</ListItemAvatar>
+					<Grid container wrap="nowrap" justifyContent="space-between" alignItems="center" flex={1}>
+						<ListItemText sx={{m: 0}}>
+							<Grid container alignItems="center" wrap="nowrap" gap={0.25}>
+								<NavigateLink href={`/user/${username}`} sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
+									<Typography fontWeight="bold" noWrap alignItems="center">
+										{displayName}
+									</Typography>
+								</NavigateLink>
+								<UserBadge badge={badge} fontSize={18}/>
+							</Grid>
+							<Typography
+								fontSize={14}
+								color="textSecondary"
+								noWrap
+								overflow="hidden"
+								textOverflow="ellipsis"
+								maxWidth="100%"
+							>
+								<NavigateLink href={`/user/${username}`} underline="none">
+									@{username}
+								</NavigateLink>
+							</Typography>
+						</ListItemText>
+						{!showBlockButton ? (
+							<Button
+								variant={isFollowingState ? "outlined" : "contained"}
+								sx={{ml: 2, flexShrink: 0}}
+								disabled={username === myname}
+								startIcon={isFollowedBy && isFollowingState ? <SwapHoriz/> : (isFollowingState ? <PersonOutlined/> : <PersonAdd/>)}
+								onClick={() => {
+									axios.post("/api/user/" + username + "/follow").then(res => {
+										if (res.data.status === 1 || res.data.status === 2) {
+											const newIsFollowing = res.data.status === 1;
+											setIsFollowing(newIsFollowing);
+											queryClient.invalidateQueries({queryKey: queryKey});
+											queryClient.invalidateQueries({queryKey: ["user", queryKeyUserName, "info"]});
+										} else {
+											enqueueSnackbar(res.data.content, {variant: "error"});
+										}
+									})
+								}}
+							>
+								{isFollowingState ? (isFollowedBy ? "已互关" : "已关注") : "关注"}
+							</Button>
+						) : (
+							<Button
+								color="error"
+								variant={isBlockingState ? "outlined" : "contained"}
+								sx={{ml: 2, flexShrink: 0}}
+								disabled={username === myname}
+								startIcon={<Block/>}
+								onClick={() => {
+									axios.post("/api/user/" + username + "/block").then(res => {
+										if (res.data.status === 1 || res.data.status === 2) {
+											const newIsBlocking = res.data.status === 1;
+											setIsBlocking(newIsBlocking);
+											queryClient.invalidateQueries({queryKey: queryKey});
+											queryClient.invalidateQueries({queryKey: ["user", queryKeyUserName, "info"]});
+										} else {
+											enqueueSnackbar(res.data.content, {variant: "error"});
+										}
+									})
+								}}
+							>
+								{isBlockingState ? "已屏蔽" : "屏蔽"}
+							</Button>
+						)}
+					</Grid>
+				</ListItem>
+				<Grid container sx={{ml: 7, mt: 0.25}}>
+					<Typography
+						component="span"
+						fontSize={14}
+						color="textPrimary"
+						maxHeight="6em"
+						overflow="hidden"
+						textOverflow="ellipsis"
+						sx={{
+							display: "-webkit-box",
+							WebkitBoxOrient: "vertical",
+							WebkitLineClamp: 4,
+						}}
 					>
-						<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
-					</NavigateButtonBase>
-				</ListItemAvatar>
-				<Grid container wrap="nowrap" justifyContent="space-between" alignItems="center" flex={1}>
-					<ListItemText sx={{m: 0}}>
-						<Grid container alignItems="center" wrap="nowrap" gap={0.25}>
-							<NavigateLink href={`/user/${username}`} sx={{overflow: "hidden", textOverflow: "ellipsis"}}>
-								<Typography fontWeight="bold" noWrap alignItems="center">
-									{displayName}
-								</Typography>
-							</NavigateLink>
-							<UserBadge badge={badge} fontSize={18}/>
-						</Grid>
-						<Typography
-							fontSize={14}
-							color="textSecondary"
-							noWrap
-							overflow="hidden"
-							textOverflow="ellipsis"
-							maxWidth="100%"
-						>
-							<NavigateLink href={`/user/${username}`} underline="none">
-								@{username}
-							</NavigateLink>
-						</Typography>
-					</ListItemText>
-					{!showBlockButton ? (
-						<Button
-							variant={isFollowingState ? "outlined" : "contained"}
-							sx={{ml: 2, flexShrink: 0}}
-							disabled={username === myname}
-							startIcon={isFollowedBy && isFollowingState ? <SwapHoriz/> : (isFollowingState ? <PersonOutlined/> : <PersonAdd/>)}
-							onClick={() => {
-								axios.post("/api/user/" + username + "/follow").then(res => {
-									if (res.data.status === 1 || res.data.status === 2) {
-										const newIsFollowing = res.data.status === 1;
-										setIsFollowing(newIsFollowing);
-										queryClient.setQueryData(queryKey, (old) => ({
-											pages: old?.pages?.map(page => page.map(item => (
-												item.username !== username ? item : {
-													...item,
-													isFollowing: newIsFollowing,
-												}
-											))),
-											pageParams: old.pageParams,
-										}));
-									} else {
-										enqueueSnackbar(res.data.content, {variant: "error"});
-									}
-								})
-							}}
-						>
-							{isFollowingState ? (isFollowedBy ? "已互关" : "已关注") : "关注"}
-						</Button>
-					) : (
-						<Button
-							color="error"
-							variant={isBlockingState ? "outlined" : "contained"}
-							sx={{ml: 2, flexShrink: 0}}
-							disabled={username === myname}
-							startIcon={<Block/>}
-							onClick={() => {
-								axios.post("/api/user/" + username + "/block").then(res => {
-									if (res.data.status === 1 || res.data.status === 2) {
-										const newIsBlocking = res.data.status === 1;
-										setIsBlocking(newIsBlocking);
-										queryClient.setQueryData(queryKey, (old) => ({
-											pages: old?.pages?.map(page => page.map(item => (
-												item.username !== username ? item : {
-													...item,
-													isBlocking: newIsBlocking,
-												}
-											))),
-											pageParams: old.pageParams,
-										}));
-									} else {
-										enqueueSnackbar(res.data.content, {variant: "error"});
-									}
-								})
-							}}
-						>
-							{isBlockingState ? "已屏蔽" : "屏蔽"}
-						</Button>
-					)}
+						<NavigateLink href={`/user/${username}`} underline="none">
+							{introduction}
+						</NavigateLink>
+					</Typography>
 				</Grid>
-			</ListItem>
-			<Grid container sx={{ml: 7, mt: 0.25}}>
-				<Typography
-					component="span"
-					fontSize={14}
-					color="textPrimary"
-					maxHeight="6em"
-					overflow="hidden"
-					textOverflow="ellipsis"
-					sx={{
-						display: "-webkit-box",
-						WebkitBoxOrient: "vertical",
-						WebkitLineClamp: 4,
-					}}
-				>
-					<NavigateLink href={`/user/${username}`} underline="none">
-						{introduction}
-					</NavigateLink>
-				</Typography>
-			</Grid>
-		</>
+			</Box>
+		</motion.div>
 	);
 });
 
@@ -306,16 +303,20 @@ UserItem.propTypes = {
 	isFollowedBy: PropTypes.bool,
 	isBlocking: PropTypes.bool,
 	showBlockButton: PropTypes.bool.isRequired,
-	queryKey: PropTypes.array.isRequired,
+	type: PropTypes.string.isRequired,
+	queryKeyUserName: PropTypes.string.isRequired,
+	disableAnimation: PropTypes.bool.isRequired,
 }
 
 const Follows = memo(function Follows({username, type}) {
-	const {data, fetchNextPage, isFetching, hasNextPage} = useInfiniteQuery({
+	const {data, fetchNextPage, isFetching, hasNextPage, isFetchingNextPage, isRefetching} = useInfiniteQuery({
 		queryKey: ["user", username, type],
 		queryFn: ({pageParam}) => axios.get(`/api/user/${username}/${type}/${pageParam}`).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
 	});
+	
+	const [isNewData, setIsNewData] = useState(true);
 	
 	const loadMoreRef = useRef(null);
 	
@@ -331,32 +332,36 @@ const Follows = memo(function Follows({username, type}) {
 		return () => pageLoadingObserver.disconnect();
 	}, [fetchNextPage, hasNextPage, isFetching]);
 	
+	useLayoutEffect(() => {
+		if (isFetchingNextPage) {
+			setIsNewData(true);
+		} else if (isRefetching) {
+			setIsNewData(false);
+		}
+	}, [isFetchingNextPage, isRefetching]);
+	
 	return (
 		<>
 			<List sx={{pt: 0, mt: -1}}>
-				{data?.pages?.map((page, pageIndex) => (
-					<Fragment key={pageIndex}>
-						{page.map((user) => (
-							<Fragment key={user.username}>
-								<Box sx={{px: 2, py: 2.5}}>
-									<UserItem
-										username={user.username}
-										displayName={user.displayName}
-										avatarVersion={user.avatarVersion}
-										badge={user.badge}
-										introduction={user.introduction}
-										isFollowing={user.isFollowing}
-										isFollowedBy={user.isFollowedBy}
-										isBlocking={user.isBlocking}
-										showBlockButton={type === "blocking"}
-										queryKey={["user", username, type]}
-									/>
-								</Box>
-								<Divider/>
-							</Fragment>
-						))}
-					</Fragment>
-				))}
+				<AnimatePresence>
+					{data?.pages.map(page => page.map(user => (
+						<UserItem
+							key={user.username}
+							username={user.username}
+							displayName={user.displayName}
+							avatarVersion={user.avatarVersion}
+							badge={user.badge}
+							introduction={user.introduction}
+							isFollowing={user.isFollowing}
+							isFollowedBy={user.isFollowedBy}
+							isBlocking={user.isBlocking}
+							showBlockButton={type === "blocking"}
+							type={type}
+							queryKeyUserName={username}
+							disableAnimation={isNewData}
+						/>
+					)))}
+				</AnimatePresence>
 			</List>
 			<Box ref={loadMoreRef} sx={{pt: !data || data.pages.flat().length === 0 ? 2 : 1}}>
 				<LoadMoreIndicator isFetching={isFetching}/>
@@ -378,16 +383,16 @@ const TabPanel = memo(function TabPanel({value, username, displayName, avatarVer
 	
 	if (value === 1) {
 		document.title = `${displayName} (@${username}) 的关注列表 - chy.web`;
-		return <Follows username={username} type="following"/>;
+		return <Follows key={0} username={username} type="following"/>;
 	}
 	
 	if (value === 2) {
 		document.title = `${displayName} (@${username}) 的粉丝列表 - chy.web`;
-		return <Follows username={username} type="followers"/>;
+		return <Follows key={1} username={username} type="followers"/>;
 	}
 	
 	document.title = `${displayName} (@${username}) 的屏蔽列表 - chy.web`;
-	return <Follows username={username} type="blocking"/>;
+	return <Follows key={2} username={username} type="blocking"/>;
 });
 
 TabPanel.propTypes = {
@@ -431,6 +436,8 @@ const GENDERS = [
 ];
 
 const UserPage = memo(function UserPage({username}) {
+	const queryClient = useQueryClient();
+	
 	const {clientUser, setClientUser} = useClientUser();
 	const {tab} = useParams();
 	const navigate = useNavigate();
@@ -642,6 +649,7 @@ const UserPage = memo(function UserPage({username}) {
 											<IconButton onClick={() => {
 												doFollow(data.username, setIsFollowing).then(() => {
 													refetch();
+													queryClient.invalidateQueries({queryKey: ["user", data.username, "followers"]});
 												});
 											}}>
 												<PersonOffOutlined/>
@@ -652,6 +660,7 @@ const UserPage = memo(function UserPage({username}) {
 											<IconButton onClick={() => {
 												doFollow(data.username, setIsFollowing).then(() => {
 													refetch();
+													queryClient.invalidateQueries({queryKey: ["user", data.username, "followers"]});
 												});
 											}}>
 												<PersonAddOutlined/>
