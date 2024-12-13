@@ -178,11 +178,6 @@ const UserItem = memo(function UserItem({
                                         }) {
 	const queryClient = useQueryClient();
 	
-	const [isFollowingState, setIsFollowing] = useState(isFollowing);
-	const [isBlockingState, setIsBlocking] = useState(isBlocking);
-	
-	const queryKey = ["user", queryKeyUserName, type];
-	
 	return (
 		<motion.div
 			initial={{opacity: disableAnimation ? 1 : 0, height: disableAnimation ? "auto" : 0}}
@@ -225,29 +220,43 @@ const UserItem = memo(function UserItem({
 						</ListItemText>
 						{!showBlockButton ? (
 							<Button
-								variant={isFollowingState ? "outlined" : "contained"}
+								variant={isFollowing ? "outlined" : "contained"}
 								sx={{ml: 2, flexShrink: 0}}
 								disabled={username === myname}
-								startIcon={isFollowedBy && isFollowingState ? <SwapHoriz/> : (isFollowingState ? <PersonOutlined/> : <PersonAdd/>)}
+								startIcon={isFollowedBy && isFollowing ? <SwapHoriz/> : (isFollowing ? <PersonOutlined/> : <PersonAdd/>)}
 								onClick={() => {
 									axios.post("/api/user/" + username + "/follow").then(res => {
 										if (res.data.status === 1 || res.data.status === 2) {
 											const newIsFollowing = res.data.status === 1;
-											setIsFollowing(newIsFollowing);
-											queryClient.invalidateQueries({queryKey: queryKey});
+											
 											queryClient.invalidateQueries({queryKey: ["user", queryKeyUserName, "info"]});
+											
+											queryClient.setQueryData(["user", queryKeyUserName, "followers"], data => ({
+												pages: data?.pages.map(page => page.map(item => item.username !== username ? item : ({
+													...item,
+													isFollowing: newIsFollowing,
+												}))),
+												pageParams: data?.pageParams,
+											}));
+											
+											if (type === "following" && newIsFollowing === false) {
+												queryClient.setQueryData(["user", queryKeyUserName, "following"], data => ({
+													pages: data?.pages.map(page => page.filter(item => item.username !== username)),
+													pageParams: data?.pageParams,
+												}));
+											}
 										} else {
 											enqueueSnackbar(res.data.content, {variant: "error"});
 										}
 									})
 								}}
 							>
-								{isFollowingState ? (isFollowedBy ? "已互关" : "已关注") : "关注"}
+								{isFollowing ? (isFollowedBy ? "已互关" : "已关注") : "关注"}
 							</Button>
 						) : (
 							<Button
 								color="error"
-								variant={isBlockingState ? "outlined" : "contained"}
+								variant={isBlocking ? "outlined" : "contained"}
 								sx={{ml: 2, flexShrink: 0}}
 								disabled={username === myname}
 								startIcon={<Block/>}
@@ -255,16 +264,22 @@ const UserItem = memo(function UserItem({
 									axios.post("/api/user/" + username + "/block").then(res => {
 										if (res.data.status === 1 || res.data.status === 2) {
 											const newIsBlocking = res.data.status === 1;
-											setIsBlocking(newIsBlocking);
-											queryClient.invalidateQueries({queryKey: queryKey});
-											queryClient.invalidateQueries({queryKey: ["user", queryKeyUserName, "info"]});
+											if (queryKeyUserName === myname) {
+												queryClient.invalidateQueries({queryKey: ["user", queryKeyUserName, "info"]});
+												if (newIsBlocking === false) {
+													queryClient.setQueryData(["user", queryKeyUserName, "blocking"], data => ({
+														pages: data?.pages.map(page => page.filter(item => item.username !== username)),
+														pageParams: data?.pageParams,
+													}));
+												}
+											}
 										} else {
 											enqueueSnackbar(res.data.content, {variant: "error"});
 										}
 									})
 								}}
 							>
-								{isBlockingState ? "已屏蔽" : "屏蔽"}
+								{isBlocking ? "已屏蔽" : "屏蔽"}
 							</Button>
 						)}
 					</Grid>
@@ -344,7 +359,7 @@ const Follows = memo(function Follows({username, type}) {
 		<>
 			<List sx={{pt: 0, mt: -1}}>
 				<AnimatePresence>
-					{data?.pages.map(page => page.map(user => (
+					{data?.pages.flat().map(user => (
 						<UserItem
 							key={user.username}
 							username={user.username}
@@ -360,7 +375,7 @@ const Follows = memo(function Follows({username, type}) {
 							queryKeyUserName={username}
 							disableAnimation={isNewData}
 						/>
-					)))}
+					))}
 				</AnimatePresence>
 			</List>
 			<Box ref={loadMoreRef} sx={{pt: !data || data.pages.flat().length === 0 ? 2 : 1}}>
