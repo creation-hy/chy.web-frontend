@@ -220,10 +220,11 @@ const UserItem = memo(function UserItem({
 						</ListItemText>
 						{!showBlockButton ? (
 							<Button
-								variant={isFollowing ? "outlined" : "contained"}
+								variant={isFollowing || isBlocking ? "outlined" : "contained"}
 								sx={{ml: 2, flexShrink: 0}}
-								disabled={username === myname}
-								startIcon={isFollowedBy && isFollowing ? <SwapHoriz/> : (isFollowing ? <PersonOutlined/> : <PersonAdd/>)}
+								disabled={username === myname || isBlocking}
+								startIcon={isBlocking ? <Block/> :
+									(isFollowedBy && isFollowing ? <SwapHoriz/> : (isFollowing ? <PersonOutlined/> : <PersonAdd/>))}
 								onClick={() => {
 									axios.post("/api/user/" + username + "/follow").then(res => {
 										if (res.data.status === 1 || res.data.status === 2) {
@@ -251,7 +252,7 @@ const UserItem = memo(function UserItem({
 									})
 								}}
 							>
-								{isFollowing ? (isFollowedBy ? "已互关" : "已关注") : "关注"}
+								{isBlocking ? "已屏蔽" : (isFollowing ? (isFollowedBy ? "已互关" : "已关注") : "关注")}
 							</Button>
 						) : (
 							<Button
