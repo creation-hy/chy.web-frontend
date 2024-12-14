@@ -132,7 +132,7 @@ export const ChybenchRanking = memo(function ChybenchRanking() {
 		}
 	}, [navigate, pageNumber]);
 	
-	const {data, isFetching} = useQuery({
+	const {data, isLoading, isPlaceholderData} = useQuery({
 		queryKey: ["chybench", rankingItem, rankingSize, pageNumber],
 		queryFn: () => axios.get(`/api/chybench/ranking/${rankingItem}/${rankingSize}/${pageNumber}`).then(res => res.data.result),
 		placeholderData: keepPreviousData,
@@ -151,8 +151,8 @@ export const ChybenchRanking = memo(function ChybenchRanking() {
 	}, 100));
 	
 	useEffect(() => {
-		toggleShowLoading.current(isFetching);
-	}, [isFetching]);
+		toggleShowLoading.current(isLoading || isPlaceholderData);
+	}, [isLoading, isPlaceholderData]);
 	
 	return (
 		<Grid container direction="column" sx={{minHeight: "100%", justifyContent: "space-between", maxWidth: "100%"}}>

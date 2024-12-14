@@ -131,7 +131,7 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 	
 	const [rankingData, setRankingData] = useState([]);
 	
-	const {data, isLoading} = useQuery({
+	const {data, isLoading, isPlaceholderData} = useQuery({
 		queryKey: ["minesweeper-ranking", pageNumber],
 		queryFn: () => axios.get(`/api/minesweeper/ranking/${pageNumber}`).then(res => res.data.result),
 	});
@@ -156,8 +156,8 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 	}, [data]);
 	
 	useEffect(() => {
-		toggleShowLoading.current(isLoading);
-	}, [isLoading]);
+		toggleShowLoading.current(isLoading || isPlaceholderData);
+	}, [isLoading, isPlaceholderData]);
 	
 	return (
 		<Dialog
