@@ -32,6 +32,7 @@ import {NavigateLink} from "src/components/NavigateComponents.jsx";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import Avatar from "@mui/material/Avatar";
+import Link from "@mui/material/Link";
 
 const StyledToolbar = styled(Toolbar)(({theme}) => ({
 	display: 'flex',
@@ -64,9 +65,9 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 			event.preventDefault();
 			if (location.pathname !== url) {
 				navigate(url);
-				if (navigateCallback) {
-					navigateCallback();
-				}
+			}
+			if (navigateCallback) {
+				navigateCallback();
 			}
 		}
 	}, [location.pathname, navigate, navigateCallback]);
@@ -163,11 +164,17 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 							            avatarVersion={clientUser.avatarVersion} width={80} height={80}/>
 						</IconButton>
 						<Grid container alignItems="center" flexWrap="nowrap" gap={0.25} maxWidth="100%">
-							<NavigateLink href={`/user/${clientUser.username}`} sx={{overflow: "hidden"}}>
+							<Link
+								href={`/user/${clientUser.username}`}
+								color="textPrimary"
+								underline="hover"
+								onClick={(event) => navigateAndCloseDrawer(event, `/user/${clientUser.username}`)}
+								sx={{cursor: "pointer"}}
+							>
 								<Typography fontSize={18} fontWeight="bold" noWrap overflow="hidden" textOverflow="ellipsis" alignItems="center">
 									{clientUser.displayName}
 								</Typography>
-							</NavigateLink>
+							</Link>
 							<UserBadge badge={clientUser.badge} fontSize={20}/>
 						</Grid>
 						<Typography fontSize={14} noWrap color="text.secondary" maxWidth="100%" overflow="hidden" textOverflow="ellipsis">
