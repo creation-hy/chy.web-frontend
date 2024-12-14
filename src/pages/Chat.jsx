@@ -80,8 +80,9 @@ import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
 import {LoadingButton} from "@mui/lab";
 import {isIOS13, isMobile} from "react-device-detect";
-import {useInfiniteQuery, useQueryClient} from "@tanstack/react-query";
+import {keepPreviousData, useInfiniteQuery, useQueryClient} from "@tanstack/react-query";
 import {LoadMoreIndicator} from "src/components/LoadMoreIndicator.jsx";
+import {AnimatePresence, motion} from "framer-motion";
 
 const myname = localStorage.getItem("username");
 
@@ -1412,8 +1413,6 @@ export default function Chat() {
 	const [messages, setMessages] = useState([]);
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
-	const [matchList, setMatchList] = useState(null);
-	const [abortController, setAbortController] = useState(null);
 	const [showScrollTop, setShowScrollTop] = useState(false);
 	
 	const [isDragging, setIsDragging] = useState(false);
@@ -1423,7 +1422,9 @@ export default function Chat() {
 	const messageCard = useRef(null);
 	const messageInput = useRef(null);
 	const [inputValue, setInputValue] = useState("");
-	const userSearchField = useRef(null);
+	
+	const [onUserSearching, setOnUserSearching] = useState(false);
+	const [userSearchKey, setUserSearchKey] = useState("");
 	
 	const disconnectErrorBarKey = useRef(null);
 	
@@ -1459,20 +1460,6 @@ export default function Chat() {
 		});
 	}, [queryClient]);
 	
-	const userFindPageNumberCurrent = useRef(0);
-	const userFindPageNumberNew = useRef(0);
-	const lastUserFindingRef = useRef(null);
-	const userFindingObserver = useRef(new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && userFindPageNumberNew.current === userFindPageNumberCurrent.current) {
-			userFindPageNumberNew.current = userFindPageNumberCurrent.current + 1;
-			axios.get(`/api/user/find/${userFindPageNumberNew.current}`, {params: {key: userSearchField.current.value}}).then(res => {
-				if (res.data.result.length > 0) {
-					setMatchList(matchList => [...matchList, ...res.data.result]);
-				}
-			});
-		}
-	}));
-	
 	const contactsData = useInfiniteQuery({
 		queryKey: ["chat", "contacts", initialUsername],
 		queryFn: ({pageParam}) => axios.get(`/api/chat/contacts/${pageParam}`,
@@ -1502,7 +1489,34 @@ export default function Chat() {
 	useLayoutEffect(() => {
 		usersVar = contactsData.data?.pages?.flat();
 		setUsers(usersVar ? [...usersVar] : null);
+		console.log(usersVar ? [...usersVar] : null);
 	}, [contactsData.data?.pages, setUsers]);
+	
+	const userFindData = useInfiniteQuery({
+		queryKey: ["user", "find", userSearchKey],
+		queryFn: ({pageParam}) => userSearchKey === "" ? [] : axios.get(`/api/user/find/${pageParam}`,
+			{params: {key: userSearchKey}}).then(res => res.data?.result ?? []),
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
+		staleTime: 60 * 1000,
+		placeholderData: keepPreviousData,
+	});
+	
+	const userFindLoadMoreRef = useRef(null);
+	
+	useEffect(() => {
+		const pageLoadingObserver = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting && !userFindData.isFetching && userFindData.hasNextPage) {
+				userFindData.fetchNextPage();
+			}
+		}, {
+			rootMargin: "200px",
+		});
+		if (userFindLoadMoreRef.current) {
+			pageLoadingObserver.observe(userFindLoadMoreRef.current);
+		}
+		return () => pageLoadingObserver.disconnect();
+	}, [userFindData, userFindData.fetchNextPage, userFindData.hasNextPage, userFindData.isFetching]);
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
@@ -1520,7 +1534,8 @@ export default function Chat() {
 		
 		const isCurrentUser = currentUserVar === username;
 		
-		const userItem = usersVar.find(item => item.username === username) ?? matchList?.find(item => item.username === username);
+		const userItem = usersVar.find(item => item.username === username) ??
+			userFindData.data?.pages.flat().find(item => item.username === username);
 		
 		if (userItem) {
 			setCurrentUserDisplayName(userItem.displayName);
@@ -1613,7 +1628,7 @@ export default function Chat() {
 			
 			messageCardScrollTo(currentScrollBottom, "instant");
 		});
-	}, [matchList, messageCardScrollTo, navigate, setClientUser, setUsers]);
+	}, [userFindData.data?.pages, messageCardScrollTo, navigate, setClientUser, setUsers]);
 	
 	const messageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
 		if (entries[0].isIntersecting && messagePageNumberNew.current === messagePageNumberCurrent.current) {
@@ -1913,14 +1928,6 @@ export default function Chat() {
 		}
 	}, [messageLoadingObserver, messages]);
 	
-	useEffect(() => {
-		if (lastUserFindingRef.current) {
-			userFindPageNumberCurrent.current = userFindPageNumberNew.current;
-			userFindingObserver.current.disconnect();
-			userFindingObserver.current.observe(lastUserFindingRef.current);
-		}
-	}, [matchList]);
-	
 	useLayoutEffect(() => {
 		if (!username) {
 			setCurrentUser(null);
@@ -1950,7 +1957,7 @@ export default function Chat() {
 				}}
 			>
 				<OutlinedInput
-					inputRef={userSearchField}
+					value={userSearchKey}
 					startAdornment={
 						<InputAdornment position="start">
 							<PersonSearch sx={{fontSize: 22}}/>
@@ -1958,12 +1965,12 @@ export default function Chat() {
 					}
 					endAdornment={
 						<InputAdornment position="end">
-							{Boolean(matchList) && <Cancel
+							{onUserSearching && <Cancel
 								fontSize="small"
 								sx={{cursor: "pointer"}}
 								onClick={() => {
-									userSearchField.current.value = "";
-									setMatchList(null);
+									setUserSearchKey("");
+									setOnUserSearching(false);
 								}}
 							/>}
 						</InputAdornment>
@@ -1971,33 +1978,15 @@ export default function Chat() {
 					placeholder="搜索用户"
 					sx={{fontSize: 15, mx: "-1px", mt: "-1px"}}
 					onFocus={() => {
-						if (!matchList)
-							setMatchList([]);
+						setOnUserSearching(true);
 					}}
 					onBlur={() => {
-						if (userSearchField.current.value === "") {
-							setMatchList(null);
+						if (userSearchKey === "") {
+							setOnUserSearching(false);
 						}
 					}}
 					onChange={(event) => {
-						if (abortController)
-							abortController.abort();
-						if (event.target.value === "")
-							setMatchList([]);
-						else {
-							const controller = new AbortController();
-							setAbortController(controller);
-							axios.get(`/api/user/find/0`, {
-								signal: controller.signal,
-								params: {
-									key: event.target.value,
-								},
-							}).then(res => {
-								setMatchList(res.data.result);
-								userFindPageNumberNew.current = 0;
-								userFindPageNumberCurrent.current = 0;
-							}).catch(() => null);
-						}
+						setUserSearchKey(event.target.value);
 					}}
 				/>
 				<Box sx={{overflowY: "auto"}}>
@@ -2020,7 +2009,7 @@ export default function Chat() {
 						)}
 					</List>
 					<Divider/>
-					<Collapse in={!matchList}>
+					<Collapse in={!onUserSearching}>
 						<List>
 							{users != null && users.map(user => user.username !== "ChatRoomSystem" && (
 								<UserItem
@@ -2040,50 +2029,63 @@ export default function Chat() {
 								/>
 							))}
 						</List>
-						<Box ref={contactsLoadMoreRef} sx={{pb: 1}}>
-							<LoadMoreIndicator isFetching={contactsData.isFetching}/>
-						</Box>
 					</Collapse>
-					{Boolean(matchList) && <List>
-						{matchList.map((user, userIndex) => {
-							const regex = new RegExp(`(${userSearchField.current?.value?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i");
-							
-							if (!regex.test(user.username) && !regex.test(user.displayName)) {
-								return null;
-							}
-							
-							return (
-								<Box key={user.username} ref={userIndex === matchList.length - 1 ? lastUserFindingRef : undefined}>
-									<UserItem
-										username={user.username}
-										displayName={
-											(regex.test(user.displayName) ? user.displayName : "@" + user.username).split(regex).map((content, index) => {
-												if (regex?.test(content)) {
-													return (
-														<Typography key={index} component="span" color="primary" fontSize="inherit"
-														            fontWeight="inherit">
-															{content}
-														</Typography>
-													);
+					<Box ref={contactsLoadMoreRef} sx={{pb: 1, display: onUserSearching ? "none" : "block"}}>
+						<LoadMoreIndicator isFetching={contactsData.isFetching}/>
+					</Box>
+					{onUserSearching && (
+						<List>
+							<AnimatePresence>
+								{userFindData.data?.pages.map(page => page.map(user => {
+									const regex = new RegExp(`(${userSearchKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, "i");
+									
+									if (!regex.test(user.username) && !regex.test(user.displayName)) {
+										return null;
+									}
+									
+									return (
+										<motion.div
+											key={user.username}
+											initial={{opacity: 0, height: 0}}
+											animate={{opacity: 1, height: "auto"}}
+											exit={{opacity: 0, height: 0}}
+											transition={{duration: 0.3}}
+										>
+											<UserItem
+												username={user.username}
+												displayName={
+													(regex.test(user.displayName) ? user.displayName : "@" + user.username).split(regex).map((content, index) => {
+														if (regex?.test(content)) {
+															return (
+																<Typography key={index} component="span" color="primary" fontSize="inherit"
+																            fontWeight="inherit">
+																	{content}
+																</Typography>
+															);
+														}
+														return content;
+													})
 												}
-												return content;
-											})
-										}
-										displayNameString={user.displayName}
-										avatarVersion={user.avatarVersion}
-										badge={user.badge}
-										isOnline={user.isOnline}
-										newMessageCount={user.newMessageCount}
-										lastMessageTime={user.lastMessageTime}
-										lastMessageText={user.lastMessageText || "\u00A0"}
-										draft={user.draft}
-										selected={currentUser === user.username}
-										isMessageAllowed={user.isMessageAllowed}
-									/>
-								</Box>
-							);
-						})}
-					</List>}
+												displayNameString={user.displayName}
+												avatarVersion={user.avatarVersion}
+												badge={user.badge}
+												isOnline={user.isOnline}
+												newMessageCount={user.newMessageCount}
+												lastMessageTime={user.lastMessageTime}
+												lastMessageText={user.lastMessageText || "\u00A0"}
+												draft={user.draft}
+												selected={currentUser === user.username}
+												isMessageAllowed={user.isMessageAllowed}
+											/>
+										</motion.div>
+									);
+								}))}
+							</AnimatePresence>
+						</List>
+					)}
+					<Box ref={userFindLoadMoreRef} sx={{pb: 1, display: userSearchKey !== "" ? "block" : "none"}}>
+						<LoadMoreIndicator isFetching={userFindData.isFetching}/>
+					</Box>
 				</Box>
 			</Card>
 			<Grid container
