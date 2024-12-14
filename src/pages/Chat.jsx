@@ -76,7 +76,7 @@ import {useClientUser} from "src/components/ClientUser.jsx";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from "src/assets/DateUtils.jsx";
 import {debounce, throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
-import {NavigateIconButton} from "src/components/NavigateComponents.jsx";
+import {NavigateIconButton, NavigateListItemButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
 import {LoadingButton} from "@mui/lab";
 import {isIOS13, isMobile} from "react-device-detect";
@@ -135,8 +135,8 @@ const UserItem = memo(function UserItem({
 	const navigate = useNavigate();
 	
 	return (
-		<ListItemButton
-			onClick={() => navigate(`/chat/${username}`)}
+		<NavigateListItemButton
+			href={`/chat/${username}`}
 			selected={selected}
 		>
 			<ListItemAvatar>
@@ -229,7 +229,7 @@ const UserItem = memo(function UserItem({
 					</Typography>
 				)}
 			/>
-		</ListItemButton>
+		</NavigateListItemButton>
 	);
 });
 
@@ -1489,7 +1489,6 @@ export default function Chat() {
 	useLayoutEffect(() => {
 		usersVar = contactsData.data?.pages?.flat();
 		setUsers(usersVar ? [...usersVar] : null);
-		console.log(usersVar ? [...usersVar] : null);
 	}, [contactsData.data?.pages, setUsers]);
 	
 	const userFindData = useInfiniteQuery({

@@ -123,9 +123,11 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 	const [pageNumber, setPageNumber] = useState(Number(useParams().pageNumber ?? 0));
 	
 	const togglePageNumber = useCallback((page) => {
-		navigate(`/minesweeper/ranking/page/${page}`);
-		setPageNumber(page);
-	}, [navigate]);
+		if (pageNumber !== page) {
+			navigate(`/minesweeper/ranking/page/${page}`);
+			setPageNumber(page);
+		}
+	}, [navigate, pageNumber]);
 	
 	const [rankingData, setRankingData] = useState([]);
 	

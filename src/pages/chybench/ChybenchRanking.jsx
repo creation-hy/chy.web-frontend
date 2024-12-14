@@ -3,7 +3,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import {Backdrop, CircularProgress, InputLabel} from "@mui/material";
 import Box from "@mui/material/Box";
-import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import axios from "axios";
 import FormControl from "@mui/material/FormControl";
 import {SimpleUserItem} from "src/components/UserComponents.jsx";
@@ -112,6 +112,7 @@ RankingTable.propTypes = {
 
 export const ChybenchRanking = memo(function ChybenchRanking() {
 	const navigate = useNavigate();
+	const params = useParams();
 	
 	const rankingParams = useMemo(() => JSON.parse(localStorage.getItem("chybenchRanking")) || {}, []);
 	const updateRankingParams = useCallback(() => localStorage.setItem("chybenchRanking", JSON.stringify(rankingParams)), [rankingParams]);
@@ -119,12 +120,17 @@ export const ChybenchRanking = memo(function ChybenchRanking() {
 	const [rankingItem, setItem] = useState(rankingParams.item ?? "gpuScore");
 	const [rankingSize, setSize] = useState(rankingParams.size ?? 0);
 	
-	const [pageNumber, setPageNumber] = useState(Number(useParams().pageNumber ?? 0));
+	const [pageNumber, setPageNumber] = useState(null);
+	
+	useLayoutEffect(() => {
+		setPageNumber(Number(params.pageNumber ?? 0));
+	}, [params.pageNumber]);
 	
 	const togglePageNumber = useCallback((page) => {
-		navigate(`/chybench/ranking/page/${page}`);
-		setPageNumber(page);
-	}, [navigate]);
+		if (pageNumber !== page) {
+			navigate(`/chybench/ranking/page/${page}`);
+		}
+	}, [navigate, pageNumber]);
 	
 	const {data, isFetching} = useQuery({
 		queryKey: ["chybench", rankingItem, rankingSize, pageNumber],

@@ -55,17 +55,21 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 	
 	const {clientUser, isClientUserLoading, setClientUser} = useClientUser();
 	const navigate = useNavigate();
-	const firstLevelLocation = useLocation().pathname.split("/")[1];
+	const location = useLocation();
+	
+	const firstLevelLocation = location.pathname.split("/")[1];
 	
 	const navigateAndCloseDrawer = useCallback((event, url) => {
-		if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
+		if (!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button === 0) {
 			event.preventDefault();
-			navigate(url);
-			if (navigateCallback) {
-				navigateCallback();
+			if (location.pathname !== url) {
+				navigate(url);
+				if (navigateCallback) {
+					navigateCallback();
+				}
 			}
 		}
-	}, [navigate, navigateCallback]);
+	}, [location.pathname, navigate, navigateCallback]);
 	
 	if (clientUser) {
 		myInformation.displayName = clientUser.displayName;
