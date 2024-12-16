@@ -131,105 +131,111 @@ const UserItem = memo(function UserItem({
 	                                        draft,
 	                                        selected,
 	                                        isMessageAllowed,
+	                                        lastMessageScrollBottom,
                                         }) {
-	const navigate = useNavigate();
-	
 	return (
-		<NavigateListItemButton
-			href={`/chat/${username}`}
-			selected={selected}
+		<ButtonBase
+			sx={{width: "100%"}}
+			onClick={() => {
+				lastMessageScrollBottom.current = -1;
+			}}
 		>
-			<ListItemAvatar>
-				<Badge
-					badgeContent={newMessageCount}
-					overlap="circular"
-					color="error"
-				>
-					{isMessageAllowed ? (
-						<Badge
-							badgeContent={isOnline === true ? " " : 0}
-							overlap="circular"
-							color="success"
-							variant="dot"
-							anchorOrigin={{vertical: "bottom", horizontal: "right"}}
-							sx={{
-								'& .MuiBadge-badge': {
-									backgroundColor: '#44b700',
-									color: '#44b700',
-									boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
-									'&::after': {
-										position: 'absolute',
-										top: 0,
-										left: 0,
-										width: '100%',
-										height: '100%',
-										borderRadius: '50%',
-										animation: 'ripple 1.2s infinite ease-in-out',
-										border: '1px solid currentColor',
-										content: '""',
+			<NavigateListItemButton
+				href={`/chat/${username}`}
+				selected={selected}
+			>
+				<ListItemAvatar>
+					<Badge
+						badgeContent={newMessageCount}
+						overlap="circular"
+						color="error"
+					>
+						{isMessageAllowed ? (
+							<Badge
+								badgeContent={isOnline === true ? " " : 0}
+								overlap="circular"
+								color="success"
+								variant="dot"
+								anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+								sx={{
+									'& .MuiBadge-badge': {
+										backgroundColor: '#44b700',
+										color: '#44b700',
+										boxShadow: (theme) => `0 0 0 2px ${theme.palette.background.paper}`,
+										'&::after': {
+											position: 'absolute',
+											top: 0,
+											left: 0,
+											width: '100%',
+											height: '100%',
+											borderRadius: '50%',
+											animation: 'ripple 1.2s infinite ease-in-out',
+											border: '1px solid currentColor',
+											content: '""',
+										},
 									},
-								},
-								'@keyframes ripple': {
-									'0%': {
-										transform: 'scale(.8)',
-										opacity: 1,
+									'@keyframes ripple': {
+										'0%': {
+											transform: 'scale(.8)',
+											opacity: 1,
+										},
+										'100%': {
+											transform: 'scale(2.4)',
+											opacity: 0,
+										},
 									},
-									'100%': {
-										transform: 'scale(2.4)',
-										opacity: 0,
-									},
-								},
-							}}
-						>
-							<UserAvatar username={username} displayName={displayNameString} avatarVersion={avatarVersion}/>
-						</Badge>
+								}}
+							>
+								<UserAvatar username={username} displayName={displayNameString} avatarVersion={avatarVersion}/>
+							</Badge>
+						) : (
+							<Badge
+								badgeContent={<Block fontSize="small"/>}
+								overlap="circular"
+								color="error"
+								anchorOrigin={{vertical: "bottom", horizontal: "right"}}
+								sx={{
+									'& .MuiBadge-badge': {
+										width: 20,
+										height: 20,
+										borderRadius: "50%",
+									}
+								}}
+							>
+								<UserAvatar username={username} displayName={displayNameString} avatarVersion={avatarVersion}/>
+							</Badge>
+						)}
+					</Badge>
+				</ListItemAvatar>
+				<ListItemText
+					primary={
+						<Grid container sx={{
+							justifyContent: "space-between",
+							flexWrap: "nowrap",
+							whiteSpace: "nowrap",
+							gap: 1,
+						}}>
+							<UsernameWithBadge
+								username={displayName}
+								badge={badge}
+							/>
+							{lastMessageTime && <Typography variant="body2" color="textSecondary">
+								{convertDateToLocaleShortString(lastMessageTime)}
+							</Typography>}
+						</Grid>
+					}
+					secondary={draft ? (
+						<Typography variant="body2" color="primary" noWrap textOverflow="ellipsis">
+							[草稿] {draft.toString()}
+						</Typography>
 					) : (
-						<Badge
-							badgeContent={<Block fontSize="small"/>}
-							overlap="circular"
-							color="error"
-							anchorOrigin={{vertical: "bottom", horizontal: "right"}}
-							sx={{
-								'& .MuiBadge-badge': {
-									width: 20,
-									height: 20,
-									borderRadius: "50%",
-								}
-							}}
-						>
-							<UserAvatar username={username} displayName={displayNameString} avatarVersion={avatarVersion}/>
-						</Badge>
+						<Typography variant="body2" color="text.secondary" noWrap textOverflow="ellipsis">
+							{lastMessageText}
+						</Typography>
 					)}
-				</Badge>
-			</ListItemAvatar>
-			<ListItemText
-				primary={
-					<Grid container sx={{
-						justifyContent: "space-between",
-						flexWrap: "nowrap",
-						whiteSpace: "nowrap",
-						gap: 1,
-					}}>
-						<UsernameWithBadge
-							username={displayName}
-							badge={badge}
-						/>
-						{lastMessageTime && <Typography variant="body2" color="textSecondary">
-							{convertDateToLocaleShortString(lastMessageTime)}
-						</Typography>}
-					</Grid>
-				}
-				secondary={draft ? (
-					<Typography variant="body2" color="primary" noWrap textOverflow="ellipsis">
-						[草稿] {draft.toString()}
-					</Typography>
-				) : (
-					<Typography variant="body2" color="text.secondary" noWrap textOverflow="ellipsis">
-						{lastMessageText}
-					</Typography>
-				)}
-			/>
-		</NavigateListItemButton>
+				/>
+			</NavigateListItemButton>
+		</ButtonBase>
 	);
 });
 
@@ -246,6 +252,7 @@ UserItem.propTypes = {
 	draft: PropTypes.string,
 	selected: PropTypes.bool.isRequired,
 	isMessageAllowed: PropTypes.bool.isRequired,
+	lastMessageScrollBottom: PropTypes.object.isRequired,
 }
 
 export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, disableMediaEvent, ...props}) {
@@ -439,9 +446,7 @@ const Message = memo(function Message({
 	                                      quote,
 	                                      setQuote,
 	                                      useMarkdown,
-	                                      setMessages,
-	                                      messagePageNumberNew,
-	                                      messagePageNumberCurrent
+	                                      messageData
                                       }) {
 	const [contextMenu, setContextMenu] = useState(null);
 	const [onDialog, setOnDialog] = useState(false);
@@ -560,25 +565,23 @@ const Message = memo(function Message({
 							if (!messagesVar.find(item => item.id === quote.id)) {
 								toggleMessageSearchScrollLoading.current(true);
 								
-								let currentMessageList;
-								
-								do {
-									messagePageNumberNew.current = messagePageNumberCurrent.current = messagePageNumberCurrent.current + 1;
-									currentMessageList = await axios.get(`/api/chat/message/${currentUserVar}/${messagePageNumberNew.current}`)
-										.then(res => res.data.result.message);
-									messagesVar = [...currentMessageList, ...messagesVar];
-								} while (!currentMessageList.find(item => item.id === quote.id));
-								
-								flushSync(() => setMessages([...messagesVar]));
+								while (true) {
+									const data = (await messageData.fetchNextPage()).data.pages.flat();
+									if (data.find(item => item.id === quote.id)) {
+										break;
+									}
+								}
 								
 								toggleMessageSearchScrollLoading.current(false);
 							}
 							
-							if (document.getElementById(`message-${quote.id}`)) {
-								document.getElementById(`message-${quote.id}`).scrollIntoView({behavior: "smooth"});
-							} else {
-								enqueueSnackbar("消息不存在", {variant: "error"});
-							}
+							setTimeout(() => {
+								if (document.getElementById(`message-${quote.id}`)) {
+									document.getElementById(`message-${quote.id}`).scrollIntoView({behavior: "smooth"});
+								} else {
+									enqueueSnackbar("消息不存在", {variant: "error"});
+								}
+							}, 0);
 						}}
 					/>
 				}
@@ -682,8 +685,7 @@ Message.propTypes = {
 	setQuote: PropTypes.func.isRequired,
 	useMarkdown: PropTypes.bool,
 	setMessages: PropTypes.func.isRequired,
-	messagePageNumberCurrent: PropTypes.object.isRequired,
-	messagePageNumberNew: PropTypes.object.isRequired,
+	messageData: PropTypes.object.isRequired,
 }
 
 const notify = (title, body, iconId, avatarVersion) => {
@@ -714,8 +716,7 @@ const ChatToolBar = memo(function ChatToolBar({
 	                                              setQuote,
 	                                              sendFiles,
 	                                              setMessages,
-	                                              messagePageNumberNew,
-	                                              messagePageNumberCurrent,
+	                                              messageData,
 	                                              currentUser
                                               }) {
 	const [binaryColorMode] = useBinaryColorMode();
@@ -879,12 +880,6 @@ const ChatToolBar = memo(function ChatToolBar({
 							flushSync(() => setOnMessageSearching(true));
 							if (messageSearchResultBodyRef.current) {
 								messageSearchResultBodyRef.current.scrollTo({top: messageSearchResultBodyScrollTop.current});
-								[...messageSearchResultBodyRef.current.getElementsByTagName("img"), ...messageSearchResultBodyRef.current.getElementsByTagName("video")].map(element => {
-									const resizeObserver = new ResizeObserver(() => {
-										messageSearchResultBodyRef.current?.scrollTo({top: messageSearchResultBodyScrollTop.current});
-									});
-									resizeObserver.observe(element);
-								});
 							}
 						}}
 					>
@@ -1073,26 +1068,24 @@ const ChatToolBar = memo(function ChatToolBar({
 													if (!messagesVar.find(item => item.id === message.id)) {
 														toggleMessageSearchScrollLoading.current(true);
 														
-														let currentMessageList;
-														
-														do {
-															messagePageNumberNew.current = messagePageNumberCurrent.current = messagePageNumberCurrent.current + 1;
-															currentMessageList = await axios.get(`/api/chat/message/${currentUserVar}/${messagePageNumberNew.current}`)
-																.then(res => res.data.result.message);
-															messagesVar = [...currentMessageList, ...messagesVar];
-														} while (!currentMessageList.find(item => item.id === message.id));
-														
-														flushSync(() => setMessages([...messagesVar]));
+														while (true) {
+															const data = (await messageData.fetchNextPage()).data.pages.flat();
+															if (data.find(item => item.id === message.id)) {
+																break;
+															}
+														}
 														
 														toggleMessageSearchScrollLoading.current(false);
 													}
 													
-													if (document.getElementById(`message-${message.id}`)) {
-														document.getElementById(`message-${message.id}`).scrollIntoView({behavior: "smooth"});
-														closeMessageSearchDialog();
-													} else {
-														enqueueSnackbar("消息不存在", {variant: "error"});
-													}
+													setTimeout(() => {
+														if (document.getElementById(`message-${message.id}`)) {
+															document.getElementById(`message-${message.id}`).scrollIntoView({behavior: "smooth"});
+															closeMessageSearchDialog();
+														} else {
+															enqueueSnackbar("消息不存在", {variant: "error"});
+														}
+													}, 0);
 												}}
 											>
 												<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.5}}>
@@ -1254,8 +1247,7 @@ ChatToolBar.propTypes = {
 	setQuote: PropTypes.func.isRequired,
 	sendFiles: PropTypes.object.isRequired,
 	setMessages: PropTypes.func.isRequired,
-	messagePageNumberNew: PropTypes.any.isRequired,
-	messagePageNumberCurrent: PropTypes.any.isRequired,
+	messageData: PropTypes.object.isRequired,
 	currentUser: PropTypes.string,
 }
 
@@ -1410,7 +1402,9 @@ export default function Chat() {
 	const [isCurrentUserMessageAllowed, setCurrentUserMessageAllowed] = useState(true);
 	const [showMessageBlockAlert, setShowMessageBlockAlert] = useState(false);
 	
-	const [messages, setMessages] = useState([]);
+	const [messages, setMessagesState] = useState([]);
+	const lastMessageScrollBottom = useRef(0);
+	
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
 	const [showScrollTop, setShowScrollTop] = useState(false);
@@ -1430,24 +1424,21 @@ export default function Chat() {
 	
 	const {setClientUser} = useClientUser();
 	
-	const messagePageNumberCurrent = useRef(0);
-	const messagePageNumberNew = useRef(0);
-	const lastMessageRef = useRef(null);
-	
 	const setUsers = useCallback((param) => {
 		setUsersState(users => {
 			const newUsers = param instanceof Function ? param(users) : param;
+			const tmp = newUsers instanceof Array ? [...newUsers] : newUsers;
 			const pages = [];
 			
-			while (newUsers?.length > PAGE_SIZE) {
-				pages.push(newUsers.splice(0, PAGE_SIZE));
+			while (tmp?.length > PAGE_SIZE) {
+				pages.push(tmp.splice(0, PAGE_SIZE));
 			}
 			
-			if (newUsers?.length > 0) {
+			if (tmp?.length > 0) {
 				if (pages.length > 0) {
-					pages[0] = pages[0].concat(newUsers);
+					pages[0] = pages[0].concat(tmp);
 				} else {
-					pages.push(newUsers);
+					pages.push(tmp);
 				}
 			}
 			
@@ -1466,8 +1457,6 @@ export default function Chat() {
 			{params: {extraContactName: initialUsername.current}}).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
-		staleTime: 60 * 1000,
-		refetchOnMount: "always",
 	});
 	
 	const contactsLoadMoreRef = useRef(null);
@@ -1497,7 +1486,6 @@ export default function Chat() {
 			{params: {key: userSearchKey}}).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
-		staleTime: 60 * 1000,
 		placeholderData: keepPreviousData,
 	});
 	
@@ -1519,16 +1507,131 @@ export default function Chat() {
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
-		[...messageCard.current.getElementsByTagName("img"), ...messageCard.current.getElementsByTagName("video")].map(element => {
-			const resizeObserver = new ResizeObserver(() => {
-				messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
-			});
-			resizeObserver.observe(element);
-		});
 	}, []);
 	
-	const getMessages = useCallback((username, pageNumber = 0, doRefresh = false) => {
-		if (!username || currentUserVar === username && pageNumber === 0 && !doRefresh)
+	const messageQueryFn = useCallback(({pageParam}) => {
+		return !username ? [] : axios.get(`/api/chat/message/${username}/${pageParam}`).then(res => {
+			if (res.data.status === 0) {
+				navigate("/chat");
+				return [];
+			}
+			
+			const userInfo = res.data?.result?.userInfo;
+			
+			if (userInfo) {
+				setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
+				
+				if (pageParam === 0) {
+					setClientUser(clientUser => ({
+						...clientUser,
+						newMessageCount: Math.max(0, clientUser.newMessageCount - userInfo.newMessageCount),
+					}));
+					
+					setUsers(users => {
+						usersVar = users?.map(user => user.username !== userInfo.username ? user : {
+							...user,
+							newMessageCount: 0,
+						});
+						
+						return usersVar;
+					});
+				}
+				
+				setInputValue(userInfo.draft ? userInfo.draft : "");
+				setShowScrollTop(true);
+			}
+			
+			if (userInfo) {
+				flushSync(() => {
+					setCurrentUserDisplayName(userInfo.displayName);
+					setCurrentUserBadge(userInfo.badge);
+					setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
+					
+					setUsers(users => {
+						usersVar = users?.map(user => user.username !== userInfo.username ? user : {
+							...user,
+							displayName: userInfo.displayName,
+							badge: userInfo.badge,
+							isMessageAllowed: userInfo.isMessageAllowed,
+						});
+						return usersVar;
+					});
+				});
+			}
+			
+			return res.data?.result?.message ?? [];
+		});
+	}, [navigate, setClientUser, setUsers, username]);
+	
+	const messageData = useInfiniteQuery({
+		queryKey: ["chat", "message", username],
+		queryFn: messageQueryFn,
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
+		staleTime: Infinity,
+		refetchOnMount: "always",
+		select: data => ({
+			pages: [...data.pages].reverse(),
+			pageParams: [...data.pageParams].reverse(),
+		}),
+	});
+	
+	const messageLoadMoreRef = useRef(null);
+	
+	useEffect(() => {
+		const pageLoadingObserver = new IntersectionObserver((entries) => {
+			if (entries[0].isIntersecting && !messageData.isFetching && messageData.hasNextPage) {
+				messageData.fetchNextPage();
+			}
+		}, {
+			rootMargin: "200px",
+		});
+		if (messageLoadMoreRef.current) {
+			pageLoadingObserver.observe(messageLoadMoreRef.current);
+		}
+		return () => pageLoadingObserver.disconnect();
+	}, [messageData, messageData.fetchNextPage, messageData.hasNextPage, messageData.isFetching]);
+	
+	useEffect(() => {
+		lastMessageScrollBottom.current = Math.max(0, lastMessageScrollBottom.current);
+		messageCardScrollTo(lastMessageScrollBottom.current, "instant");
+	}, [messageCardScrollTo, messages]);
+	
+	const setMessages = useCallback((param) => {
+		setMessagesState(messages => {
+			const newMessages = param instanceof Function ? param(messages) : param;
+			const tmp = newMessages instanceof Array ? [...newMessages] : newMessages;
+			const pages = [];
+			
+			if (tmp?.length % 30 > 0) {
+				pages.push(tmp.splice(0, tmp.length % 30));
+			}
+			
+			while (tmp?.length >= 30) {
+				pages.push(tmp.splice(0, 30));
+			}
+			
+			if (pages.length > 0) {
+				queryClient.setQueryData(["chat", "message", username], data => ({
+					pages: pages,
+					pageParams: data?.pageParams,
+				}));
+			}
+			
+			return newMessages;
+		});
+	}, [queryClient, username]);
+	
+	useLayoutEffect(() => {
+		if (lastMessageScrollBottom.current !== -1) {
+			lastMessageScrollBottom.current = messageCard.current.scrollHeight - messageCard.current.scrollTop;
+		}
+		messagesVar = messageData.data?.pages.flat() ?? [];
+		setMessagesState([...messagesVar]);
+	}, [messageData.data?.pages]);
+	
+	const getMessages = useCallback((username, doRefresh = false) => {
+		if (!username || currentUserVar === username && !doRefresh)
 			return;
 		
 		const isCurrentUser = currentUserVar === username;
@@ -1553,8 +1656,6 @@ export default function Chat() {
 			currentUserVar = username;
 			setCurrentUser(username);
 			setQuote(null);
-			messagePageNumberNew.current = 0;
-			messagePageNumberCurrent.current = 0;
 		}
 		
 		try {
@@ -1562,86 +1663,14 @@ export default function Chat() {
 		} catch (e) {
 			console.log("你的浏览器不支持通知，人家也没办法呀……", e);
 		}
-		
-		axios.get(`/api/chat/message/${username}/${pageNumber}`).then(res => {
-			if (currentUserVar !== username) {
-				return;
-			}
-			
-			if (res.data.status === 0) {
-				navigate("/chat");
-				return;
-			}
-			
-			const userInfo = res.data?.result?.userInfo;
-			
-			if (userInfo) {
-				setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
-				
-				if (pageNumber === 0) {
-					setClientUser(clientUser => ({
-						...clientUser,
-						newMessageCount: Math.max(0, clientUser.newMessageCount - userInfo.newMessageCount),
-					}));
-					
-					setUsers(users => {
-						usersVar = users.map(user => user.username !== userInfo.username ? user : {
-							...user,
-							newMessageCount: 0,
-						});
-						
-						return usersVar;
-					});
-				}
-				
-				setInputValue(userInfo.draft ? userInfo.draft : "");
-				setShowScrollTop(true);
-			}
-			
-			if (!isCurrentUser && userInfo) {
-				flushSync(() => {
-					setCurrentUserDisplayName(userInfo.displayName);
-					setCurrentUserBadge(userInfo.badge);
-					setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
-					
-					setUsers(users => {
-						usersVar = users.map(user => user.username !== userInfo.username ? user : {
-							...user,
-							displayName: userInfo.displayName,
-							badge: userInfo.badge,
-							isMessageAllowed: userInfo.isMessageAllowed,
-						});
-						return usersVar;
-					});
-				});
-			}
-			
-			let currentScrollBottom = !isCurrentUser ? 0 : messageCard.current.scrollHeight - messageCard.current.scrollTop;
-			
-			if (res.data.result && res.data.result.message && res.data.result.message.length > 0 || pageNumber === 0) {
-				flushSync(() => {
-					messagesVar = pageNumber === 0 ? res.data.result.message : [...res.data.result.message, ...messagesVar];
-					setMessages([...messagesVar]);
-				});
-			}
-			
-			messageCardScrollTo(currentScrollBottom, "instant");
-		});
-	}, [userFindData.data?.pages, messageCardScrollTo, navigate, setClientUser, setUsers]);
-	
-	const messageLoadingObserver = useMemo(() => new IntersectionObserver((entries) => {
-		if (entries[0].isIntersecting && messagePageNumberNew.current === messagePageNumberCurrent.current) {
-			messagePageNumberNew.current = messagePageNumberCurrent.current + 1;
-			getMessages(currentUserVar, messagePageNumberNew.current);
-		}
-	}), [getMessages]);
+	}, [userFindData.data?.pages]);
 	
 	useLayoutEffect(() => {
 		if (!contactsData.isLoading) {
 			currentUserVar = null;
 			setCurrentUser(null);
 			if (username) {
-				getMessages(username, 0, true);
+				getMessages(username, true);
 			}
 		}
 	}, [getMessages, contactsData.isLoading, username]);
@@ -1765,7 +1794,7 @@ export default function Chat() {
 		if (scrollTop + clientHeight + 50 >= scrollHeight) {
 			messageCardScrollTo(0, "smooth");
 		}
-	}, [messageCardScrollTo, updateUserItem]);
+	}, [messageCardScrollTo, setMessages, updateUserItem]);
 	
 	let firstRebirth = useRef(false);
 	
@@ -1777,9 +1806,7 @@ export default function Chat() {
 		
 		if (disconnectErrorBarKey.current) {
 			closeSnackbar(disconnectErrorBarKey.current);
-			if (messagePageNumberNew.current === 0) {
-				getMessages(currentUserVar, 0, true);
-			}
+			messageData.refetch();
 			contactsData.refetch();
 			disconnectErrorBarKey.current = null;
 		}
@@ -1883,7 +1910,7 @@ export default function Chat() {
 				}
 			}
 		});
-	}, [contactsData, getMessages, newMessage, setUsers, updateUserItem]);
+	}, [contactsData, messageData, newMessage, setMessages, setUsers, updateUserItem]);
 	
 	useEffect(() => {
 		const stompConnect = () => {
@@ -1919,14 +1946,6 @@ export default function Chat() {
 		}
 	}, [stompOnConnect]);
 	
-	useEffect(() => {
-		if (lastMessageRef.current) {
-			messagePageNumberCurrent.current = messagePageNumberNew.current;
-			messageLoadingObserver.disconnect();
-			messageLoadingObserver.observe(lastMessageRef.current);
-		}
-	}, [messageLoadingObserver, messages]);
-	
 	useLayoutEffect(() => {
 		if (!username) {
 			setCurrentUser(null);
@@ -1939,7 +1958,7 @@ export default function Chat() {
 		if (document.getElementById("app-bar")) {
 			document.getElementById("app-bar").style.display = username && isSmallScreen ? "none" : "flex";
 		}
-	}, [isSmallScreen, username]);
+	}, [isSmallScreen, setMessages, username]);
 	
 	document.title = (currentUserDisplayName ? `和 ${currentUserDisplayName} 的聊天` : "聊天") + " - chy.web";
 	
@@ -2004,7 +2023,7 @@ export default function Chat() {
 								lastMessageText={users.find(item => item.username === "ChatRoomSystem").lastMessageText}
 								selected={currentUser === "ChatRoomSystem"}
 								isMessageAllowed={users.find(item => item.username === "ChatRoomSystem").isMessageAllowed}
-							/>
+								lastMessageScrollBottom={lastMessageScrollBottom}/>
 						)}
 					</List>
 					<Divider/>
@@ -2025,6 +2044,7 @@ export default function Chat() {
 									draft={user.draft}
 									selected={currentUser === user.username}
 									isMessageAllowed={user.isMessageAllowed}
+									lastMessageScrollBottom={lastMessageScrollBottom}
 								/>
 							))}
 						</List>
@@ -2075,6 +2095,7 @@ export default function Chat() {
 												draft={user.draft}
 												selected={currentUser === user.username}
 												isMessageAllowed={user.isMessageAllowed}
+												lastMessageScrollBottom={lastMessageScrollBottom}
 											/>
 										</motion.div>
 									);
@@ -2100,12 +2121,6 @@ export default function Chat() {
 				{Boolean(currentUser) && <Card variant="outlined" sx={{width: "100%"}}>
 					<Grid container direction="row" justifyContent="space-between" alignItems="center" padding={isSmallScreen ? 1 : 1.5} gap={1.5}>
 						{isSmallScreen && <IconButton onClick={() => {
-							setCurrentUser(null);
-							setCurrentUserDisplayName(null);
-							setCurrentUserBadge(null);
-							currentUserVar = null;
-							setMessages([]);
-							messagesVar = [];
 							navigate("/chat");
 						}}>
 							<ArrowBack/>
@@ -2144,13 +2159,26 @@ export default function Chat() {
 						</Box>
 					</Grid>
 				</Card>}
-				<Card variant="outlined" ref={messageCard} sx={{flex: 1, overflowY: "auto", px: 1, pt: 2, maxWidth: "100%"}}>
+				<Card
+					variant="outlined"
+					ref={messageCard}
+					sx={{
+						flex: 1,
+						overflowY: "scroll",
+						px: 1,
+						pt: 2,
+						maxWidth: "100%",
+					}}
+				>
+					<Box ref={messageLoadMoreRef} sx={{mt: -1, pb: 1, display: username ? "block" : "none"}}>
+						<LoadMoreIndicator isFetching={messageData.isFetching}/>
+					</Box>
 					{messages.map((message, messageIndex) => {
 						const currentDate = new Date(message.time);
 						const previousDate = new Date(!messageIndex ? 0 : messages[messageIndex - 1].time);
 						const showTime = currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000;
 						return (
-							<Box ref={messageIndex === 0 ? lastMessageRef : undefined} key={message.id}>
+							<Box key={message.id}>
 								{showTime && <Grid container><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
 								<Message
 									messageId={message.id}
@@ -2165,8 +2193,7 @@ export default function Chat() {
 									setQuote={setQuote}
 									useMarkdown={message.useMarkdown}
 									setMessages={setMessages}
-									messagePageNumberCurrent={messagePageNumberCurrent}
-									messagePageNumberNew={messagePageNumberNew}
+									messageData={messageData}
 								/>
 							</Box>
 						);
@@ -2254,8 +2281,7 @@ export default function Chat() {
 								setQuote={setQuote}
 								sendFiles={sendFiles}
 								setMessages={setMessages}
-								messagePageNumberNew={messagePageNumberNew}
-								messagePageNumberCurrent={messagePageNumberCurrent}
+								messageData={messageData}
 								currentUser={currentUser}
 							/>
 							<Dialog open={showMessageBlockAlert} onClose={() => setShowMessageBlockAlert(false)}>
