@@ -7,7 +7,7 @@ import {SnackbarProvider} from "notistack";
 import CssBaseline from "@mui/material/CssBaseline";
 import getDefaultTheme from "src/theme/getDefaultTheme.jsx";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
-import {useEffect, useRef, useState} from "react";
+import {useLayoutEffect, useRef, useState} from "react";
 import {Fab, useMediaQuery, useScrollTrigger, Zoom} from "@mui/material";
 import {createBrowserRouter, useLocation} from "react-router";
 import {MobileAppBar, PCAppBarLeft} from "src/components/AppAppBar.jsx";
@@ -40,7 +40,7 @@ const Layout = () => {
 		threshold: 100,
 	});
 	
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (pathname === "/" || pathname.startsWith("/chat")) {
 			setLockHeight(true);
 		} else {
