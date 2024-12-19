@@ -1,4 +1,4 @@
-import {memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
+import {Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import axios from "axios";
 import {
 	Backdrop,
@@ -462,14 +462,20 @@ const Message = memo(function Message({
 	const isMe = username === myname;
 	
 	return (
-		<Grid container justifyContent={isMe ? 'flex-end' : 'flex-start'} alignItems="flex-start" sx={{my: 2}} id={"message-" + messageId}>
+		<Grid
+			container
+			justifyContent={isMe ? "flex-end" : "flex-start"}
+			alignItems="flex-start"
+			sx={{my: 1}}
+			id={"message-" + messageId}
+		>
 			<Backdrop open={isMessageSearchScrollLoading} sx={{zIndex: 8964}}>
 				<CircularProgress size={50}/>
 			</Backdrop>
 			{!isMe && <NavigateIconButton sx={{mr: 1, p: 0}} href={`/user/${username}`}>
 				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 			</NavigateIconButton>}
-			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? 'flex-end' : 'flex-start'} spacing={0.7}>
+			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? "flex-end" : "flex-start"} spacing={0.7}>
 				{type === 1 ? (
 					<Paper
 						elevation={3}
@@ -580,7 +586,7 @@ const Message = memo(function Message({
 								} else {
 									enqueueSnackbar("消息不存在", {variant: "error"});
 								}
-							}, 0);
+							}, 500);
 						}}
 					/>
 				}
@@ -2158,48 +2164,60 @@ export default function Chat() {
 				</Card>}
 				<Card
 					variant="outlined"
-					ref={messageCard}
 					sx={{
 						flex: 1,
-						overflowY: "scroll",
-						px: 1,
-						pt: 2,
+						display: "flex",
+						flexDirection: "column",
+						justifyContent: "flex-end",
 						maxWidth: "100%",
 					}}
-					onScroll={() => {
-						if (lastMessageScrollBottom !== -1) {
-							lastMessageScrollBottom = messageCard.current.scrollHeight - messageCard.current.scrollTop;
-						}
-					}}
 				>
-					<Box ref={messageLoadMoreRef} sx={{mt: -1, pb: 1, display: username ? "block" : "none"}}>
-						<LoadMoreIndicator isFetching={messageData.isFetching}/>
-					</Box>
-					{messages.map((message, messageIndex) => {
-						const currentDate = new Date(message.time);
-						const previousDate = new Date(messageIndex === 0 ? 0 : messages[messageIndex - 1].time);
-						const showTime = currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000;
-						
-						return (
-							<Box key={message.id}>
-								{showTime && <Grid container><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
-								<Message
-									messageId={message.id}
-									type={message.type}
-									username={message.username}
-									displayName={message.displayName}
-									avatarVersion={message.avatarVersion}
-									badge={message.badge}
-									content={message.content}
-									file={message.file}
-									quote={message.quote}
-									setQuote={setQuote}
-									useMarkdown={message.useMarkdown}
-									messageData={messageData}
-								/>
-							</Box>
-						);
-					})}
+					<Grid
+						container
+						ref={messageCard}
+						sx={{
+							overflowY: "auto",
+							px: 1,
+							py: 1,
+							maxWidth: "100%",
+							flexDirection: "column",
+							flexWrap: "nowrap",
+						}}
+						onScroll={() => {
+							if (lastMessageScrollBottom !== -1) {
+								lastMessageScrollBottom = messageCard.current.scrollHeight - messageCard.current.scrollTop;
+							}
+						}}
+					>
+						<Box ref={messageLoadMoreRef} sx={{py: 1, display: username ? "block" : "none"}}>
+							<LoadMoreIndicator isFetching={messageData.isFetching}/>
+						</Box>
+						{messages.map((message, messageIndex) => {
+							const currentDate = new Date(message.time);
+							const previousDate = new Date(messageIndex === 0 ? 0 : messages[messageIndex - 1].time);
+							const showTime = currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000;
+							
+							return (
+								<Fragment key={message.id}>
+									{showTime && <Grid container my={1}><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
+									<Message
+										messageId={message.id}
+										type={message.type}
+										username={message.username}
+										displayName={message.displayName}
+										avatarVersion={message.avatarVersion}
+										badge={message.badge}
+										content={message.content}
+										file={message.file}
+										quote={message.quote}
+										setQuote={setQuote}
+										useMarkdown={message.useMarkdown}
+										messageData={messageData}
+									/>
+								</Fragment>
+							);
+						})}
+					</Grid>
 					{showScrollTop && <ScrollTop messageCard={messageCard}>
 						<Fab size="small">
 							<ArrowDownward/>
