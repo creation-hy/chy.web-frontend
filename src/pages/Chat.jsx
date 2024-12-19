@@ -1575,7 +1575,10 @@ export default function Chat() {
 			
 			if (pages.length > 0) {
 				queryClient.setQueryData(["chat", "message", username], data => ({
-					pages: pages,
+					pages: pages.map(page => ({
+						message: page,
+						userInfo: data?.pages.at(-1).userInfo,
+					})),
 					pageParams: data?.pageParams,
 				}));
 			}
