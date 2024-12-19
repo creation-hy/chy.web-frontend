@@ -734,6 +734,10 @@ const UserPage = memo(function UserPage({username}) {
 					}).then(res => {
 						if (res.data.status === 1) {
 							refetch();
+							setClientUser(clientUser => ({
+								...clientUser,
+								displayName: formData.get("displayName"),
+							}));
 						}
 					});
 					setModifying(false);
