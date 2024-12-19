@@ -88,6 +88,7 @@ const myname = localStorage.getItem("username");
 
 let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {useMarkdown: false};
 let usersVar = [], messagesVar = [];
+let lastMessageScrollBottom = 0;
 let socket, stomp;
 
 const uploadDraft = (contact, content) => {
@@ -131,13 +132,12 @@ const UserItem = memo(function UserItem({
 	                                        draft,
 	                                        selected,
 	                                        isMessageAllowed,
-	                                        lastMessageScrollBottom,
                                         }) {
 	return (
 		<ButtonBase
 			sx={{width: "100%"}}
 			onClick={() => {
-				lastMessageScrollBottom.current = -1;
+				lastMessageScrollBottom = -1;
 			}}
 		>
 			<NavigateListItemButton
@@ -252,7 +252,6 @@ UserItem.propTypes = {
 	draft: PropTypes.string,
 	selected: PropTypes.bool.isRequired,
 	isMessageAllowed: PropTypes.bool.isRequired,
-	lastMessageScrollBottom: PropTypes.object.isRequired,
 }
 
 export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, disableMediaEvent, ...props}) {
@@ -566,7 +565,7 @@ const Message = memo(function Message({
 								toggleMessageSearchScrollLoading.current(true);
 								
 								while (true) {
-									const data = (await messageData.fetchNextPage()).data.pages.flat();
+									const data = (await messageData.fetchNextPage()).data.pages.map(page => page.message).flat();
 									if (data.find(item => item.id === quote.id)) {
 										break;
 									}
@@ -684,7 +683,6 @@ Message.propTypes = {
 	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
 	useMarkdown: PropTypes.bool,
-	setMessages: PropTypes.func.isRequired,
 	messageData: PropTypes.object.isRequired,
 }
 
@@ -715,7 +713,6 @@ const ChatToolBar = memo(function ChatToolBar({
 	                                              quote,
 	                                              setQuote,
 	                                              sendFiles,
-	                                              setMessages,
 	                                              messageData,
 	                                              currentUser
                                               }) {
@@ -744,7 +741,7 @@ const ChatToolBar = memo(function ChatToolBar({
 	
 	const {data, fetchNextPage, isFetching, isFetched, hasNextPage} = useInfiniteQuery({
 		queryKey: ["chat", "message", "match", currentUser, messageSearchKeywords],
-		queryFn: ({pageParam}) => messageSearchKeywords === "" ? [] : axios.get(`/api/chat/message/match/${currentUser}/${pageParam}`,
+		queryFn: ({pageParam}) => !currentUser || messageSearchKeywords === "" ? [] : axios.get(`/api/chat/message/match/${currentUser}/${pageParam}`,
 			{params: {key: messageSearchKeywords}}).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
@@ -826,6 +823,10 @@ const ChatToolBar = memo(function ChatToolBar({
 		messageSearchResultBodyScrollTop.current = messageSearchResultBodyRef.current?.scrollTop ?? 0;
 		setOnMessageSearching(false);
 	};
+	
+	useLayoutEffect(() => {
+		setMessageSearchKeywords("");
+	}, [currentUser]);
 	
 	return (
 		<>
@@ -1060,7 +1061,7 @@ const ChatToolBar = memo(function ChatToolBar({
 								<Divider/>
 								<DialogContent ref={messageSearchResultBodyRef} sx={{py: 1}}>
 									<List sx={{py: 0}}>
-										{data?.pages?.map(page => page.map(message => (
+										{data.pages.map(page => page.map(message => (
 											<ListItemButton
 												key={message.id}
 												sx={{borderRadius: 1, px: 1}}
@@ -1069,7 +1070,7 @@ const ChatToolBar = memo(function ChatToolBar({
 														toggleMessageSearchScrollLoading.current(true);
 														
 														while (true) {
-															const data = (await messageData.fetchNextPage()).data.pages.flat();
+															const data = (await messageData.fetchNextPage()).data.pages.map(page => page.message).flat();
 															if (data.find(item => item.id === message.id)) {
 																break;
 															}
@@ -1085,7 +1086,7 @@ const ChatToolBar = memo(function ChatToolBar({
 														} else {
 															enqueueSnackbar("消息不存在", {variant: "error"});
 														}
-													}, 0);
+													}, 500);
 												}}
 											>
 												<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.5}}>
@@ -1246,7 +1247,6 @@ ChatToolBar.propTypes = {
 	quote: PropTypes.object,
 	setQuote: PropTypes.func.isRequired,
 	sendFiles: PropTypes.object.isRequired,
-	setMessages: PropTypes.func.isRequired,
 	messageData: PropTypes.object.isRequired,
 	currentUser: PropTypes.string,
 }
@@ -1403,7 +1403,6 @@ export default function Chat() {
 	const [showMessageBlockAlert, setShowMessageBlockAlert] = useState(false);
 	
 	const [messages, setMessagesState] = useState([]);
-	const lastMessageScrollBottom = useRef(0);
 	
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
@@ -1507,61 +1506,23 @@ export default function Chat() {
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
+		[...messageCard.current.getElementsByTagName("img"), ...messageCard.current.getElementsByTagName("video")].map(element => {
+			const resizeObserver = new ResizeObserver(() => {
+				messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
+			});
+			resizeObserver.observe(element);
+		});
 	}, []);
 	
 	const messageQueryFn = useCallback(({pageParam}) => {
 		return !username ? [] : axios.get(`/api/chat/message/${username}/${pageParam}`).then(res => {
 			if (res.data.status === 0) {
 				navigate("/chat");
-				return [];
+				return {};
 			}
-			
-			const userInfo = res.data?.result?.userInfo;
-			
-			if (userInfo) {
-				setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
-				
-				if (pageParam === 0) {
-					setClientUser(clientUser => ({
-						...clientUser,
-						newMessageCount: Math.max(0, clientUser.newMessageCount - userInfo.newMessageCount),
-					}));
-					
-					setUsers(users => {
-						usersVar = users?.map(user => user.username !== userInfo.username ? user : {
-							...user,
-							newMessageCount: 0,
-						});
-						
-						return usersVar;
-					});
-				}
-				
-				setInputValue(userInfo.draft ? userInfo.draft : "");
-				setShowScrollTop(true);
-			}
-			
-			if (userInfo) {
-				flushSync(() => {
-					setCurrentUserDisplayName(userInfo.displayName);
-					setCurrentUserBadge(userInfo.badge);
-					setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
-					
-					setUsers(users => {
-						usersVar = users?.map(user => user.username !== userInfo.username ? user : {
-							...user,
-							displayName: userInfo.displayName,
-							badge: userInfo.badge,
-							isMessageAllowed: userInfo.isMessageAllowed,
-						});
-						return usersVar;
-					});
-				});
-			}
-			
-			return res.data?.result?.message ?? [];
+			return res.data?.result ?? {};
 		});
-	}, [navigate, setClientUser, setUsers, username]);
+	}, [navigate, username]);
 	
 	const messageData = useInfiniteQuery({
 		queryKey: ["chat", "message", username],
@@ -1592,11 +1553,6 @@ export default function Chat() {
 		return () => pageLoadingObserver.disconnect();
 	}, [messageData, messageData.fetchNextPage, messageData.hasNextPage, messageData.isFetching]);
 	
-	useEffect(() => {
-		lastMessageScrollBottom.current = Math.max(0, lastMessageScrollBottom.current);
-		messageCardScrollTo(lastMessageScrollBottom.current, "instant");
-	}, [messageCardScrollTo, messages]);
-	
 	const setMessages = useCallback((param) => {
 		setMessagesState(messages => {
 			const newMessages = param instanceof Function ? param(messages) : param;
@@ -1622,13 +1578,64 @@ export default function Chat() {
 		});
 	}, [queryClient, username]);
 	
-	useLayoutEffect(() => {
-		if (lastMessageScrollBottom.current !== -1) {
-			lastMessageScrollBottom.current = messageCard.current.scrollHeight - messageCard.current.scrollTop;
+	useEffect(() => {
+		if (!messageData.data || messageData.data.pages.flat().length === 0) {
+			messagesVar = [];
+			setMessagesState([]);
+			return;
 		}
-		messagesVar = messageData.data?.pages.flat() ?? [];
-		setMessagesState([...messagesVar]);
-	}, [messageData.data?.pages]);
+		
+		const data = messageData.data;
+		
+		const userInfo = data.pages[data.pages.length - 1]?.userInfo;
+		
+		if (userInfo && data.pages.length === 1) {
+			setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
+			
+			setClientUser(clientUser => ({
+				...clientUser,
+				newMessageCount: clientUser ? Math.max(0, clientUser.newMessageCount - userInfo.newMessageCount) : 0,
+			}));
+			
+			setUsers(users => {
+				usersVar = users?.map(user => user.username !== userInfo.username ? user : {
+					...user,
+					newMessageCount: 0,
+				});
+				
+				return usersVar;
+			});
+			
+			setInputValue(userInfo.draft ? userInfo.draft : "");
+			setShowScrollTop(true);
+		}
+		
+		if (userInfo) {
+			flushSync(() => {
+				setCurrentUserDisplayName(userInfo.displayName);
+				setCurrentUserBadge(userInfo.badge);
+				setCurrentUserMessageAllowed(userInfo.isMessageAllowed);
+				
+				setUsers(users => {
+					usersVar = users?.map(user => user.username !== userInfo.username ? user : {
+						...user,
+						displayName: userInfo.displayName,
+						badge: userInfo.badge,
+						isMessageAllowed: userInfo.isMessageAllowed,
+					});
+					return usersVar;
+				});
+			});
+		}
+		
+		messagesVar = data.pages.map(page => page.message).flat();
+		flushSync(() => setMessagesState([...messagesVar]));
+		
+		requestAnimationFrame(() => {
+			lastMessageScrollBottom = Math.max(0, lastMessageScrollBottom);
+			messageCardScrollTo(lastMessageScrollBottom, "instant");
+		});
+	}, [messageCardScrollTo, messageData.data, messageData.data?.pages, setClientUser, setUsers]);
 	
 	const getMessages = useCallback((username, doRefresh = false) => {
 		if (!username || currentUserVar === username && !doRefresh)
@@ -1756,7 +1763,7 @@ export default function Chat() {
 		if (sender !== myname && !isCurrent) {
 			setClientUser(clientUser => ({
 				...clientUser,
-				newMessageCount: clientUser.newMessageCount + 1,
+				newMessageCount: clientUser ? clientUser.newMessageCount + 1 : 0,
 			}));
 		}
 	}, [setClientUser, setUsers]);
@@ -1947,18 +1954,10 @@ export default function Chat() {
 	}, [stompOnConnect]);
 	
 	useLayoutEffect(() => {
-		if (!username) {
-			setCurrentUser(null);
-			setCurrentUserDisplayName(null);
-			setCurrentUserBadge(null);
-			currentUserVar = null;
-			setMessages([]);
-			messagesVar = [];
-		}
 		if (document.getElementById("app-bar")) {
 			document.getElementById("app-bar").style.display = username && isSmallScreen ? "none" : "flex";
 		}
-	}, [isSmallScreen, setMessages, username]);
+	}, [isSmallScreen, username]);
 	
 	document.title = (currentUserDisplayName ? `和 ${currentUserDisplayName} 的聊天` : "聊天") + " - chy.web";
 	
@@ -2023,7 +2022,7 @@ export default function Chat() {
 								lastMessageText={users.find(item => item.username === "ChatRoomSystem").lastMessageText}
 								selected={currentUser === "ChatRoomSystem"}
 								isMessageAllowed={users.find(item => item.username === "ChatRoomSystem").isMessageAllowed}
-								lastMessageScrollBottom={lastMessageScrollBottom}/>
+							/>
 						)}
 					</List>
 					<Divider/>
@@ -2044,7 +2043,6 @@ export default function Chat() {
 									draft={user.draft}
 									selected={currentUser === user.username}
 									isMessageAllowed={user.isMessageAllowed}
-									lastMessageScrollBottom={lastMessageScrollBottom}
 								/>
 							))}
 						</List>
@@ -2095,7 +2093,6 @@ export default function Chat() {
 												draft={user.draft}
 												selected={currentUser === user.username}
 												isMessageAllowed={user.isMessageAllowed}
-												lastMessageScrollBottom={lastMessageScrollBottom}
 											/>
 										</motion.div>
 									);
@@ -2169,14 +2166,20 @@ export default function Chat() {
 						pt: 2,
 						maxWidth: "100%",
 					}}
+					onScroll={() => {
+						if (lastMessageScrollBottom !== -1) {
+							lastMessageScrollBottom = messageCard.current.scrollHeight - messageCard.current.scrollTop;
+						}
+					}}
 				>
 					<Box ref={messageLoadMoreRef} sx={{mt: -1, pb: 1, display: username ? "block" : "none"}}>
 						<LoadMoreIndicator isFetching={messageData.isFetching}/>
 					</Box>
 					{messages.map((message, messageIndex) => {
 						const currentDate = new Date(message.time);
-						const previousDate = new Date(!messageIndex ? 0 : messages[messageIndex - 1].time);
+						const previousDate = new Date(messageIndex === 0 ? 0 : messages[messageIndex - 1].time);
 						const showTime = currentDate.getTime() - previousDate.getTime() > 5 * 60 * 1000;
+						
 						return (
 							<Box key={message.id}>
 								{showTime && <Grid container><Chip label={convertDateToLocaleAbsoluteString(currentDate)} sx={{mx: "auto"}}/></Grid>}
@@ -2192,7 +2195,6 @@ export default function Chat() {
 									quote={message.quote}
 									setQuote={setQuote}
 									useMarkdown={message.useMarkdown}
-									setMessages={setMessages}
 									messageData={messageData}
 								/>
 							</Box>
@@ -2280,7 +2282,6 @@ export default function Chat() {
 								quote={quote}
 								setQuote={setQuote}
 								sendFiles={sendFiles}
-								setMessages={setMessages}
 								messageData={messageData}
 								currentUser={currentUser}
 							/>
