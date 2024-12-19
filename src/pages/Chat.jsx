@@ -1528,7 +1528,7 @@ export default function Chat() {
 		queryKey: ["chat", "message", username],
 		queryFn: messageQueryFn,
 		initialPageParam: 0,
-		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
+		getNextPageParam: (lastPage, allPages, lastPageParam) => !lastPage.message || lastPage.message.length === 0 ? undefined : lastPageParam + 1,
 		staleTime: Infinity,
 		refetchOnMount: "always",
 		select: data => ({
