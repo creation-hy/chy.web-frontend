@@ -1671,7 +1671,7 @@ export default function Chat() {
 		
 		const isCurrentUser = currentUserVar === username;
 		
-		const userItem = usersVar.find(item => item.username === username) ??
+		const userItem = usersVar?.find(item => item.username === username) ??
 			userFindData.data?.pages.flat().find(item => item.username === username);
 		
 		if (userItem) {
@@ -1761,7 +1761,7 @@ export default function Chat() {
 	}, [isCurrentUserMessageAllowed, setUsers, quote?.id]);
 	
 	const updateUserItem = useCallback((username, displayName, avatarVersion, badge, content, time, isCurrent, sender) => {
-		const userItem = usersVar.find(item => item.username === username);
+		const userItem = usersVar?.find(item => item.username === username);
 		
 		if (userItem) {
 			userItem.lastMessageText = content;
@@ -1769,7 +1769,9 @@ export default function Chat() {
 			if (sender !== myname && !isCurrent)
 				userItem.newMessageCount++;
 			userItem.avatarVersion = avatarVersion;
-			usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
+			if (usersVar) {
+				usersVar = [userItem, ...usersVar.filter(item => item.username !== username)];
+			}
 			setUsers([...usersVar]);
 		} else {
 			axios.get(`/api/user/find/0`, {params: {key: username}}).then(res => {
@@ -1848,7 +1850,7 @@ export default function Chat() {
 		
 		stomp.subscribe("/topic/chat.online", (message) => {
 			const username = JSON.parse(message.body).username;
-			const userItem = usersVar.find(item => item.username === username);
+			const userItem = usersVar?.find(item => item.username === username);
 			if (userItem) {
 				userItem.isOnline = true;
 				setUsers([...usersVar]);
@@ -1859,7 +1861,7 @@ export default function Chat() {
 		
 		stomp.subscribe("/topic/chat.offline", (message) => {
 			const data = JSON.parse(message.body);
-			const userItem = usersVar.find(item => item.username === data.username);
+			const userItem = usersVar?.find(item => item.username === data.username);
 			if (userItem) {
 				userItem.isOnline = false;
 				userItem.lastOnline = data.lastOnline;
@@ -1918,7 +1920,7 @@ export default function Chat() {
 			}
 			
 			if (data["isLatest"]) {
-				const userItem = usersVar.find(item => item.username === (data.sender === myname`` ? data.recipient : data.sender));
+				const userItem = usersVar?.find(item => item.username === (data.sender === myname`` ? data.recipient : data.sender));
 				if (userItem) {
 					userItem.lastMessageText = "消息已撤回";
 					setUsers([...usersVar]);
@@ -1938,7 +1940,7 @@ export default function Chat() {
 			}
 			
 			if (data["isLatest"]) {
-				const userItem = usersVar.find(item => item.username === "ChatRoomSystem");
+				const userItem = usersVar?.find(item => item.username === "ChatRoomSystem");
 				if (userItem) {
 					userItem.lastMessageText = data.displayName + ": 消息已撤回";
 					setUsers([...usersVar]);
