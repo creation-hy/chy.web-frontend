@@ -259,7 +259,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 	
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	
-	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng|bmp)$/i.test(fileName) && deleted === false) {
+	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng|bmp|svg|ico)$/i.test(fileName) && deleted === false) {
 		return (
 			<>
 				<ButtonBase
@@ -356,7 +356,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 		);
 	}
 	
-	if (/\.(mp4|webm|ogg|ogv)$/i.test(fileName) && deleted === false) {
+	if (/\.(mp4|webm)$/i.test(fileName) && deleted === false) {
 		return (
 			<video
 				src={url}
@@ -372,7 +372,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 		);
 	}
 	
-	if (/\.(mp3|wav|aac)$/i.test(fileName) && deleted === false) {
+	if (/\.(mp3|wav|aac|flac)$/i.test(fileName) && deleted === false) {
 		return (
 			<audio
 				src={url}
