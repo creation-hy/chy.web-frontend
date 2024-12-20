@@ -1263,21 +1263,28 @@ const ScrollTop = memo(function ScrollTop({children, messageCard}) {
 	const [left, setLeft] = useState(0);
 	
 	useEffect(() => {
-		messageCard.current.addEventListener("scroll", () => {
-			if (messageCard.current.scrollTop + messageCard.current.clientHeight + 100 <= messageCard.current.scrollHeight)
-				setTrigger(true);
-			else
-				setTrigger(false);
-		});
+		const card = messageCard.current;
+		
+		const updateTrigger = () => {
+			setTrigger(card.scrollTop + card.clientHeight + 100 <= card.scrollHeight);
+		}
+		
+		card.addEventListener("scroll", updateTrigger);
 		
 		const observer = new ResizeObserver(() => {
-			if (messageCard.current) {
-				setTop(messageCard.current.clientHeight + messageCard.current.offsetTop - 50);
-				setLeft(messageCard.current.clientWidth / 2 + messageCard.current.offsetLeft - 25);
+			if (card) {
+				setTop(card.clientHeight + card.offsetTop - 50);
+				setLeft(card.clientWidth / 2 + card.offsetLeft - 25);
 			}
 		});
 		
-		observer.observe(messageCard.current);
+		observer.observe(card);
+		updateTrigger();
+		
+		return () => {
+			card.removeEventListener("scroll", updateTrigger);
+			observer.disconnect();
+		}
 	}, [messageCard]);
 	
 	if (!messageCard.current || messageCard.current.display === "none") {
@@ -1412,7 +1419,7 @@ export default function Chat() {
 	
 	const [lastOnline, setLastOnline] = useState("");
 	const [quote, setQuote] = useState(null);
-	const [showScrollTop, setShowScrollTop] = useState(false);
+	const [showScrollTop, setShowScrollTop] = useState(true);
 	
 	const [isDragging, setIsDragging] = useState(false);
 	const sendFiles = useRef(null);
@@ -1521,17 +1528,17 @@ export default function Chat() {
 	}, []);
 	
 	const messageQueryFn = useCallback(({pageParam}) => {
-		return !username ? [] : axios.get(`/api/chat/message/${username}/${pageParam}`).then(res => {
+		return !currentUser ? [] : axios.get(`/api/chat/message/${currentUser}/${pageParam}`).then(res => {
 			if (res.data.status === 0) {
 				navigate("/chat");
 				return {};
 			}
 			return res.data?.result ?? {};
 		});
-	}, [navigate, username]);
+	}, [navigate, currentUser]);
 	
 	const messageData = useInfiniteQuery({
-		queryKey: ["chat", "message", username],
+		queryKey: ["chat", "message", currentUser],
 		queryFn: messageQueryFn,
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages, lastPageParam) => !lastPage.message || lastPage.message.length === 0 ? undefined : lastPageParam + 1,
@@ -1574,7 +1581,7 @@ export default function Chat() {
 			}
 			
 			if (pages.length > 0) {
-				queryClient.setQueryData(["chat", "message", username], data => ({
+				queryClient.setQueryData(["chat", "message", currentUser], data => ({
 					pages: pages.map(page => ({
 						message: page,
 						userInfo: data?.pages.at(-1).userInfo,
@@ -1585,7 +1592,7 @@ export default function Chat() {
 			
 			return newMessages;
 		});
-	}, [queryClient, username]);
+	}, [queryClient, currentUser]);
 	
 	useEffect(() => {
 		if (!messageData.data || messageData.data.pages.flat().length === 0) {
@@ -1616,8 +1623,9 @@ export default function Chat() {
 			});
 			
 			setInputValue(userInfo.draft ? userInfo.draft : "");
-			setShowScrollTop(true);
 		}
+		
+		setShowScrollTop(true);
 		
 		if (userInfo) {
 			flushSync(() => {
@@ -1668,7 +1676,7 @@ export default function Chat() {
 			if (messageInput.current) {
 				uploadDraft(currentUserVar, messageInput.current.value);
 			}
-			setShowScrollTop(false);
+			flushSync(() => setShowScrollTop(false));
 			currentUserVar = username;
 			setCurrentUser(username);
 			setQuote(null);
