@@ -372,6 +372,17 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 		);
 	}
 	
+	if (/\.(mp3|wav|aac)$/i.test(fileName) && deleted === false) {
+		return (
+			<audio
+				src={url}
+				controls
+				style={{maxWidth: "100%"}}
+				{...props}
+			/>
+		);
+	}
+	
 	return (
 		<Paper variant="outlined" sx={{maxWidth: "100%"}} {...props}>
 			<ListItemButton
