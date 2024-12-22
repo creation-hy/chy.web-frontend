@@ -15,6 +15,7 @@ import {
 	ListItemText,
 	MenuList,
 	Paper,
+	Skeleton,
 	Switch,
 	Tooltip,
 	useMediaQuery,
@@ -254,17 +255,75 @@ UserItem.propTypes = {
 	isMessageAllowed: PropTypes.bool.isRequired,
 }
 
-export const MessageFile = memo(function MessageFile({url, fileName, fileSize, deleted, disableMediaEvent, ...props}) {
+export const MessageFile = memo(function MessageFile({url, fileName, fileSize, fileWidth, fileHeight, deleted, disableMediaEvent, ...props}) {
 	const [showBrokenDialog, setShowBrokenDialog] = useState(false);
 	
 	const [showImagePreview, setShowImagePreview] = useState(false);
 	
-	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|avif|apng|bmp|svg|ico)$/i.test(fileName) && deleted === false) {
+	const [loaded, setLoaded] = useState(false);
+	
+	const [width, setWidth] = useState(fileWidth ?? 300);
+	const [height, setHeight] = useState(fileHeight ?? 300);
+	
+	const containerRef = useRef(null);
+	
+	useLayoutEffect(() => {
+		const maxSize = 300;
+		let width = fileWidth ?? maxSize;
+		let height = fileHeight ?? maxSize;
+		
+		if (fileWidth && fileHeight && fileWidth > maxSize) {
+			width = maxSize;
+			height = fileHeight / fileWidth * maxSize;
+		}
+		
+		const updateScale = () => {
+			if (containerRef.current) {
+				const containerWidth = containerRef.current.offsetWidth;
+				const scale = containerWidth / width;
+				
+				if (scale < 1) {
+					width *= scale;
+					height *= scale;
+				}
+				
+				setWidth(width);
+				setHeight(height);
+			}
+		};
+		
+		window.addEventListener("resize", updateScale);
+		updateScale();
+		
+		return () => window.removeEventListener("resize", updateScale);
+	}, [fileHeight, fileWidth]);
+	
+	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|bmp|ico)$/i.test(fileName) && deleted === false) {
 		return (
-			<>
+			<Grid
+				container
+				ref={containerRef}
+				direction="column"
+				sx={{
+					flex: 1,
+					width: "100%",
+					alignItems: "flex-end",
+				}}
+			>
+				{!loaded && (
+					<Skeleton
+						variant="rectangular"
+						width={width}
+						height={Math.min(height, 800)}
+						sx={{borderRadius: 0.5}}
+					/>
+				)}
 				<ButtonBase
 					sx={{
 						display: "grid",
+						alignItems: "stretch",
+						visibility: loaded ? "visible" : "hidden",
+						height: loaded ? undefined : 0,
 						borderRadius: 0.5,
 					}}
 					onClick={disableMediaEvent ? undefined : () => {
@@ -277,10 +336,12 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 						alt={fileName}
 						style={{
 							maxWidth: "min(100%, 300px)",
-							maxHeight: "min(100%, 300px)",
+							maxHeight: "800px",
+							height: loaded ? undefined : 0,
 							objectFit: "contain",
 							borderRadius: 4,
 						}}
+						onLoad={() => setLoaded(true)}
 						{...props}
 					/>
 				</ButtonBase>
@@ -352,23 +413,45 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, d
 						</Box>
 					</Grid>
 				</Dialog>
-			</>
+			</Grid>
 		);
 	}
 	
 	if (/\.(mp4|webm)$/i.test(fileName) && deleted === false) {
 		return (
-			<video
-				src={url}
-				controls
-				style={{
-					maxWidth: "min(100%, 300px)",
-					maxHeight: "min(100%, 300px)",
-					objectFit: "contain",
-					borderRadius: 4,
+			<Grid
+				container
+				ref={containerRef}
+				direction="column"
+				sx={{
+					flex: 1,
+					width: "100%",
+					alignItems: "flex-end",
 				}}
-				{...props}
-			/>
+			>
+				{!loaded && (
+					<Skeleton
+						variant="rectangular"
+						width={width}
+						height={Math.min(height, 800)}
+						sx={{borderRadius: 0.5}}
+					/>
+				)}
+				<video
+					src={url}
+					controls={loaded}
+					style={{
+						maxWidth: "min(100%, 300px)",
+						maxHeight: "min(100%, 300px)",
+						objectFit: "contain",
+						borderRadius: 4,
+						visibility: loaded ? "visible" : "hidden",
+						height: loaded ? undefined : 0,
+					}}
+					onLoadedData={() => setLoaded(true)}
+					{...props}
+				/>
+			</Grid>
 		);
 	}
 	
@@ -440,6 +523,8 @@ MessageFile.propTypes = {
 	url: PropTypes.string,
 	fileName: PropTypes.string.isRequired,
 	fileSize: PropTypes.number.isRequired,
+	fileWidth: PropTypes.number,
+	fileHeight: PropTypes.number,
 	deleted: PropTypes.bool,
 	disableMediaEvent: PropTypes.bool,
 }
@@ -486,7 +571,7 @@ const Message = memo(function Message({
 			{!isMe && <NavigateIconButton sx={{mr: 1, p: 0}} href={`/user/${username}`}>
 				<UserAvatar username={username} displayName={displayName} avatarVersion={avatarVersion}/>
 			</NavigateIconButton>}
-			<Grid container direction="column" sx={{maxWidth: "75%"}} alignItems={isMe ? "flex-end" : "flex-start"} spacing={0.7}>
+			<Grid container direction="column" sx={{maxWidth: "75%", flex: 1}} alignItems={isMe ? "flex-end" : "flex-start"}>
 				{type === 1 ? (
 					<Paper
 						elevation={3}
@@ -541,6 +626,8 @@ const Message = memo(function Message({
 						url={file.url}
 						fileName={file.fileName}
 						fileSize={file.fileSize}
+						fileWidth={file.fileWidth}
+						fileHeight={file.fileHeight}
 						deleted={file.deleted}
 						onContextMenu={(event) => {
 							event.preventDefault();
@@ -577,6 +664,7 @@ const Message = memo(function Message({
 						variant="outlined"
 						avatar={<UserAvatar username={quote.username} displayName={quote.displayName} avatarVersion={quote.avatarVersion}/>}
 						label={quote.displayName + ": " + quote.content}
+						sx={{mt: 0.75}}
 						onClick={async () => {
 							if (!messagesVar.find(item => item.id === quote.id)) {
 								toggleMessageSearchScrollLoading.current(true);
@@ -619,6 +707,8 @@ const Message = memo(function Message({
 							url={file.url}
 							fileName={file.fileName}
 							fileSize={file.fileSize}
+							fileWidth={file.fileWidth}
+							fileHeight={file.fileHeight}
 							deleted={file.deleted}
 							onContextMenu={(event) => event.preventDefault()}
 						/>
@@ -1141,6 +1231,8 @@ const ChatToolBar = memo(function ChatToolBar({
 																url={message.file.url}
 																fileName={message.file.fileName}
 																fileSize={message.file.fileSize}
+																width={message.file.fileWidth}
+																height={message.file.fileHeight}
 																deleted={message.file.deleted}
 																disableMediaEvent
 															/>
