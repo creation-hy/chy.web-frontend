@@ -307,7 +307,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 				sx={{
 					flex: 1,
 					width: "100%",
-					alignItems: "flex-end",
+					alignItems: "inherit",
 				}}
 			>
 				{!loaded && (
@@ -334,10 +334,9 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 					<img
 						src={url}
 						alt={fileName}
+						width={width}
+						height={loaded ? Math.min(height, 800) : 0}
 						style={{
-							maxWidth: "min(100%, 300px)",
-							maxHeight: "800px",
-							height: loaded ? undefined : 0,
 							objectFit: "contain",
 							borderRadius: 4,
 						}}
@@ -426,7 +425,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 				sx={{
 					flex: 1,
 					width: "100%",
-					alignItems: "flex-end",
+					alignItems: "inherit",
 				}}
 			>
 				{!loaded && (
@@ -440,13 +439,12 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 				<video
 					src={url}
 					controls={loaded}
+					width={width}
+					height={loaded ? Math.min(height, 800) : 0}
 					style={{
-						maxWidth: "min(100%, 300px)",
-						maxHeight: "min(100%, 300px)",
 						objectFit: "contain",
 						borderRadius: 4,
 						visibility: loaded ? "visible" : "hidden",
-						height: loaded ? undefined : 0,
 					}}
 					onLoadedData={() => setLoaded(true)}
 					{...props}
@@ -685,7 +683,7 @@ const Message = memo(function Message({
 								} else {
 									enqueueSnackbar("消息不存在", {variant: "error"});
 								}
-							}, 500);
+							}, 50);
 						}}
 					/>
 				}
@@ -1193,7 +1191,7 @@ const ChatToolBar = memo(function ChatToolBar({
 														} else {
 															enqueueSnackbar("消息不存在", {variant: "error"});
 														}
-													}, 500);
+													}, 50);
 												}}
 											>
 												<ListItemAvatar sx={{alignSelf: "flex-start", mt: 0.5}}>
@@ -1622,12 +1620,6 @@ export default function Chat() {
 	
 	const messageCardScrollTo = useCallback((bottom, behavior) => {
 		messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
-		[...messageCard.current.getElementsByTagName("img"), ...messageCard.current.getElementsByTagName("video")].map(element => {
-			const resizeObserver = new ResizeObserver(() => {
-				messageCard.current?.scrollTo({top: messageCard.current.scrollHeight - bottom, behavior: behavior});
-			});
-			resizeObserver.observe(element);
-		});
 	}, []);
 	
 	const messageQueryFn = useCallback(({pageParam}) => {
