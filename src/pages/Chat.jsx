@@ -288,7 +288,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 				}
 				
 				setWidth(width);
-				setHeight(height);
+				setHeight(Math.min(height, 800));
 			}
 		};
 		
@@ -314,7 +314,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 					<Skeleton
 						variant="rectangular"
 						width={width}
-						height={Math.min(height, 800)}
+						height={height}
 						sx={{borderRadius: 0.5}}
 					/>
 				)}
@@ -324,6 +324,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 						alignItems: "stretch",
 						visibility: loaded ? "visible" : "hidden",
 						height: loaded ? undefined : 0,
+						width: loaded ? width : undefined,
 						borderRadius: 0.5,
 					}}
 					onClick={disableMediaEvent ? undefined : () => {
@@ -334,10 +335,10 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 					<img
 						src={url}
 						alt={fileName}
-						width={width}
-						height={loaded ? Math.min(height, 800) : 0}
 						style={{
-							objectFit: "contain",
+							width: width,
+							height: loaded ? height : 0,
+							objectFit: "cover",
 							borderRadius: 4,
 						}}
 						onLoad={() => setLoaded(true)}
@@ -432,7 +433,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 					<Skeleton
 						variant="rectangular"
 						width={width}
-						height={Math.min(height, 800)}
+						height={height}
 						sx={{borderRadius: 0.5}}
 					/>
 				)}
@@ -440,9 +441,9 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 					src={url}
 					controls={loaded}
 					width={width}
-					height={loaded ? Math.min(height, 800) : 0}
+					height={loaded ? height : 0}
 					style={{
-						objectFit: "contain",
+						objectFit: "cover",
 						borderRadius: 4,
 						visibility: loaded ? "visible" : "hidden",
 					}}
@@ -1229,8 +1230,8 @@ const ChatToolBar = memo(function ChatToolBar({
 																url={message.file.url}
 																fileName={message.file.fileName}
 																fileSize={message.file.fileSize}
-																width={message.file.fileWidth}
-																height={message.file.fileHeight}
+																fileWidth={message.file.fileWidth}
+																fileHeight={message.file.fileHeight}
 																deleted={message.file.deleted}
 																disableMediaEvent
 															/>
