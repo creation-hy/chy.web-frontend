@@ -262,15 +262,15 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 	
 	const [loaded, setLoaded] = useState(false);
 	
-	const [width, setWidth] = useState(fileWidth ?? 300);
-	const [height, setHeight] = useState(fileHeight ?? 300);
+	const [width, setWidth] = useState(fileWidth);
+	const [height, setHeight] = useState(fileHeight);
 	
 	const containerRef = useRef(null);
 	
 	useLayoutEffect(() => {
 		const maxSize = 300;
-		let width = fileWidth ?? maxSize;
-		let height = fileHeight ?? maxSize;
+		let width = fileWidth;
+		let height = fileHeight;
 		
 		if (fileWidth && fileHeight && fileWidth > maxSize) {
 			width = maxSize;
@@ -278,7 +278,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 		}
 		
 		const updateScale = () => {
-			if (containerRef.current) {
+			if (containerRef.current && width && height) {
 				const containerWidth = containerRef.current.offsetWidth;
 				const scale = containerWidth / width;
 				
@@ -335,10 +335,12 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 					<img
 						src={url}
 						alt={fileName}
+						width={width}
+						height={loaded ? height : 0}
 						style={{
-							width: width,
-							height: loaded ? height : 0,
-							objectFit: "cover",
+							maxWidth: width ? undefined : "min(100%, 300px)",
+							maxHeight: height ? undefined : "800px",
+							objectFit: width && height ? "cover" : "contain",
 							borderRadius: 4,
 						}}
 						onLoad={() => setLoaded(true)}
@@ -437,19 +439,32 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 						sx={{borderRadius: 0.5}}
 					/>
 				)}
-				<video
-					src={url}
-					controls={loaded}
-					width={width}
-					height={loaded ? height : 0}
-					style={{
-						objectFit: "cover",
-						borderRadius: 4,
+				<Box
+					sx={{
+						display: "grid",
+						alignItems: "stretch",
 						visibility: loaded ? "visible" : "hidden",
+						height: loaded ? undefined : 0,
+						width: loaded ? width : undefined,
+						borderRadius: 0.5,
 					}}
-					onLoadedData={() => setLoaded(true)}
-					{...props}
-				/>
+				>
+					<video
+						src={url}
+						controls={loaded}
+						width={width}
+						height={loaded ? height : 0}
+						style={{
+							maxWidth: width ? undefined : "min(100%, 300px)",
+							maxHeight: height ? undefined : "800px",
+							objectFit: "cover",
+							borderRadius: 4,
+							visibility: loaded ? "visible" : "hidden",
+						}}
+						onLoadedData={() => setLoaded(true)}
+						{...props}
+					/>
+				</Box>
 			</Grid>
 		);
 	}
