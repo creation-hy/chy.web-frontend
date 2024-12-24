@@ -132,6 +132,8 @@ const News = memo(function News({username, displayName, avatarVersion}) {
 									url={chat.file.url}
 									fileName={chat.file.fileName}
 									fileSize={chat.file.fileSize}
+									fileWidth={chat.file.fileWidth}
+									fileHeight={chat.file.fileHeight}
 									deleted={chat.file.deleted}
 									onContextMenu={(event) => event.preventDefault()}
 								/>
