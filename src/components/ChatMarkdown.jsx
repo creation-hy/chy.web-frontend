@@ -59,7 +59,7 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, k
 			components={{
 				hr: () => <Divider sx={{my: 1}} color={fontColor}/>,
 				a: ({href, title, children}) => (
-					<Link href={href} title={title} onClick={(event) => event.stopPropagation()}>
+					<Link href={href} title={title} target="_blank" onClick={(event) => event.stopPropagation()}>
 						{highlightText(children)}
 					</Link>
 				),
