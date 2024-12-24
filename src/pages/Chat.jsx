@@ -1927,11 +1927,12 @@ export default function Chat() {
 		}];
 		
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
-		flushSync(() => setMessages([...messagesVar]));
+		flushSync(() => setMessagesState([...messagesVar]));
+		messageData.refetch();
 		if (scrollTop + clientHeight + 50 >= scrollHeight) {
 			messageCardScrollTo(0, "smooth");
 		}
-	}, [messageCardScrollTo, setMessages, updateUserItem]);
+	}, [messageCardScrollTo, messageData, updateUserItem]);
 	
 	let firstRebirth = useRef(false);
 	
@@ -2020,7 +2021,7 @@ export default function Chat() {
 			}
 			
 			if (data["isLatest"]) {
-				const userItem = usersVar?.find(item => item.username === (data.sender === myname`` ? data.recipient : data.sender));
+				const userItem = usersVar?.find(item => item.username === (data.sender === myname ? data.recipient : data.sender));
 				if (userItem) {
 					userItem.lastMessageText = "消息已撤回";
 					setUsers([...usersVar]);
