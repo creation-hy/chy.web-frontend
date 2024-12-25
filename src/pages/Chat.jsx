@@ -89,7 +89,7 @@ const myname = localStorage.getItem("username");
 
 let currentUserVar = null, settingsVar = JSON.parse(localStorage.getItem("chatSettings")) || {useMarkdown: false};
 let usersVar = [], messagesVar = [];
-let lastMessageScrollBottom = 0;
+let lastMessageScrollBottom = 0, enableScrollAnimation = false;
 let socket, stomp;
 
 const uploadDraft = (contact, content) => {
@@ -1761,7 +1761,8 @@ export default function Chat() {
 		
 		requestAnimationFrame(() => {
 			lastMessageScrollBottom = Math.max(0, lastMessageScrollBottom);
-			messageCardScrollTo(lastMessageScrollBottom, "instant");
+			messageCardScrollTo(lastMessageScrollBottom, enableScrollAnimation ? "smooth" : "instant");
+			enableScrollAnimation = false;
 		});
 	}, [messageCardScrollTo, messageData.data, messageData.data?.pages, setClientUser, setUsers]);
 	
@@ -1927,12 +1928,14 @@ export default function Chat() {
 		}];
 		
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
+		if (scrollTop + clientHeight + 50 >= scrollHeight) {
+			lastMessageScrollBottom = 0;
+			enableScrollAnimation = true;
+		}
+		
 		flushSync(() => setMessagesState([...messagesVar]));
 		messageData.refetch();
-		if (scrollTop + clientHeight + 50 >= scrollHeight) {
-			messageCardScrollTo(0, "smooth");
-		}
-	}, [messageCardScrollTo, messageData, updateUserItem]);
+	}, [messageData, updateUserItem]);
 	
 	let firstRebirth = useRef(false);
 	
