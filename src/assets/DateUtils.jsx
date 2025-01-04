@@ -35,7 +35,7 @@ export const convertDateToLocaleAbsoluteString = (inputDate) => {
 	const dayOfYearOffset = getDayOfYear(currentDate) - getDayOfYear(date);
 	
 	if (date.getFullYear() !== currentDate.getFullYear()) {
-		return `${date.getFullYear() % 100}年${date.getMonth()}月${date.getDate()}日 ${localeTimeString}`;
+		return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${localeTimeString}`;
 	} else if (!isSameWeek(date, currentDate)) {
 		return `${date.getMonth() + 1}月${date.getDate()}日 ${localeTimeString}`;
 	} else if (dayOfYearOffset > 2) {
