@@ -234,19 +234,27 @@ const UserItem = memo(function UserItem({
 											
 											queryClient.invalidateQueries({queryKey: ["user", queryKeyUserName, "info"]});
 											
-											queryClient.setQueryData(["user", queryKeyUserName, "followers"], data => ({
-												pages: data?.pages.map(page => page.map(item => item.username !== username ? item : ({
+											queryClient.setQueryData(["user", queryKeyUserName, "followers"], data => !data ? data : {
+												pages: data.pages.map(page => page.map(item => item.username !== username ? item : {
 													...item,
 													isFollowing: newIsFollowing,
-												}))),
-												pageParams: data?.pageParams,
-											}));
+												})),
+												pageParams: data.pageParams,
+											});
 											
-											if (type === "following" && newIsFollowing === false) {
-												queryClient.setQueryData(["user", queryKeyUserName, "following"], data => ({
-													pages: data?.pages.map(page => page.filter(item => item.username !== username)),
-													pageParams: data?.pageParams,
-												}));
+											if (type === "following" && newIsFollowing === false && queryKeyUserName === myname) {
+												queryClient.setQueryData(["user", queryKeyUserName, "following"], data => !data ? data : {
+													pages: data.pages.map(page => page.filter(item => item.username !== username)),
+													pageParams: data.pageParams,
+												});
+											} else {
+												queryClient.setQueryData(["user", queryKeyUserName, "following"], data => !data ? data : {
+													pages: data.pages.map(page => page.map(item => item.username !== username ? item : {
+														...item,
+														isFollowing: newIsFollowing,
+													})),
+													pageParams: data.pageParams,
+												});
 											}
 										} else {
 											enqueueSnackbar(res.data.content, {variant: "error"});
@@ -270,10 +278,10 @@ const UserItem = memo(function UserItem({
 											if (queryKeyUserName === myname) {
 												queryClient.invalidateQueries({queryKey: ["user", queryKeyUserName, "info"]});
 												if (newIsBlocking === false) {
-													queryClient.setQueryData(["user", queryKeyUserName, "blocking"], data => ({
-														pages: data?.pages.map(page => page.filter(item => item.username !== username)),
-														pageParams: data?.pageParams,
-													}));
+													queryClient.setQueryData(["user", queryKeyUserName, "blocking"], data => !data ? data : {
+														pages: data.pages.map(page => page.filter(item => item.username !== username)),
+														pageParams: data.pageParams,
+													});
 												}
 											}
 										} else {
