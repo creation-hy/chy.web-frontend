@@ -1732,8 +1732,6 @@ export default function Chat() {
 				
 				return usersVar;
 			});
-			
-			setInputValue(userInfo.draft ? userInfo.draft : "");
 		}
 		
 		setShowScrollTop(true);
@@ -1928,7 +1926,7 @@ export default function Chat() {
 		}];
 		
 		const {scrollTop, scrollHeight, clientHeight} = messageCard.current;
-		if (scrollTop + clientHeight + 50 >= scrollHeight) {
+		if (scrollTop + clientHeight + 100 >= scrollHeight) {
 			lastMessageScrollBottom = 0;
 			enableScrollAnimation = true;
 		}
