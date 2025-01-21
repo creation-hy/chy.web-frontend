@@ -12,7 +12,6 @@ import {Apple, HowToRegOutlined} from "@mui/icons-material";
 import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
-import {LoadingButton} from "@mui/lab";
 import {useNavigate} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {NavigateLink} from "src/components/NavigateComponents.jsx";
@@ -203,14 +202,14 @@ export default function SignUp() {
 							/>
 						</Grid>
 						<Grid display="flex">
-							<LoadingButton
+							<Button
 								type="button"
 								variant="contained"
 								loading={verifyLoading}
 								onClick={verify}
 							>
 								验证
-							</LoadingButton>
+							</Button>
 						</Grid>
 					</Grid>
 				</FormControl>
@@ -225,7 +224,7 @@ export default function SignUp() {
 						label="验证码"
 					/>
 				</FormControl>
-				<LoadingButton
+				<Button
 					type="submit"
 					fullWidth
 					variant="contained"
@@ -234,7 +233,7 @@ export default function SignUp() {
 					startIcon={<HowToRegOutlined/>}
 				>
 					注册
-				</LoadingButton>
+				</Button>
 				<Typography sx={{textAlign: 'center'}}>
 					已经有账号了？{' '}
 					<NavigateLink

@@ -10,7 +10,6 @@ import Grid from "@mui/material/Grid2";
 import axios from "axios";
 import {memo, useRef, useState} from "react";
 import {enqueueSnackbar} from "notistack";
-import {LoadingButton} from "@mui/lab";
 
 const ResetPassword = memo(function ResetPassword({open, handleClose}) {
 	const emailText = useRef(null);
@@ -42,7 +41,7 @@ const ResetPassword = memo(function ResetPassword({open, handleClose}) {
 						type="email"
 						sx={{flex: 1}}
 					/>
-					<LoadingButton
+					<Button
 						variant="contained"
 						loading={verifyLoading}
 						onClick={() => {
@@ -58,7 +57,7 @@ const ResetPassword = memo(function ResetPassword({open, handleClose}) {
 						}}
 					>
 						验证
-					</LoadingButton>
+					</Button>
 				</Grid>
 				<TextField
 					inputRef={verificationText}

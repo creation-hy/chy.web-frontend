@@ -15,7 +15,6 @@ import {Apple, LoginOutlined} from "@mui/icons-material";
 import ResetPassword from "src/components/ResetPassword.jsx";
 import {Tab, Tabs} from "@mui/material";
 import {useClientUser} from "src/components/ClientUser.jsx";
-import {LoadingButton} from "@mui/lab";
 import {useNavigate} from "react-router";
 import {NavigateLink} from "src/components/NavigateComponents.jsx";
 
@@ -168,7 +167,7 @@ export default function SignIn() {
 								color={usernameError ? 'error' : 'primary'}
 								sx={{flex: 1}}
 							/>
-							<LoadingButton
+							<Button
 								variant="contained"
 								loading={verifyLoading}
 								onClick={() => {
@@ -184,7 +183,7 @@ export default function SignIn() {
 								}}
 							>
 								验证
-							</LoadingButton>
+							</Button>
 						</>}
 				</FormControl>
 				<FormControl>
@@ -226,7 +225,7 @@ export default function SignIn() {
 					</Box>
 				</FormControl>
 				<ResetPassword open={open} handleClose={() => setOpen(false)}/>
-				<LoadingButton
+				<Button
 					type="submit"
 					fullWidth
 					variant="contained"
@@ -235,7 +234,7 @@ export default function SignIn() {
 					startIcon={<LoginOutlined/>}
 				>
 					登录
-				</LoadingButton>
+				</Button>
 				<Typography sx={{textAlign: 'center'}}>
 					还没有账号？{' '}
 					<NavigateLink

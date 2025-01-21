@@ -79,7 +79,6 @@ import {debounce, throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton, NavigateListItemButton} from "src/components/NavigateComponents.jsx";
 import Link from "@mui/material/Link";
-import {LoadingButton} from "@mui/lab";
 import {isIOS13, isMobile} from "react-device-detect";
 import {keepPreviousData, useInfiniteQuery, useQueryClient} from "@tanstack/react-query";
 import {LoadMoreIndicator} from "src/components/LoadMoreIndicator.jsx";
@@ -1323,7 +1322,7 @@ const ChatToolBar = memo(function ChatToolBar({
 					<Button onClick={() => setShowUploadFileConfirmation(false)}>
 						取消
 					</Button>
-					<LoadingButton
+					<Button
 						loading={isFileUploading}
 						onClick={async () => {
 							setIsFileUploading(true);
@@ -1356,7 +1355,7 @@ const ChatToolBar = memo(function ChatToolBar({
 						}}
 					>
 						确认
-					</LoadingButton>
+					</Button>
 				</DialogActions>
 			</Dialog>
 		</>

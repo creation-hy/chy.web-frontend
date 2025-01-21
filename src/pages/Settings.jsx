@@ -9,7 +9,6 @@ import IconButton from "@mui/material/IconButton";
 import Grid from "@mui/material/Grid2";
 import {useEffect, useRef, useState} from "react";
 import TextField from "@mui/material/TextField";
-import {LoadingButton} from "@mui/lab";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
@@ -20,6 +19,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import Footer from "src/components/Footer.jsx";
+import Button from "@mui/material/Button";
 
 const SettingsItemButton = ({url, icon, text, onClick}) => {
 	return (
@@ -178,7 +178,7 @@ const ResetPassword = () => {
 						type="email"
 						sx={{flex: 1}}
 					/>
-					<LoadingButton
+					<Button
 						variant="contained"
 						loading={verifyLoading}
 						onClick={() => {
@@ -194,7 +194,7 @@ const ResetPassword = () => {
 						}}
 					>
 						验证
-					</LoadingButton>
+					</Button>
 				</Grid>
 				<TextField
 					inputRef={verificationText}
@@ -217,7 +217,7 @@ const ResetPassword = () => {
 					placeholder="••••••"
 					label="新密码"
 				/>
-				<LoadingButton
+				<Button
 					loading={resetLoading}
 					variant="contained"
 					startIcon={<LockReset/>}
@@ -246,7 +246,7 @@ const ResetPassword = () => {
 					}}
 				>
 					重置
-				</LoadingButton>
+				</Button>
 			</Grid>
 		</CardContent>
 	);

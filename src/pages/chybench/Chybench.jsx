@@ -17,7 +17,6 @@ import Dialog from "@mui/material/Dialog";
 import {ChybenchRanking} from "src/pages/chybench/ChybenchRanking.jsx";
 import DialogContent from "@mui/material/DialogContent";
 import IconButton from "@mui/material/IconButton";
-import {LoadingButton} from "@mui/lab";
 import {useNavigate} from "react-router";
 
 function LinearProgressWithLabel(props) {
@@ -337,7 +336,7 @@ export const Chybench = memo(function Chybench({showRanking}) {
 						<MenuItem value={30}>深度</MenuItem>
 					</Select>
 				</FormControl>
-				<LoadingButton
+				<Button
 					variant="contained"
 					onClick={async () => {
 						setRunning(true);
@@ -347,7 +346,7 @@ export const Chybench = memo(function Chybench({showRanking}) {
 					disabled={running}
 				>
 					{running ? <HourglassBottom/> : <PlayArrow/>}
-				</LoadingButton>
+				</Button>
 			</Grid>
 			<Grid container direction="column" spacing={3} sx={{width: "100%", maxWidth: 800}}>
 				<Box>

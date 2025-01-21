@@ -62,7 +62,6 @@ import Divider from "@mui/material/Divider";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
-import {LoadingButton} from "@mui/lab";
 import Masonry from "react-masonry-css";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogActions from "@mui/material/DialogActions";
@@ -592,7 +591,7 @@ const GeneratedResults = () => {
 				<DialogTitle>要删除这 {selectedImages.size} 张图片吗？</DialogTitle>
 				<DialogActions>
 					<Button onClick={() => setShowMultipleDeletingDialog(false)}>取消</Button>
-					<LoadingButton color="error" loading={isMultipleDeleting} onClick={() => {
+					<Button color="error" loading={isMultipleDeleting} onClick={() => {
 						setIsMultipleDeleting(true);
 						axios.post("/api/ai-art/work/delete", {idList: [...selectedImages]}, {
 							headers: {
@@ -622,7 +621,7 @@ const GeneratedResults = () => {
 								}));
 							}
 						});
-					}}>删除</LoadingButton>
+					}}>删除</Button>
 				</DialogActions>
 			</Dialog>
 			<Dialog
@@ -883,7 +882,7 @@ const GeneratedResults = () => {
 				<img src={`/api/ai-art-works/${myId}/${deletingImageId}.webp`} alt="Deleting Image"/>
 				<DialogActions>
 					<Button onClick={() => setShowDeletingDialog(false)}>取消</Button>
-					<LoadingButton color="error" loading={isDeleting} onClick={() => {
+					<Button color="error" loading={isDeleting} onClick={() => {
 						setIsDeleting(true);
 						axios.post("/api/ai-art/work/delete", {idList: [deletingImageId]}, {
 							headers: {
@@ -907,7 +906,7 @@ const GeneratedResults = () => {
 								}
 							}
 						});
-					}}>删除</LoadingButton>
+					}}>删除</Button>
 				</DialogActions>
 			</Dialog>
 		</Box>
@@ -1170,7 +1169,7 @@ const TextToImageUI = () => {
 								updateDrawingParams();
 							}}/>
 						</Grid>
-						<LoadingButton
+						<Button
 							variant="contained"
 							type="submit"
 							startIcon={<DrawOutlined/>}
@@ -1178,7 +1177,7 @@ const TextToImageUI = () => {
 							loadingPosition="start"
 						>
 							绘制
-						</LoadingButton>
+						</Button>
 					</Grid>
 				</Grid>
 			</Card>
