@@ -335,16 +335,17 @@ UserItem.propTypes = {
 }
 
 const Follows = memo(function Follows({username, type}) {
-	const {data, fetchNextPage, isFetching, hasNextPage, isFetchingNextPage, isRefetching} = useInfiniteQuery({
+	const [isNewData, setIsNewData] = useState(true);
+	
+	const {data, fetchNextPage, isFetching, hasNextPage, isFetched} = useInfiniteQuery({
 		queryKey: ["user", username, type],
 		queryFn: ({pageParam}) => axios.get(`/api/user/${username}/${type}/${pageParam}`).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
 	});
 	
-	const [isNewData, setIsNewData] = useState(true);
-	
 	const loadMoreRef = useRef(null);
+	const prevPageNumberRef = useRef(0);
 	
 	useEffect(() => {
 		const pageLoadingObserver = new IntersectionObserver((entries) => {
@@ -358,13 +359,17 @@ const Follows = memo(function Follows({username, type}) {
 		return () => pageLoadingObserver.disconnect();
 	}, [fetchNextPage, hasNextPage, isFetching]);
 	
-	useLayoutEffect(() => {
-		if (isFetchingNextPage) {
-			setIsNewData(true);
-		} else if (isRefetching) {
+	if (!isFetching && isFetched && data != null && prevPageNumberRef.current !== data.pageParams.length) {
+		console.log(prevPageNumberRef.current, data.pageParams.length);
+		setIsNewData(true);
+		prevPageNumberRef.current = data.pageParams.length;
+	}
+	
+	useEffect(() => {
+		if (isNewData) {
 			setIsNewData(false);
 		}
-	}, [isFetchingNextPage, isRefetching]);
+	}, [isNewData]);
 	
 	return (
 		<>
