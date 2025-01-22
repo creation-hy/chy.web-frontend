@@ -2043,13 +2043,15 @@ export default function Chat() {
 		
 		stomp.subscribe(`/topic/chat.group.public.delete`, (message) => {
 			const data = JSON.parse(message.body);
-			
 			const item = messagesVar.find(item => item.id === data.id);
+			
 			if (item) {
 				item.content = "消息已撤回";
 				item.type = 1;
 				item.id = -item.id;
 				setMessages([...messagesVar]);
+			} else {
+				queryClient.refetchQueries({queryKey: ["chat", "message", "ChatRoomSystem"]});
 			}
 			
 			if (data["isLatest"]) {
