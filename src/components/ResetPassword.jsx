@@ -19,7 +19,12 @@ const ResetPassword = memo(function ResetPassword({open, handleClose}) {
 	const [verifyLoading, setVerifyLoading] = useState(false);
 	
 	return (
-		<Dialog open={open} onClose={handleClose} fullWidth PaperProps={{sx: {maxWidth: 450}}}>
+		<Dialog
+			open={open}
+			onClose={handleClose}
+			fullWidth
+			slotProps={{paper: {sx: {maxWidth: 450}}}}
+		>
 			<DialogTitle>重置密码</DialogTitle>
 			<DialogContent
 				sx={{display: 'flex', flexDirection: 'column', gap: 2}}

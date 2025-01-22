@@ -1270,7 +1270,11 @@ const ChatToolBar = memo(function ChatToolBar({
 					</DialogActions>
 				</Grid>
 			</Dialog>
-			<Dialog open={onEmojiPicker} onClose={() => handleEmojiPicker(false)} PaperProps={{sx: {borderRadius: "10px", margin: 0}}}>
+			<Dialog
+				open={onEmojiPicker}
+				onClose={() => handleEmojiPicker(false)}
+				slotProps={{paper: {sx: {borderRadius: "10px", margin: 0}}}}
+			>
 				<Picker
 					theme={binaryColorMode}
 					locale="zh"
