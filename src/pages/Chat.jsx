@@ -1894,7 +1894,9 @@ export default function Chat() {
 				newMessageCount: clientUser ? clientUser.newMessageCount + 1 : 0,
 			}));
 		}
-	}, [setClientUser, setUsers]);
+		
+		queryClient.refetchQueries({queryKey: ["chat", "message", username]});
+	}, [queryClient, setClientUser, setUsers]);
 	
 	const newMessage = useCallback((data) => {
 		axios.post("/api/chat/update-viewed", {target: currentUserVar}, {
@@ -1931,8 +1933,7 @@ export default function Chat() {
 		}
 		
 		flushSync(() => setMessagesState([...messagesVar]));
-		messageData.refetch();
-	}, [messageData, updateUserItem]);
+	}, [updateUserItem]);
 	
 	let firstRebirth = useRef(false);
 	
@@ -1944,8 +1945,13 @@ export default function Chat() {
 		
 		if (disconnectErrorBarKey.current) {
 			closeSnackbar(disconnectErrorBarKey.current);
-			messageData.refetch();
 			contactsData.refetch();
+			queryClient.invalidateQueries({
+				predicate: query => {
+					const key = query.queryKey;
+					return Array.isArray(key) && key.length === 3 && key[0] === "chat" && key[1] === "message";
+				}
+			});
 			disconnectErrorBarKey.current = null;
 		}
 		
