@@ -1695,7 +1695,7 @@ export default function Chat() {
 			}
 			
 			if (pages.length > 0) {
-				queryClient.setQueryData(["chat", "message", currentUser], data => ({
+				queryClient.setQueryData(["chat", "message", currentUserVar], data => ({
 					pages: pages.map(page => ({
 						message: page,
 						userInfo: data?.pages.at(-1).userInfo,
@@ -1706,7 +1706,7 @@ export default function Chat() {
 			
 			return newMessages;
 		});
-	}, [queryClient, currentUser]);
+	}, [queryClient]);
 	
 	useEffect(() => {
 		if (!messageData.data || messageData.data.pages.flat().length === 0) {
@@ -2028,6 +2028,8 @@ export default function Chat() {
 				item.type = 1;
 				item.id = -item.id;
 				setMessages([...messagesVar]);
+			} else {
+				queryClient.refetchQueries({queryKey: ["chat", "message", data.sender === myname ? data.recipient : data.sender]});
 			}
 			
 			if (data["isLatest"]) {
@@ -2058,7 +2060,7 @@ export default function Chat() {
 				}
 			}
 		});
-	}, [contactsData, messageData, newMessage, setMessages, setUsers, updateUserItem]);
+	}, [contactsData, newMessage, queryClient, setMessages, setUsers, updateUserItem]);
 	
 	useEffect(() => {
 		const stompConnect = () => {
