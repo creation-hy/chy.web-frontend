@@ -861,7 +861,7 @@ const ChatToolBar = memo(function ChatToolBar({
 	
 	const {data, fetchNextPage, isFetching, isFetched, hasNextPage} = useInfiniteQuery({
 		queryKey: ["chat", "message", "match", currentUser, messageSearchKeywords],
-		queryFn: ({pageParam}) => !currentUser || messageSearchKeywords === "" ? [] : axios.get(`/api/chat/message/match/${currentUser}/${pageParam}`,
+		queryFn: ({pageParam}) => !currentUser ? [] : axios.get(`/api/chat/message/match/${currentUser}/${pageParam}`,
 			{params: {key: messageSearchKeywords}}).then(res => res.data?.result ?? []),
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages, lastPageParam) => lastPage.length === 0 ? undefined : lastPageParam + 1,
@@ -946,6 +946,7 @@ const ChatToolBar = memo(function ChatToolBar({
 	
 	useLayoutEffect(() => {
 		setMessageSearchKeywords("");
+		messageSearchResultBodyScrollTop.current = 0;
 	}, [currentUser]);
 	
 	return (
@@ -1171,7 +1172,7 @@ const ChatToolBar = memo(function ChatToolBar({
 							/>
 						</Grid>
 					</DialogTitle>
-					{messageSearchKeywords !== "" && (isFetched ? (
+					{(isFetched ? (
 						data.pages.flat().length === 0 ? (
 							<Typography align={"center"} color={"textSecondary"} sx={{py: 2}}>
 								没有找到相关消息呢……
