@@ -7,7 +7,6 @@ import {
 	CircularProgress,
 	Collapse,
 	Fab,
-	InputLabel,
 	List,
 	ListItemAvatar,
 	ListItemButton,
@@ -39,7 +38,6 @@ import {
 	DeleteOutline,
 	FileDownloadOutlined,
 	Filter,
-	FontDownloadOutlined,
 	FormatQuoteOutlined,
 	InsertDriveFileOutlined,
 	MoreHoriz,
@@ -69,8 +67,6 @@ import Chip from "@mui/material/Chip";
 import DialogTitle from "@mui/material/DialogTitle";
 import Picker from "@emoji-mart/react";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
-import Select from "@mui/material/Select";
-import FormControl from "@mui/material/FormControl";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {useLocation, useNavigate, useParams} from "react-router";
 import {useClientUser} from "src/components/ClientUser.jsx";
@@ -78,7 +74,6 @@ import {convertDateToLocaleAbsoluteString, convertDateToLocaleShortString} from 
 import {debounce, throttle} from "lodash";
 import {UserAvatar, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateIconButton, NavigateListItemButton} from "src/components/NavigateComponents.jsx";
-import Link from "@mui/material/Link";
 import {isIOS13, isMobile} from "react-device-detect";
 import {keepPreviousData, useInfiniteQuery, useQueryClient} from "@tanstack/react-query";
 import {LoadMoreIndicator} from "src/components/LoadMoreIndicator.jsx";
@@ -839,10 +834,6 @@ const ChatToolBar = memo(function ChatToolBar({
 	const [binaryColorMode] = useBinaryColorMode();
 	const isSmallScreen = useMediaQuery(theme => theme.breakpoints.down("md"));
 	
-	const [onSpecialFont, handleSpecialFont] = useState(false);
-	const [fontStyle, setFontStyle] = useState("");
-	const fontTextRef = useRef(null);
-	
 	const [onMessageSearching, setOnMessageSearching] = useState(false);
 	const [isMessageSearchScrollLoading, setIsMessageSearchScrollLoading] = useState(false);
 	const toggleMessageSearchScrollLoading = useRef(debounce((isLoading) => {
@@ -917,17 +908,6 @@ const ChatToolBar = memo(function ChatToolBar({
 		inputField.current.setSelectionRange(start + text.length, start + text.length);
 	}, [inputField, setInputValue, setUsers]);
 	
-	const MarkdownChecker = memo(function MarkdownChecker() {
-		return settings.useMarkdown === false && (
-			<Typography color="error">
-				您还没有启用Markdown+，是否前往开启？
-				<Link onClick={() => handleSettings(true)} sx={{cursor: 'pointer'}}>
-					打开设置
-				</Link>
-			</Typography>
-		);
-	});
-	
 	sendFiles.current = useCallback((files) => {
 		for (const file of files) {
 			if (file.size > 20 * 1024 * 1024) {
@@ -982,17 +962,6 @@ const ChatToolBar = memo(function ChatToolBar({
 						}}
 					>
 						<UploadFileOutlined/>
-					</IconButton>
-				</Tooltip>
-				<Tooltip title={"特殊字体"}>
-					<IconButton
-						sx={{m: 0.5}}
-						onClick={() => {
-							updateCursorSelection();
-							handleSpecialFont(true);
-						}}
-					>
-						<FontDownloadOutlined/>
 					</IconButton>
 				</Tooltip>
 				<Tooltip title={"搜索聊天记录"}>
@@ -1062,70 +1031,6 @@ const ChatToolBar = memo(function ChatToolBar({
 						<ListItemText>上传文件</ListItemText>
 					</MenuItem>
 				</MenuList>
-			</Dialog>
-			<Dialog open={onSpecialFont} onClose={() => handleSpecialFont(false)} fullWidth>
-				<DialogTitle>
-					添加特殊字体
-				</DialogTitle>
-				<DialogContent>
-					<MarkdownChecker/>
-					<Grid container gap={1}>
-						<FormControl margin="dense" sx={{mb: 0, minWidth: 80}}>
-							<InputLabel id="font-style-label">样式</InputLabel>
-							<Select
-								labelId="font-style-label"
-								variant="outlined"
-								label="样式"
-								value={fontStyle}
-								onChange={(event) => setFontStyle(event.target.value)}
-							>
-								<MenuItem value="#">H1</MenuItem>
-								<MenuItem value="##">H2</MenuItem>
-								<MenuItem value="###">H3</MenuItem>
-								<MenuItem value="####">H4</MenuItem>
-								<MenuItem value="#####">H5</MenuItem>
-								<MenuItem value="######">H6</MenuItem>
-								<MenuItem value="*">斜体</MenuItem>
-								<MenuItem value="**">粗体</MenuItem>
-								<MenuItem value="***">斜体+粗体</MenuItem>
-								<MenuItem value="~~">删除线</MenuItem>
-							</Select>
-						</FormControl>
-						<TextField label="文本" margin="dense" inputRef={fontTextRef} sx={{flex: 1, minWidth: "min(100%, 300px)"}}/>
-					</Grid>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => handleSpecialFont(false)}>关闭</Button>
-					<Button
-						onClick={() => {
-							if (fontStyle.length > 0 && fontStyle.charAt(0) === '#') {
-								let start = cursorSelection.current[0], end = cursorSelection.current[1], text = fontStyle + " " + fontTextRef.current.value;
-								
-								flushSync(() => handleSpecialFont(false));
-								inputField.current.focus();
-								
-								if (start > 0 && inputField.current.value[start - 1] !== "\n") {
-									document.execCommand("insertLineBreak");
-									start++;
-									end++;
-								}
-								
-								flushSync(() => setInputValue(value => {
-									value = value.slice(0, start) + text + value.slice(end);
-									saveDraft(currentUserVar, value, setUsers);
-									return value;
-								}));
-								inputField.current.setSelectionRange(start + text.length, start + text.length);
-								
-								document.execCommand("insertLineBreak");
-							} else {
-								insertText(fontStyle + fontTextRef.current.value + fontStyle, () => handleSpecialFont(false));
-							}
-						}}
-					>
-						确认
-					</Button>
-				</DialogActions>
 			</Dialog>
 			<Backdrop open={isMessageSearchScrollLoading} sx={{zIndex: 8964}}>
 				<CircularProgress size={50}/>
