@@ -141,7 +141,9 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, k
 				},
 				
 				img: ({src, alt}) => (
-					<img src={src} alt={alt} style={{maxWidth: "100%", maxHeight: "100%", objectFit: "contain"}}/>
+					<Link href={src} title={alt} target="_blank" onClick={(event) => event.stopPropagation()}>
+						{highlightText(src)}
+					</Link>
 				),
 			}}
 			{...props}
