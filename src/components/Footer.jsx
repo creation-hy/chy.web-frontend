@@ -2,7 +2,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import {Facebook, GitHub, Instagram, Twitter, YouTube} from "@mui/icons-material";
+import {Facebook, GitHub, Twitter} from "@mui/icons-material";
 
 function Copyright() {
 	return (
@@ -59,14 +59,6 @@ export default function Footer() {
 				</IconButton>
 				<IconButton
 					color="inherit"
-					onClick={() => window.open("https://www.facebook.com/profile.php?id=61566312665119")}
-					aria-label="Facebook"
-					sx={{alignSelf: 'center'}}
-				>
-					<Facebook/>
-				</IconButton>
-				<IconButton
-					color="inherit"
 					onClick={() => window.open("https://x.com/creation_hy64")}
 					aria-label="Twitter"
 					sx={{alignSelf: 'center'}}
@@ -75,19 +67,11 @@ export default function Footer() {
 				</IconButton>
 				<IconButton
 					color="inherit"
-					onClick={() => window.open("https://www.youtube.com/@creation_hy")}
-					aria-label="Youtube"
+					onClick={() => window.open("https://www.facebook.com/profile.php?id=61566312665119")}
+					aria-label="Facebook"
 					sx={{alignSelf: 'center'}}
 				>
-					<YouTube/>
-				</IconButton>
-				<IconButton
-					color="inherit"
-					onClick={() => window.open("https://www.instagram.com/creation_hy64")}
-					aria-label="Instagram"
-					sx={{alignSelf: 'center'}}
-				>
-					<Instagram/>
+					<Facebook/>
 				</IconButton>
 				<IconButton
 					color="inherit"
