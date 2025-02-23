@@ -168,6 +168,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 								href={`/user/${clientUser.username}`}
 								color="textPrimary"
 								underline="hover"
+								noWrap
 								onClick={(event) => navigateAndCloseDrawer(event, `/user/${clientUser.username}`)}
 								sx={{cursor: "pointer"}}
 							>
