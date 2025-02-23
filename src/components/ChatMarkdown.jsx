@@ -10,6 +10,7 @@ import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import remarkBreaks from "remark-breaks";
 import React, {memo, useCallback, useMemo} from "react";
 import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 
 export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, keyword, fontColor, ...props}) {
 	if (!children)
@@ -53,103 +54,104 @@ export const ChatMarkdown = memo(function ChatMarkdown({useMarkdown, children, k
 	}, [keyword, regex]);
 	
 	return useMarkdown ? (
-		<Markdown
-			className="my-markdown"
-			remarkPlugins={[remarkGfm, remarkBreaks]}
-			components={{
-				hr: () => <Divider sx={{my: 1}} color={fontColor}/>,
-				a: ({href, title, children}) => (
-					<Link href={href} title={title} target="_blank" onClick={(event) => event.stopPropagation()}>
-						{highlightText(children)}
-					</Link>
-				),
-				p: ({children}) => (
-					<Typography fontSize="inherit">
-						{highlightText(children)}
-					</Typography>
-				),
-				
-				h1: ({children}) => (<h1>{highlightText(children)}</h1>),
-				h2: ({children}) => (<h2>{highlightText(children)}</h2>),
-				h3: ({children}) => (<h3>{highlightText(children)}</h3>),
-				h4: ({children}) => (<h4>{highlightText(children)}</h4>),
-				h5: ({children}) => (<h5>{highlightText(children)}</h5>),
-				h6: ({children}) => (<h6>{highlightText(children)}</h6>),
-				
-				table: ({children}) => (
-					<TableContainer component={Paper} sx={{my: 0.5}}>
-						<Table size="small">
+		<Box className="my-markdown">
+			<Markdown
+				remarkPlugins={[remarkGfm, remarkBreaks]}
+				components={{
+					hr: () => <Divider sx={{my: 1}} color={fontColor}/>,
+					a: ({href, title, children}) => (
+						<Link href={href} title={title} target="_blank" onClick={(event) => event.stopPropagation()}>
 							{highlightText(children)}
-						</Table>
-					</TableContainer>
-				),
-				tbody: ({children}) => (<TableBody>{highlightText(children)}</TableBody>),
-				tr: ({children}) => (<TableRow>{highlightText(children)}</TableRow>),
-				td: ({children}) => (<TableCell>{highlightText(children)}</TableCell>),
-				
-				ol: ({children}) => (
-					<List
-						sx={{
-							listStyleType: "decimal",
+						</Link>
+					),
+					p: ({children}) => (
+						<Typography fontSize="inherit">
+							{highlightText(children)}
+						</Typography>
+					),
+					
+					h1: ({children}) => (<h1>{highlightText(children)}</h1>),
+					h2: ({children}) => (<h2>{highlightText(children)}</h2>),
+					h3: ({children}) => (<h3>{highlightText(children)}</h3>),
+					h4: ({children}) => (<h4>{highlightText(children)}</h4>),
+					h5: ({children}) => (<h5>{highlightText(children)}</h5>),
+					h6: ({children}) => (<h6>{highlightText(children)}</h6>),
+					
+					table: ({children}) => (
+						<TableContainer component={Paper} sx={{my: 0.5}}>
+							<Table size="small">
+								{highlightText(children)}
+							</Table>
+						</TableContainer>
+					),
+					tbody: ({children}) => (<TableBody>{highlightText(children)}</TableBody>),
+					tr: ({children}) => (<TableRow>{highlightText(children)}</TableRow>),
+					td: ({children}) => (<TableCell>{highlightText(children)}</TableCell>),
+					
+					ol: ({children}) => (
+						<List
+							sx={{
+								listStyleType: "decimal",
+								m: 0,
+								p: 0,
+								"& .MuiListItem-root": {display: "list-item"},
+							}}
+						>
+							{highlightText(children)}
+						</List>
+					),
+					ul: ({children}) => (
+						<List sx={{
+							listStyleType: "disc",
 							m: 0,
 							p: 0,
 							"& .MuiListItem-root": {display: "list-item"},
-						}}
-					>
-						{highlightText(children)}
-					</List>
-				),
-				ul: ({children}) => (
-					<List sx={{
-						listStyleType: "disc",
-						m: 0,
-						p: 0,
-						"& .MuiListItem-root": {display: "list-item"},
-					}}>
-						{highlightText(children)}
-					</List>
-				),
-				li: ({children}) => (
-					<ListItem sx={{m: 0, p: 0}} disableGutters>
-						{highlightText(children)}
-					</ListItem>
-				),
-				
-				code: ({className, children}) => {
-					const match = /language-(\w+)/.exec(className || "");
-					return match ? (
-						<SyntaxHighlighter
-							style={binaryColorMode === "light" ? tomorrow : tomorrowNight}
-							language={match ? match[1] : undefined}
-							PreTag="div"
-							className="syntax-highlighter"
-						>
-							{children}
-						</SyntaxHighlighter>
-					) : (
-						<code style={{
-							color: binaryColorMode === "light" ? "black" : "white",
-							backgroundColor: binaryColorMode === "light" ? "white" : "rgb(29, 31, 33)",
-							borderRadius: 4,
-							padding: "1px 4px",
-							marginLeft: 2,
-							marginRight: 2,
 						}}>
 							{highlightText(children)}
-						</code>
-					);
-				},
-				
-				img: ({src, alt}) => (
-					<Link href={src} title={alt} target="_blank" onClick={(event) => event.stopPropagation()}>
-						{highlightText(src)}
-					</Link>
-				),
-			}}
-			{...props}
-		>
-			{md}
-		</Markdown>
+						</List>
+					),
+					li: ({children}) => (
+						<ListItem sx={{m: 0, p: 0}} disableGutters>
+							{highlightText(children)}
+						</ListItem>
+					),
+					
+					code: ({className, children}) => {
+						const match = /language-(\w+)/.exec(className || "");
+						return match ? (
+							<SyntaxHighlighter
+								style={binaryColorMode === "light" ? tomorrow : tomorrowNight}
+								language={match ? match[1] : undefined}
+								PreTag="div"
+								className="syntax-highlighter"
+							>
+								{children}
+							</SyntaxHighlighter>
+						) : (
+							<code style={{
+								color: binaryColorMode === "light" ? "black" : "white",
+								backgroundColor: binaryColorMode === "light" ? "white" : "rgb(29, 31, 33)",
+								borderRadius: 4,
+								padding: "1px 4px",
+								marginLeft: 2,
+								marginRight: 2,
+							}}>
+								{highlightText(children)}
+							</code>
+						);
+					},
+					
+					img: ({src, alt}) => (
+						<Link href={src} title={alt} target="_blank" onClick={(event) => event.stopPropagation()}>
+							{highlightText(src)}
+						</Link>
+					),
+				}}
+				{...props}
+			>
+				{md}
+			</Markdown>
+		</Box>
 	) : (
 		<Typography whiteSpace="pre-wrap" fontSize="inherit">
 			{highlightText(children)}
