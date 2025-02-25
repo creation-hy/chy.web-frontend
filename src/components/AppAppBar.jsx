@@ -246,14 +246,14 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 					<ListItemText primary="BBS"/>
 				</ListItemButton>
 				<ListItemButton
-					href="/blog"
-					onClick={(event) => navigateAndCloseDrawer(event, "/blog")}
-					selected={firstLevelLocation === "blog"}
+					href="/posts"
+					onClick={(event) => navigateAndCloseDrawer(event, "/posts")}
+					selected={firstLevelLocation === "posts"}
 				>
 					<ListItemIcon>
 						<ArticleOutlined/>
 					</ListItemIcon>
-					<ListItemText primary="Blog"/>
+					<ListItemText primary="ChyPost"/>
 				</ListItemButton>
 				<ListItemButton
 					href="/settings"

@@ -18,7 +18,7 @@ import SignUp from "src/pages/SignUp.jsx";
 import AIArt from "src/pages/AIArt.jsx";
 import {Chybench} from "src/pages/chybench/Chybench.jsx";
 import {Minesweeper} from "src/pages/minesweeper/Minesweeper.jsx";
-import Blog from "src/pages/Blog.jsx";
+import Posts from "src/pages/Posts.jsx";
 import {Settings} from "src/pages/Settings.jsx";
 import SignIn from "src/pages/sign-in/SignIn.jsx";
 import Error from "src/pages/Error.jsx";
@@ -122,7 +122,8 @@ const router = createBrowserRouter([
 			{path: "/settings", element: <Settings/>},
 			{path: "/settings/:item1", element: <Settings/>},
 			{path: "/settings/:item1/:item2", element: <Settings/>},
-			{path: "/blog", element: <Blog/>},
+			{path: "/posts", element: <Posts/>},
+			{path: "/posts/:tab", element: <Posts/>},
 			{path: "*", element: <Error/>},
 		],
 	},
