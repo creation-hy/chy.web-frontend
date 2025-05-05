@@ -6,7 +6,7 @@ import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
 import {useLocation, useNavigate, useParams} from "react-router";
 import IconButton from "@mui/material/IconButton";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import {useEffect, useRef, useState} from "react";
 import TextField from "@mui/material/TextField";
 import axios from "axios";

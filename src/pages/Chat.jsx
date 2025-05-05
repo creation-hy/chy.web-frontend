@@ -20,7 +20,7 @@ import {
 	useMediaQuery,
 	Zoom
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
 import PropTypes from "prop-types";
 import Divider from "@mui/material/Divider";

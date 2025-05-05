@@ -10,7 +10,7 @@ import {CardActionArea, CardActions, Switch, Tab, Tabs, useMediaQuery} from "@mu
 import {memo, useEffect, useMemo, useRef, useState} from "react";
 import {LoadingButton} from "@mui/lab";
 import axios from "axios";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import {enqueueSnackbar} from "notistack";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";

@@ -9,7 +9,7 @@ import MuiCard from '@mui/material/Card';
 import {styled} from '@mui/material/styles';
 import {GoogleIcon} from 'src/pages/sign-in/CustomIcons';
 import {Apple, HowToRegOutlined} from "@mui/icons-material";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import axios from "axios";
 import {enqueueSnackbar} from "notistack";
 import {useNavigate} from "react-router";

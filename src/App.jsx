@@ -22,7 +22,7 @@ import Posts from "src/pages/Posts.jsx";
 import {Settings} from "src/pages/Settings.jsx";
 import SignIn from "src/pages/sign-in/SignIn.jsx";
 import Error from "src/pages/Error.jsx";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import {ClientUserProvider} from "src/components/ClientUser.jsx";
 import axios from "axios";
 

@@ -2,7 +2,7 @@ import {browserName, fullBrowserVersion, osName, osVersion} from "react-device-d
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import Select from "@mui/material/Select";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";

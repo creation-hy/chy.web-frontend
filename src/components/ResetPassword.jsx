@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import PropTypes from "prop-types";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import axios from "axios";
 import {memo, useRef, useState} from "react";
 import {enqueueSnackbar} from "notistack";

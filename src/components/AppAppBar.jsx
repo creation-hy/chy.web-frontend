@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import {Badge, ButtonBase, List, ListItemButton, ListItemIcon, ListItemText, SwipeableDrawer} from "@mui/material";
 import {
 	AnalyticsOutlined,

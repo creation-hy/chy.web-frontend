@@ -25,7 +25,7 @@ import axios from "axios";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import {enqueueSnackbar} from "notistack";
 import PropTypes from "prop-types";
 import {useInfiniteQuery, useQuery, useQueryClient} from "@tanstack/react-query";
@@ -61,7 +61,7 @@ import IconButton from "@mui/material/IconButton";
 import {convertDateToLocaleAbsoluteString, convertDateToLocaleDateString} from "src/assets/DateUtils.jsx";
 import Chip from "@mui/material/Chip";
 import {Cropper} from "react-cropper";
-import "cropperjs/dist/cropper.css";
+import "react-cropper/node_modules/cropperjs/dist/cropper.css";
 import {useClientUser} from "src/components/ClientUser.jsx";
 import {supportedBadges, UserAvatar, UserBadge, UsernameWithBadge} from "src/components/UserComponents.jsx";
 import {NavigateButtonBase, NavigateIconButton, NavigateLink} from "src/components/NavigateComponents.jsx";
@@ -453,7 +453,7 @@ const GENDERS = [
 	{name: "女", icon: <Female sx={{color: "#f5a9b8"}}/>},
 	{name: "男の娘", icon: <Male sx={{color: "#5bcefa"}}/>},
 	{name: "假小子", icon: <Female sx={{color: "#f5a9b8"}}/>},
-	{name: "扶她", icon: <Female sx={{color: "#f5a9b8"}}/>},
+	{name: "Futa", icon: <Female sx={{color: "#f5a9b8"}}/>},
 	{name: "MtF", icon: <Transgender sx={{color: "#f5a9b8"}}/>},
 	{name: "MtX", icon: <Transgender sx={{color: "#f5a9b8"}}/>},
 	{name: "FtM", icon: <Transgender sx={{color: "#5bcefa"}}/>},

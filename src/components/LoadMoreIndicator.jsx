@@ -1,6 +1,6 @@
 import {CircularProgress} from "@mui/material";
 import {HorizontalRule} from "@mui/icons-material";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import {memo} from "react";
 import PropTypes from "prop-types";
 

@@ -1,5 +1,5 @@
 import {memo, useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import DialogContent from "@mui/material/DialogContent";
 import Dialog from "@mui/material/Dialog";
