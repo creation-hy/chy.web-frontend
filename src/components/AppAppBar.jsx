@@ -207,13 +207,13 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 					</ListItemIcon>
 					<ListItemText primary="AI绘图"/>
 				</ListItemButton>
-				<ListItemButton href="https://creation-hy.top:8080/greedy-snake">
+				<ListItemButton href="https://creation-hy.com:8080/greedy-snake">
 					<ListItemIcon>
 						<SportsEsportsOutlined/>
 					</ListItemIcon>
 					<ListItemText primary="贪吃蛇"/>
 				</ListItemButton>
-				<ListItemButton href="https://creation-hy.top:8080/sgs">
+				<ListItemButton href="https://creation-hy.com:8080/sgs">
 					<ListItemIcon>
 						<SportsEsportsOutlined/>
 					</ListItemIcon>
@@ -239,7 +239,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 					</ListItemIcon>
 					<ListItemText primary="Chybench"/>
 				</ListItemButton>
-				<ListItemButton href="https://creation-hy.top:8080/bbs">
+				<ListItemButton href="https://creation-hy.com:8080/bbs">
 					<ListItemIcon>
 						<ForumOutlined/>
 					</ListItemIcon>

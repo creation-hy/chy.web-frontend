@@ -104,7 +104,7 @@ const AccountDeactivation = () => {
 				</Typography>
 			</Grid>
 			<Typography sx={{mt: 3}}>
-				请使用您的注册邮箱向 account@creation-hy.top 发送一封内容为“DEACTIVATE”的邮件，我们会在接收到邮件的 30 天后停用您的账号。<br/><br/>
+				请使用您的注册邮箱向 account@creation-hy.com 发送一封内容为“DEACTIVATE”的邮件，我们会在接收到邮件的 30 天后停用您的账号。<br/><br/>
 				在此期间内，如果您想取消停用请求，只需要发送一封内容为“REACTIVATE”的邮件即可。
 			</Typography>
 		</CardContent>
