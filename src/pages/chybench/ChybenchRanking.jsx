@@ -98,7 +98,7 @@ const RankingTable = memo(function RankingTable({data}) {
 					},
 				},
 			}}
-			rowSelectionModel={myItem ? myItem.id : undefined}
+			rowSelectionModel={myItem ? {ids: new Set([myItem.id]), type: "include"} : undefined}
 			disableRowSelectionOnClick
 			hideFooter
 			sx={{maxWidth: "100%", flex: 0}}

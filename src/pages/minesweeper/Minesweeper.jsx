@@ -147,7 +147,7 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 		setShowLoadingProgress(newIsLoading);
 	}, 100));
 	
-	const myItem = data && data.result ? data.result.find(item => item.username === myname) : undefined;
+	const myItem = data ? data.find(item => item.username === myname) : undefined;
 	
 	useEffect(() => {
 		if (data) {
@@ -185,7 +185,7 @@ const Ranking = memo(function Ranking({showRanking, setShowRanking}) {
 				<DataGrid
 					columns={tableColumns}
 					rows={rankingData}
-					rowSelectionModel={myItem ? myItem.id : undefined}
+					rowSelectionModel={myItem ? {ids: new Set([myItem.id]), type: "include"} : undefined}
 					disableRowSelectionOnClick
 					hideFooter
 				/>
