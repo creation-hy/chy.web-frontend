@@ -451,20 +451,9 @@ const GENDERS = [
 	{name: "未知", icon: <QuestionMark color="action"/>},
 	{name: "男", icon: <Male sx={{color: "#5bcefa"}}/>},
 	{name: "女", icon: <Female sx={{color: "#f5a9b8"}}/>},
-	{name: "男の娘", icon: <Male sx={{color: "#5bcefa"}}/>},
-	{name: "假小子", icon: <Female sx={{color: "#f5a9b8"}}/>},
-	{name: "Futa", icon: <Female sx={{color: "#f5a9b8"}}/>},
-	{name: "MtF", icon: <Transgender sx={{color: "#f5a9b8"}}/>},
-	{name: "MtX", icon: <Transgender sx={{color: "#f5a9b8"}}/>},
-	{name: "FtM", icon: <Transgender sx={{color: "#5bcefa"}}/>},
-	{name: "FtX", icon: <Transgender sx={{color: "#5bcefa"}}/>},
 	{name: "非二元", icon: <Transgender color="action"/>},
 	{name: "间性", icon: <Transgender color="action"/>},
-	{name: "无性别", icon: <QuestionMark color="action"/>},
-	{name: "汉堡王", icon: <QuestionMark color="action"/>},
-	{name: "西瓜霜", icon: <QuestionMark color="action"/>},
-	{name: "北洋军阀", icon: <QuestionMark color="action"/>},
-	{name: "其它", icon: <QuestionMark color="action"/>},
+	{name: "其他", icon: <QuestionMark color="action"/>},
 ];
 
 const UserPage = memo(function UserPage({username}) {
