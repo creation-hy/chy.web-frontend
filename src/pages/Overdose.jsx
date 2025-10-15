@@ -7,19 +7,20 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import {InputLabel} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
+import {useQuery} from "@tanstack/react-query";
 
 export const OverdoseArticles = () => {
-	const [drugNames, setDrugNames] = useState(null);
 	const [currentDisplayDrugId, setCurrentDisplayDrugId] = useState(null);
 	const [currentDrugContent, setCurrentDrugContent] = useState(null);
 	
 	document.title = "Overdose - chy.web";
 	
-	axios.get("/api/overdose/getDrugNames").then(res => {
-		setDrugNames(res.data);
+	const {data} = useQuery({
+		queryKey: ["overdose", "getDrugNames"],
+		queryFn: () => axios.get("/api/overdose/getDrugNames").then(res => res.data),
 	});
 	
-	if (drugNames === null) {
+	if (data == null) {
 		return null;
 	}
 	
@@ -46,7 +47,7 @@ export const OverdoseArticles = () => {
 						})
 					}}
 				>
-					{drugNames.map((item, index) => (
+					{data.map((item, index) => (
 						<MenuItem
 							key={index}
 							value={index}
@@ -63,7 +64,7 @@ export const OverdoseArticles = () => {
 					flex: 1,
 				}}
 			>
-				{currentDisplayDrugId != null ? <h1>{drugNames[currentDisplayDrugId]}</h1> : null}
+				{currentDisplayDrugId != null ? <h1>{data[currentDisplayDrugId]}</h1> : null}
 				<ChatMarkdown useMarkdown={true}>
 					{currentDrugContent}
 				</ChatMarkdown>
