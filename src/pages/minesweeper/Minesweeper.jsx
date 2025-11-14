@@ -31,7 +31,7 @@ const generateGrid = (rows, mines) => {
 	const count = Array.from({length: rows}, () => new Array(rows).fill(0));
 	
 	for (let i = 0; i < mines; i++) {
-		let x = Math.floor(Math.random() * (rows - 1)), y = Math.floor(Math.random() * (rows - 1));
+		let x = Math.floor(Math.random() * rows), y = Math.floor(Math.random() * rows);
 		while (grid[x][y] === -1) {
 			y++;
 			if (y >= rows) {
