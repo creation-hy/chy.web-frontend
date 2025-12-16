@@ -9,18 +9,18 @@ import {InputLabel} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
 
-export const OverdoseArticles = () => {
+export const DrugWiki = () => {
 	const [currentDisplayDrugId, setCurrentDisplayDrugId] = useState(null);
 	const [currentDrugContent, setCurrentDrugContent] = useState(null);
 	
-	document.title = "Overdose - chy.web";
+	document.title = "药物Wiki - chy.web";
 	
-	const {data} = useQuery({
-		queryKey: ["overdose", "getDrugNames"],
-		queryFn: () => axios.get("/api/overdose/getDrugNames").then(res => res.data),
+	const {data: drugSummaryList} = useQuery({
+		queryKey: ["drugs", "getSummaryList"],
+		queryFn: () => axios.get("/api/drugs").then(res => res.data),
 	});
 	
-	if (data == null) {
+	if (drugSummaryList == null) {
 		return null;
 	}
 	
@@ -39,20 +39,21 @@ export const OverdoseArticles = () => {
 					variant="outlined"
 					label="药物"
 					labelId="drug-select-label"
+					defaultValue={""}
 					onChange={(event) => {
 						let id = event.target.value;
-						axios.get(`/api/overdose/getDrugContent/${id + 1}`).then(res => {
-							setCurrentDisplayDrugId(id);
-							setCurrentDrugContent(res.data);
-						})
+						axios.get(`/api/drugs/${drugSummaryList[id].id}`).then(res => {
+							setCurrentDisplayDrugId(res.data.id);
+							setCurrentDrugContent(res.data.content);
+						});
 					}}
 				>
-					{data.map((item, index) => (
+					{drugSummaryList.map((item, index) => (
 						<MenuItem
 							key={index}
 							value={index}
 						>
-							{item}
+							{item.name}
 						</MenuItem>
 					))}
 				</Select>
@@ -64,7 +65,7 @@ export const OverdoseArticles = () => {
 					flex: 1,
 				}}
 			>
-				{currentDisplayDrugId != null ? <h1>{data[currentDisplayDrugId]}</h1> : null}
+				{currentDisplayDrugId != null ? <h1>{drugSummaryList[currentDisplayDrugId].name}</h1> : null}
 				<ChatMarkdown useMarkdown={true}>
 					{currentDrugContent}
 				</ChatMarkdown>

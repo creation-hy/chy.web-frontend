@@ -25,7 +25,7 @@ import Error from "src/pages/Error.jsx";
 import Grid from "@mui/material/Grid";
 import {ClientUserProvider} from "src/components/ClientUser.jsx";
 import axios from "axios";
-import {OverdoseArticles} from "src/pages/Overdose.jsx";
+import {DrugWiki} from "src/pages/DrugWiki.jsx";
 
 const Layout = () => {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -125,7 +125,7 @@ const router = createBrowserRouter([
 			{path: "/settings/:item1/:item2", element: <Settings/>},
 			{path: "/posts", element: <Posts/>},
 			{path: "/posts/:tab", element: <Posts/>},
-			{path: "/overdose", element: <OverdoseArticles/>},
+			{path: "/drugs", element: <DrugWiki/>},
 			{path: "*", element: <Error/>},
 		],
 	},
