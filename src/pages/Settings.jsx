@@ -370,7 +370,10 @@ const About = () => {
 			</Grid>
 			<Box sx={{mb: 2}}>
 				<Typography variant="h3" align="center" fontWeight="bold" mt={1}>
-					chy.web 5.2.0
+					chy.web
+				</Typography>
+				<Typography fontSize={18} align="center">
+					5.2.0
 				</Typography>
 			</Box>
 			<Box>
