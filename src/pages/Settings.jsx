@@ -1,4 +1,4 @@
-import {Badge, List, ListItemButton, ListItemIcon, ListItemText, Switch, Table, TableBody, TableCell, TableRow} from "@mui/material";
+import {List, ListItemButton, ListItemIcon, ListItemText, Switch, Table, TableBody, TableCell, TableRow} from "@mui/material";
 import {AccountCircle, ArrowBack, Block, InfoOutlined, LockReset, LogoutOutlined, MailOutlined} from "@mui/icons-material";
 import Card from "@mui/material/Card";
 import Typography from "@mui/material/Typography";
@@ -370,9 +370,7 @@ const About = () => {
 			</Grid>
 			<Box sx={{mb: 2}}>
 				<Typography variant="h3" align="center" fontWeight="bold" mt={1}>
-					<Badge badgeContent="Beta" color="primary">
-						chy.web 5.1
-					</Badge>
+					chy.web 5.2.0
 				</Typography>
 			</Box>
 			<Box>
