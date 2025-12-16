@@ -126,6 +126,7 @@ const router = createBrowserRouter([
 			{path: "/posts", element: <Posts/>},
 			{path: "/posts/:tab", element: <Posts/>},
 			{path: "/drugs", element: <DrugWiki/>},
+			{path: "/drugs/:id", element: <DrugWiki/>},
 			{path: "*", element: <Error/>},
 		],
 	},

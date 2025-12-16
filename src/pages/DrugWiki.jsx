@@ -1,5 +1,4 @@
 import axios from "axios";
-import {useState} from "react";
 import Card from "@mui/material/Card";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import Grid from "@mui/material/Grid";
@@ -8,19 +7,42 @@ import MenuItem from "@mui/material/MenuItem";
 import {InputLabel} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
+import {useNavigate, useParams} from "react-router";
+import {useEffect, useState} from "react";
 
 export const DrugWiki = () => {
-	const [currentDisplayDrugId, setCurrentDisplayDrugId] = useState(null);
-	const [currentDrugContent, setCurrentDrugContent] = useState(null);
+	const navigate = useNavigate();
+	const {id} = useParams();
+	const isIdNumeric = Boolean(id && !isNaN(Number(id)));
 	
-	document.title = "药物Wiki - chy.web";
+	const [drug, setDrug] = useState(new Map());
+	const [selectedValue, setSelectedValue] = useState(isIdNumeric ? Number(id) : "");
 	
-	const {data: drugSummaryList} = useQuery({
+	document.title = (drug.has("name") ? drug.get("name") + " - " : "") + "药物Wiki - chy.web";
+	
+	const {data: drugSummaryList, isFetched: isDrugListFetched} = useQuery({
 		queryKey: ["drugs", "getSummaryList"],
 		queryFn: () => axios.get("/api/drugs").then(res => res.data),
+		enabled: !id || isIdNumeric,
 	});
 	
-	if (drugSummaryList == null) {
+	useEffect(() => {
+		if (isIdNumeric) {
+			axios.get(`/api/drugs/${id}`).then(res => {
+				if (Object.keys(res.data || {}).length > 0) {
+					setDrug(new Map(Object.entries(res.data)));
+				} else {
+					setSelectedValue("");
+					navigate("/drugs");
+				}
+			});
+		} else {
+			setSelectedValue("");
+			navigate("/drugs");
+		}
+	}, [id, isIdNumeric, navigate]);
+	
+	if (!isDrugListFetched) {
 		return null;
 	}
 	
@@ -39,19 +61,16 @@ export const DrugWiki = () => {
 					variant="outlined"
 					label="药物"
 					labelId="drug-select-label"
-					defaultValue={""}
+					value={selectedValue}
 					onChange={(event) => {
-						let id = event.target.value;
-						axios.get(`/api/drugs/${drugSummaryList[id].id}`).then(res => {
-							setCurrentDisplayDrugId(res.data.id);
-							setCurrentDrugContent(res.data.content);
-						});
+						setSelectedValue(event.target.value);
+						navigate(`/drugs/${event.target.value}`);
 					}}
 				>
 					{drugSummaryList.map((item, index) => (
 						<MenuItem
 							key={index}
-							value={index}
+							value={item.id}
 						>
 							{item.name}
 						</MenuItem>
@@ -65,10 +84,14 @@ export const DrugWiki = () => {
 					flex: 1,
 				}}
 			>
-				{currentDisplayDrugId != null ? <h1>{drugSummaryList[currentDisplayDrugId].name}</h1> : null}
-				<ChatMarkdown useMarkdown={true}>
-					{currentDrugContent}
-				</ChatMarkdown>
+				{drug.size > 0 && (
+					<>
+						<h1>{drug.get("name")}</h1>
+						<ChatMarkdown useMarkdown={true}>
+							{drug.get("content")}
+						</ChatMarkdown>
+					</>
+				)}
 			</Card>
 		</Grid>
 	);
