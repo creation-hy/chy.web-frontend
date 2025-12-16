@@ -18,7 +18,7 @@ export const DrugWiki = () => {
 	const [drug, setDrug] = useState(new Map());
 	const [selectedValue, setSelectedValue] = useState(isIdNumeric ? Number(id) : "");
 	
-	document.title = (drug.has("name") ? drug.get("name") + " - " : "") + "药物Wiki - chy.web";
+	document.title = (drug.has("name") ? drug.get("name") + " - " : "") + "DrugWiki - chy.web";
 	
 	const {data: drugSummaryList, isFetched: isDrugListFetched} = useQuery({
 		queryKey: ["drugs", "getSummaryList"],

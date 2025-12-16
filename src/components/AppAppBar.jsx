@@ -18,7 +18,8 @@ import {
 	ForumOutlined,
 	LightMode,
 	SettingsOutlined,
-	SportsEsportsOutlined
+	SportsEsportsOutlined,
+	VaccinesOutlined
 } from "@mui/icons-material";
 import {useColorMode} from "src/components/ColorMode.jsx";
 import {useClientUser} from "src/components/ClientUser.jsx";
@@ -206,6 +207,16 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 						<DrawOutlined/>
 					</ListItemIcon>
 					<ListItemText primary="AI绘图"/>
+				</ListItemButton>
+				<ListItemButton
+					href="/drugs"
+					onClick={(event) => navigateAndCloseDrawer(event, "/drugs")}
+					selected={firstLevelLocation === "drugs"}
+				>
+					<ListItemIcon>
+						<VaccinesOutlined/>
+					</ListItemIcon>
+					<ListItemText primary="DrugWiki"/>
 				</ListItemButton>
 				<ListItemButton href="https://creation-hy.com:8080/greedy-snake">
 					<ListItemIcon>
