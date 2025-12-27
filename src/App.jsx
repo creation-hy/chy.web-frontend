@@ -120,6 +120,7 @@ const router = createBrowserRouter([
 			{path: "/chybench/ranking/page/:pageNumber", element: <Chybench showRanking/>},
 			{path: "/minesweeper", element: <Minesweeper/>},
 			{path: "/minesweeper/ranking", element: <Minesweeper showRanking/>},
+			{path: "/minesweeper/ranking/page/:pageNumber", element: <Minesweeper showRanking/>},
 			{path: "/settings", element: <Settings/>},
 			{path: "/settings/:item1", element: <Settings/>},
 			{path: "/settings/:item1/:item2", element: <Settings/>},
