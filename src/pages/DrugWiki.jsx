@@ -9,38 +9,35 @@ import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
 import {useNavigate, useParams} from "react-router";
 import {useEffect, useState} from "react";
+import Box from "@mui/material/Box";
+import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 
 export const DrugWiki = () => {
 	const navigate = useNavigate();
-	const {id} = useParams();
-	const isIdNumeric = Boolean(id && !isNaN(Number(id)));
+	const {innName} = useParams();
 	
 	const [drug, setDrug] = useState(new Map());
-	const [selectedValue, setSelectedValue] = useState(isIdNumeric ? Number(id) : "");
+	const [selectedValue, setSelectedValue] = useState(innName);
 	
-	document.title = (drug.has("name") ? drug.get("name") + " - " : "") + "DrugWiki - chy.web";
+	const [colorMode] = useBinaryColorMode();
+	
+	document.title = (drug.has("displayName") ? drug.get("displayName") + " - " : "") + "DrugWiki - chy.web";
 	
 	const {data: drugSummaryList, isFetched: isDrugListFetched} = useQuery({
 		queryKey: ["drugs", "getSummaryList"],
 		queryFn: () => axios.get("/api/drugs").then(res => res.data),
-		enabled: !id || isIdNumeric,
 	});
 	
 	useEffect(() => {
-		if (isIdNumeric) {
-			axios.get(`/api/drugs/${id}`).then(res => {
-				if (Object.keys(res.data || {}).length > 0) {
-					setDrug(new Map(Object.entries(res.data)));
-				} else {
-					setSelectedValue("");
-					navigate("/drugs");
-				}
-			});
-		} else {
-			setSelectedValue("");
-			navigate("/drugs");
-		}
-	}, [id, isIdNumeric, navigate]);
+		axios.get(`/api/drugs/${innName}`).then(res => {
+			if (Object.keys(res.data || {}).length > 0) {
+				setDrug(new Map(Object.entries(res.data)));
+			} else {
+				setSelectedValue("");
+				navigate("/drugs");
+			}
+		});
+	}, [innName, navigate]);
 	
 	if (!isDrugListFetched) {
 		return null;
@@ -70,9 +67,9 @@ export const DrugWiki = () => {
 					{drugSummaryList.map((item, index) => (
 						<MenuItem
 							key={index}
-							value={item.id}
+							value={item.innName}
 						>
-							{item.name}
+							{item.displayName}
 						</MenuItem>
 					))}
 				</Select>
@@ -86,9 +83,27 @@ export const DrugWiki = () => {
 			>
 				{drug.size > 0 && (
 					<>
-						<h1>{drug.get("name")}</h1>
+						<h1
+							style={{
+								fontWeight: "bold",
+								marginBottom: 0,
+							}}
+						>
+							{drug.get("displayName")}
+						</h1>
+						<Box
+							component="img"
+							sx={{
+								my: 1,
+								maxWidth: 250,
+								maxHeight: 250,
+								filter: colorMode === "light" ? "" : "invert(1)",
+							}}
+							src={"/api/drug-images/" + drug.get("innName") + ".svg"}
+							alt={drug.get("innName")}
+						/>
 						<ChatMarkdown useMarkdown={true}>
-							{drug.get("content")}
+							{drug.get("description")}
 						</ChatMarkdown>
 					</>
 				)}
