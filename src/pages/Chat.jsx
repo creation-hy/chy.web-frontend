@@ -292,7 +292,7 @@ export const MessageFile = memo(function MessageFile({url, fileName, fileSize, f
 		return () => window.removeEventListener("resize", updateScale);
 	}, [fileHeight, fileWidth]);
 	
-	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|bmp|ico)$/i.test(fileName) && deleted === false) {
+	if (/\.(jpg|jpeg|jfif|pjepg|pjp|png|webp|gif|bmp|ico|svg)$/i.test(fileName) && deleted === false) {
 		return (
 			<Grid
 				container
