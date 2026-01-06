@@ -2,22 +2,22 @@ import axios from "axios";
 import Card from "@mui/material/Card";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import Grid from "@mui/material/Grid";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import {InputLabel} from "@mui/material";
+import {Autocomplete} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
 import {useNavigate, useParams} from "react-router";
 import {useEffect, useState} from "react";
 import Box from "@mui/material/Box";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
+import TextField from "@mui/material/TextField";
 
 export const DrugWiki = () => {
 	const navigate = useNavigate();
 	const {innName} = useParams();
 	
 	const [drug, setDrug] = useState(new Map());
-	const [selectedValue, setSelectedValue] = useState(innName);
+	const [selectedValue, setSelectedValue] = useState(null);
+	const [isInited, setIsInited] = useState(false);
 	
 	const [colorMode] = useBinaryColorMode();
 	
@@ -29,17 +29,26 @@ export const DrugWiki = () => {
 	});
 	
 	useEffect(() => {
+		if (innName === null || innName === "") {
+			setSelectedValue(null);
+			navigate("/drugs");
+			setIsInited(true);
+		}
+		
 		axios.get(`/api/drugs/${innName}`).then(res => {
 			if (Object.keys(res.data || {}).length > 0) {
 				setDrug(new Map(Object.entries(res.data)));
+				setSelectedValue({innName: res.data.innName, displayName: res.data.displayName});
 			} else {
-				setSelectedValue("");
+				setDrug(new Map());
+				setSelectedValue(null);
 				navigate("/drugs");
 			}
 		});
+		setIsInited(true);
 	}, [innName, navigate]);
 	
-	if (!isDrugListFetched) {
+	if (!isDrugListFetched || !isInited) {
 		return null;
 	}
 	
@@ -53,26 +62,43 @@ export const DrugWiki = () => {
 					m: 0.75,
 				}}
 			>
-				<InputLabel id="drug-select-label" sx={{p: -0.75}}>药物</InputLabel>
-				<Select
-					variant="outlined"
-					label="药物"
-					labelId="drug-select-label"
+				<Autocomplete
+					freeSolo
+					selectOnFocus
+					blurOnSelect
+					handleHomeEndKeys
+					options={drugSummaryList.map(item => {
+						return {
+							innName: item.innName,
+							displayName: item.displayName,
+							label: item.displayName,
+						};
+					})}
+					isOptionEqualToValue={(option, value) => option.displayName === value.displayName}
+					renderInput={(params) => <TextField {...params} label="药物"/>}
+					getOptionLabel={option => option.displayName ?? option}
 					value={selectedValue}
-					onChange={(event) => {
-						setSelectedValue(event.target.value);
-						navigate(`/drugs/${event.target.value}`);
+					onChange={(event, newValue) => {
+						if (typeof newValue !== "string") {
+							setSelectedValue(newValue);
+							
+							if (newValue != null && newValue.innName !== innName) {
+								navigate(`/drugs/${newValue.innName}`);
+							} else {
+								navigate("/drugs");
+							}
+						} else {
+							let drugSummary = drugSummaryList.find(item => item.displayName === newValue);
+							
+							if (drugSummary) {
+								setSelectedValue({innName: drugSummary.innName, displayName: drugSummary.displayName});
+								navigate(`/drugs/${drugSummary.innName}`);
+							} else {
+								setSelectedValue({innName: innName, displayName: newValue});
+							}
+						}
 					}}
-				>
-					{drugSummaryList.map((item, index) => (
-						<MenuItem
-							key={index}
-							value={item.innName}
-						>
-							{item.displayName}
-						</MenuItem>
-					))}
-				</Select>
+				/>
 			</FormControl>
 			<Card
 				sx={{
