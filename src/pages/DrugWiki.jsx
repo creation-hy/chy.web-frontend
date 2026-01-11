@@ -17,6 +17,7 @@ export const DrugWiki = () => {
 	
 	const [drug, setDrug] = useState(new Map());
 	const [selectedValue, setSelectedValue] = useState(null);
+	const [inputValue, setInputValue] = useState("");
 	const [isInited, setIsInited] = useState(false);
 	
 	const [colorMode] = useBinaryColorMode();
@@ -74,9 +75,11 @@ export const DrugWiki = () => {
 							label: item.displayName,
 						};
 					})}
+					getOptionLabel={option => (/^[a-zA-Z]+$/.test(inputValue) ? option.innName : option.displayName) ?? option}
 					isOptionEqualToValue={(option, value) => option.displayName === value.displayName}
 					renderInput={(params) => <TextField {...params} label="药物"/>}
-					getOptionLabel={option => option.displayName ?? option}
+					inputValue={inputValue}
+					onInputChange={(event, newValue) => setInputValue(newValue)}
 					value={selectedValue}
 					onChange={(event, newValue) => {
 						if (typeof newValue !== "string") {
