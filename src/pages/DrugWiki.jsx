@@ -19,6 +19,7 @@ export const DrugWiki = () => {
 	const [selectedValue, setSelectedValue] = useState(null);
 	const [inputValue, setInputValue] = useState("");
 	const [isInited, setIsInited] = useState(false);
+	const [drugList, setDrugList] = useState([]);
 	
 	const [colorMode] = useBinaryColorMode();
 	
@@ -27,6 +28,7 @@ export const DrugWiki = () => {
 	const {data: drugSummaryList, isFetched: isDrugListFetched} = useQuery({
 		queryKey: ["drugs", "getSummaryList"],
 		queryFn: () => axios.get("/api/drugs").then(res => res.data),
+		staleTime: Infinity,
 	});
 	
 	useEffect(() => {
@@ -49,6 +51,12 @@ export const DrugWiki = () => {
 		setIsInited(true);
 	}, [innName, navigate]);
 	
+	useEffect(() => {
+		if (isDrugListFetched) {
+			setDrugList(drugSummaryList);
+		}
+	}, [drugSummaryList, isDrugListFetched]);
+	
 	if (!isDrugListFetched || !isInited) {
 		return null;
 	}
@@ -68,7 +76,7 @@ export const DrugWiki = () => {
 					selectOnFocus
 					blurOnSelect
 					handleHomeEndKeys
-					options={drugSummaryList.map(item => {
+					options={drugList.map(item => {
 						return {
 							innName: item.innName,
 							displayName: item.displayName,
@@ -82,22 +90,24 @@ export const DrugWiki = () => {
 					onInputChange={(event, newValue) => setInputValue(newValue)}
 					value={selectedValue}
 					onChange={(event, newValue) => {
+						if (newValue == null) {
+							navigate("/drugs");
+							return;
+						}
+						
+						if (selectedValue != null && newValue.innName === selectedValue.innName) {
+							return;
+						}
+						
 						if (typeof newValue !== "string") {
 							setSelectedValue(newValue);
-							
-							if (newValue != null && newValue.innName !== innName) {
-								navigate(`/drugs/${newValue.innName}`);
-							} else {
-								navigate("/drugs");
-							}
+							navigate(`/drugs/${newValue.innName}`);
 						} else {
-							let drugSummary = drugSummaryList.find(item => item.displayName === newValue);
+							let drugSummary = drugSummaryList.find(item => item.displayName === newValue || item.innName === newValue);
 							
 							if (drugSummary) {
 								setSelectedValue({innName: drugSummary.innName, displayName: drugSummary.displayName});
 								navigate(`/drugs/${drugSummary.innName}`);
-							} else {
-								setSelectedValue({innName: innName, displayName: newValue});
 							}
 						}
 					}}
