@@ -116,7 +116,18 @@ export const DrugWiki = () => {
 							}
 						}
 					}}
-					sx={{width: 200}}
+					sx={{
+						width: 225,
+					}}
+					slotProps={{
+						popper: {
+							sx: {
+								'& .MuiAutocomplete-option': {
+									wordBreak: 'break-word',
+								},
+							}
+						}
+					}}
 				/>
 				<FormControl sx={{width: 160}}>
 					<InputLabel id="order-select-label">药物排序方式</InputLabel>
