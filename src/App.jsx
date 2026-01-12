@@ -70,8 +70,6 @@ const Layout = () => {
 						minHeight: 0,
 						height: lockHeight ? "100%" : "auto",
 						overflow: "auto",
-						borderRight: 1,
-						borderColor: "divider",
 					}}
 				>
 					{!isSmallScreen && <Box minHeight={16}/>}
