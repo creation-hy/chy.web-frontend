@@ -11,6 +11,7 @@ import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import TextField from "@mui/material/TextField";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 
 export const DrugWiki = () => {
 	const navigate = useNavigate();
@@ -23,6 +24,8 @@ export const DrugWiki = () => {
 	const [drugList, setDrugList] = useState([]);
 	
 	const [colorMode] = useBinaryColorMode();
+	
+	const useEnglishDisplayNames = /^[a-zA-Z]+$/.test(inputValue) && inputValue !== selectedValue?.displayName;
 	
 	document.title = (drug.has("displayName") ? drug.get("displayName") + " - " : "") + "DrugWiki - chy.web";
 	
@@ -88,7 +91,7 @@ export const DrugWiki = () => {
 							label: item.displayName,
 						};
 					})}
-					getOptionLabel={option => (/^[a-zA-Z]+$/.test(inputValue) && inputValue !== selectedValue?.displayName ? option.innName : option.displayName) ?? option}
+					getOptionLabel={option => (useEnglishDisplayNames ? option.innName : option.displayName) ?? option}
 					isOptionEqualToValue={(option, value) => option.displayName === value.displayName}
 					renderInput={(params) => <TextField {...params} label="药物"/>}
 					inputValue={inputValue}
@@ -164,24 +167,27 @@ export const DrugWiki = () => {
 			<Card
 				sx={{
 					p: 3,
-					pt: 0,
 					flex: 1,
 				}}
 			>
 				{drug.size > 0 && (
 					<>
-						<h1
-							style={{
-								fontWeight: "bold",
-								marginBottom: 0,
-							}}
-						>
+						<Typography variant="h4" fontWeight="bold" mb={1.5}>
 							{drug.get("displayName")}
-						</h1>
+						</Typography>
+						<Typography>
+							危险联用：{drug.get("dangerousInteractions")}
+						</Typography>
+						{drug.get("physicalDependence") <= 100 ? (
+							<Typography>
+								心理成瘾性：{drug.get("psychologicalDependence")}<br/>
+								生理成瘾性：{drug.get("physicalDependence")}
+							</Typography>
+						) : ""}
 						<Box
 							component="img"
 							sx={{
-								my: 1,
+								my: 2,
 								maxWidth: 250,
 								maxHeight: 250,
 								filter: colorMode === "light" ? "" : "invert(1)",
@@ -189,6 +195,10 @@ export const DrugWiki = () => {
 							src={"/api/drug-images/" + drug.get("innName") + ".svg"}
 							alt={drug.get("innName")}
 						/>
+						<Typography>
+							化学式：{drug.get("molecularFormula")}<br/>
+							IUPAC命名：{drug.get("iupacName")}
+						</Typography><br/>
 						<ChatMarkdown useMarkdown={true}>
 							{drug.get("description")}
 						</ChatMarkdown>
