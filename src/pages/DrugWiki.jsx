@@ -1,8 +1,7 @@
 import axios from "axios";
 import Card from "@mui/material/Card";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
-import Grid from "@mui/material/Grid";
-import {Autocomplete} from "@mui/material";
+import {Autocomplete, InputLabel} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
 import {useNavigate, useParams} from "react-router";
@@ -10,6 +9,8 @@ import {useEffect, useState} from "react";
 import Box from "@mui/material/Box";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import TextField from "@mui/material/TextField";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 
 export const DrugWiki = () => {
 	const navigate = useNavigate();
@@ -62,13 +63,17 @@ export const DrugWiki = () => {
 	}
 	
 	return (
-		<Grid container sx={{flex: 1, width: "100%", flexDirection: "column"}} gap={2}>
+		<>
 			<FormControl
 				sx={{
-					maxWidth: 300,
-					width: "100%",
+					maxWidth: "100%",
+					display: "flex",
+					flexDirection: "row",
 					alignSelf: "center",
+					justifyContent: "center",
+					gap: 1,
 					m: 0.75,
+					mb: 2,
 				}}
 			>
 				<Autocomplete
@@ -111,7 +116,39 @@ export const DrugWiki = () => {
 							}
 						}
 					}}
+					sx={{width: 200}}
 				/>
+				<FormControl sx={{width: 160}}>
+					<InputLabel id="order-select-label">药物排序方式</InputLabel>
+					<Select
+						variant="outlined"
+						labelId="order-select-label"
+						label="药物排序方式"
+						defaultValue="0"
+						onChange={(event) => {
+							setDrugList(list => {
+								switch (event.target.value) {
+									case 0:
+										return drugSummaryList;
+									case 1:
+										return [...list].sort((a, b) => a.psychologicalDependence - b.psychologicalDependence);
+									case 2:
+										return [...list].sort((a, b) => b.psychologicalDependence - a.psychologicalDependence);
+									case 3:
+										return [...list].sort((a, b) => a.physicalDependence - b.physicalDependence);
+									case 4:
+										return [...list].sort((a, b) => b.physicalDependence - a.physicalDependence);
+								}
+							});
+						}}
+					>
+						<MenuItem value={0}>默认排序</MenuItem>
+						<MenuItem value={1}>心理成瘾性升序</MenuItem>
+						<MenuItem value={2}>心理成瘾性降序</MenuItem>
+						<MenuItem value={3}>生理成瘾性升序</MenuItem>
+						<MenuItem value={4}>生理成瘾性降序</MenuItem>
+					</Select>
+				</FormControl>
 			</FormControl>
 			<Card
 				sx={{
@@ -147,6 +184,6 @@ export const DrugWiki = () => {
 					</>
 				)}
 			</Card>
-		</Grid>
+		</>
 	);
 }
