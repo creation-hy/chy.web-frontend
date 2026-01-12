@@ -88,7 +88,7 @@ export const DrugWiki = () => {
 							label: item.displayName,
 						};
 					})}
-					getOptionLabel={option => (/^[a-zA-Z]+$/.test(inputValue) ? option.innName : option.displayName) ?? option}
+					getOptionLabel={option => (/^[a-zA-Z]+$/.test(inputValue) && inputValue !== selectedValue?.displayName ? option.innName : option.displayName) ?? option}
 					isOptionEqualToValue={(option, value) => option.displayName === value.displayName}
 					renderInput={(params) => <TextField {...params} label="药物"/>}
 					inputValue={inputValue}
