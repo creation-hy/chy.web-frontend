@@ -176,6 +176,11 @@ export const DrugWiki = () => {
 							{drug.get("displayName")}
 						</Typography>
 						<Typography>
+							作用分类：{drug.get("classes").filter(item => item.type === "effect").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
+							药理分类：{drug.get("classes").filter(item => item.type === "pharmacologic").sort((a, b) => a.id - b.id).map(item => item.name).join('、')}<br/>
+							化学分类：{drug.get("classes").filter(item => item.type === "chemical").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
+							医疗用途：{drug.get("classes").filter(item => item.type === "therapeutic").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
+							法律规范：{drug.get("classes").filter(item => item.type === "legal").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
 							危险联用：{drug.get("dangerousInteractions")}
 						</Typography>
 						{drug.get("physicalDependence") <= 100 ? (
