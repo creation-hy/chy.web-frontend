@@ -36,10 +36,11 @@ export const DrugWiki = () => {
 	});
 	
 	useEffect(() => {
-		if (innName === null || innName === "") {
+		if (innName == null || innName === "") {
 			setSelectedValue(null);
 			navigate("/drugs");
 			setIsInited(true);
+			return;
 		}
 		
 		axios.get(`/api/drugs/${innName}`).then(res => {
