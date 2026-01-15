@@ -20,18 +20,27 @@ export const DrugWiki = () => {
 	const [drug, setDrug] = useState(new Map());
 	const [selectedValue, setSelectedValue] = useState(null);
 	const [inputValue, setInputValue] = useState("");
+	const [selectedClass, setSelectedClass] = useState(null);
+	const [inputClass, setInputClass] = useState("");
 	const [isInited, setIsInited] = useState(false);
 	const [drugList, setDrugList] = useState([]);
 	
 	const [colorMode] = useBinaryColorMode();
 	
-	const useEnglishDisplayNames = /^[a-zA-Z]+$/.test(inputValue) && inputValue !== selectedValue?.displayName;
+	const useEnglishDisplayName = /^[a-zA-Z]+$/.test(inputValue) && inputValue !== selectedValue?.displayName;
+	const useEnglishClassName = /^[a-zA-Z]+$/.test(inputClass);
 	
 	document.title = (drug.has("displayName") ? drug.get("displayName") + " - " : "") + "DrugWiki - chy.web";
 	
 	const {data: drugSummaryList, isFetched: isDrugListFetched} = useQuery({
 		queryKey: ["drugs", "getSummaryList"],
 		queryFn: () => axios.get("/api/drugs").then(res => res.data),
+		staleTime: Infinity,
+	});
+	
+	const {data: drugClassList, isFetched: isDrugClassListFetched} = useQuery({
+		queryKey: ["drugs", "getClassList"],
+		queryFn: () => axios.get("/api/drug-classes").then(res => res.data),
 		staleTime: Infinity,
 	});
 	
@@ -62,7 +71,7 @@ export const DrugWiki = () => {
 		}
 	}, [drugSummaryList, isDrugListFetched]);
 	
-	if (!isDrugListFetched || !isInited) {
+	if (!isDrugListFetched || !isDrugClassListFetched || !isInited) {
 		return null;
 	}
 	
@@ -92,7 +101,7 @@ export const DrugWiki = () => {
 							label: item.displayName,
 						};
 					})}
-					getOptionLabel={option => (useEnglishDisplayNames ? option.innName : option.displayName) ?? option}
+					getOptionLabel={option => (useEnglishDisplayName ? option.innName : option.displayName) ?? option}
 					isOptionEqualToValue={(option, value) => option.displayName === value.displayName}
 					renderInput={(params) => <TextField {...params} label="药物"/>}
 					inputValue={inputValue}
@@ -136,11 +145,11 @@ export const DrugWiki = () => {
 					}}
 				/>
 				<FormControl sx={{width: 160}}>
-					<InputLabel id="order-select-label">药物排序方式</InputLabel>
+					<InputLabel id="order-select-label">排序方式</InputLabel>
 					<Select
 						variant="outlined"
 						labelId="order-select-label"
-						label="药物排序方式"
+						label="排序方式"
 						defaultValue="0"
 						onChange={(event) => {
 							setDrugList(list => {
@@ -166,6 +175,54 @@ export const DrugWiki = () => {
 						<MenuItem value={4}>生理成瘾性降序</MenuItem>
 					</Select>
 				</FormControl>
+				<Autocomplete
+					freeSolo
+					selectOnFocus
+					blurOnSelect
+					handleHomeEndKeys
+					options={drugClassList}
+					getOptionKey={option => option.id}
+					getOptionLabel={option => (useEnglishClassName ? option.nameEn : option.nameZh) ?? option}
+					isOptionEqualToValue={(option, value) => option.id === value.id}
+					renderInput={(params) => <TextField {...params} label="药物分类"/>}
+					inputValue={inputClass}
+					onInputChange={(event, newValue) => setInputClass(newValue)}
+					value={selectedClass}
+					onChange={(event, newValue) => {
+						if (newValue == null) {
+							setDrugList(drugSummaryList);
+							setSelectedClass(null);
+							return;
+						}
+						
+						if (typeof newValue !== "string") {
+							axios.get(`/api/drug-classes/${newValue.id}/drugs`).then(res => {
+								setSelectedClass(newValue);
+								setDrugList(res.data);
+							});
+						} else {
+							let lowerCaseValue = newValue.toLowerCase();
+							let drugClass = drugClassList.find(item =>
+								item.nameEn.toLowerCase() === lowerCaseValue || item.nameZh.toLowerCase() === lowerCaseValue);
+							axios.get(`/api/drug-classes/${drugClass.id}/drugs`).then(res => {
+								setSelectedClass(drugClass);
+								setDrugList(res.data);
+							});
+						}
+					}}
+					sx={{
+						width: 175,
+					}}
+					slotProps={{
+						popper: {
+							sx: {
+								'& .MuiAutocomplete-option': {
+									wordBreak: 'break-word',
+								},
+							}
+						}
+					}}
+				/>
 			</FormControl>
 			<Card
 				sx={{
@@ -179,11 +236,11 @@ export const DrugWiki = () => {
 							{drug.get("displayName")}
 						</Typography>
 						<Typography>
-							作用分类：{drug.get("classes").filter(item => item.type === "effect").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
-							药理分类：{drug.get("classes").filter(item => item.type === "pharmacologic").sort((a, b) => a.id - b.id).map(item => item.name).join('、')}<br/>
-							化学分类：{drug.get("classes").filter(item => item.type === "chemical").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
-							医疗用途：{drug.get("classes").filter(item => item.type === "therapeutic").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
-							法律规范：{drug.get("classes").filter(item => item.type === "legal").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
+							作用分类：{drug.get("classes").filter(item => item.type === "effect").sort((a, b) => a.id - b.id).map(item => item.nameZh).join('、') || "无"}<br/>
+							药理分类：{drug.get("classes").filter(item => item.type === "pharmacologic").sort((a, b) => a.id - b.id).map(item => item.nameZh).join('、')}<br/>
+							化学分类：{drug.get("classes").filter(item => item.type === "chemical").sort((a, b) => a.id - b.id).map(item => item.nameZh).join('、') || "无"}<br/>
+							医疗用途：{drug.get("classes").filter(item => item.type === "therapeutic").sort((a, b) => a.id - b.id).map(item => item.nameZh).join('、') || "无"}<br/>
+							法律规范：{drug.get("classes").filter(item => item.type === "legal").sort((a, b) => a.id - b.id).map(item => item.nameZh).join('、') || "无"}<br/>
 							危险联用：{drug.get("dangerousInteractions")}
 						</Typography>
 						{drug.get("physicalDependence") <= 100 ? (
