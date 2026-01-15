@@ -111,7 +111,9 @@ export const DrugWiki = () => {
 							setSelectedValue(newValue);
 							navigate(`/drugs/${newValue.innName}`);
 						} else {
-							let drugSummary = drugSummaryList.find(item => item.displayName === newValue || item.innName === newValue);
+							let lowerCaseValue = newValue.toLowerCase();
+							let drugSummary = drugSummaryList.find(item =>
+								item.displayName.toLowerCase() === lowerCaseValue || item.innName.toLowerCase() === lowerCaseValue);
 							
 							if (drugSummary) {
 								setSelectedValue({innName: drugSummary.innName, displayName: drugSummary.displayName});
