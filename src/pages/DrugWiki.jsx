@@ -5,18 +5,28 @@ import {Autocomplete, InputLabel} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
 import {useNavigate, useParams} from "react-router";
-import {memo, useEffect, useState} from "react";
+import {memo, useEffect, useMemo, useState} from "react";
 import Box from "@mui/material/Box";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import TextField from "@mui/material/TextField";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid";
 import {green, orange, red, yellow} from "@mui/material/colors";
 import PropTypes from "prop-types";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+
+const SORT_MODES = Object.freeze({
+	LAST_UPDATED_DESC: "最新更新",
+	COMBINED_ASC: "综合成瘾性升序",
+	COMBINED_DESC: "综合成瘾性降序",
+	PSYCH_ASC: "心理成瘾性升序",
+	PSYCH_DESC: "心理成瘾性降序",
+	PHYS_ASC: "生理成瘾性升序",
+	PHYS_DESC: "生理成瘾性降序",
+});
 
 export const DrugWiki = () => {
 	const navigate = useNavigate();
@@ -29,6 +39,7 @@ export const DrugWiki = () => {
 	const [inputClass, setInputClass] = useState("");
 	const [isInited, setIsInited] = useState(false);
 	const [drugList, setDrugList] = useState([]);
+	const [sortMode, setSortMode] = useState(SORT_MODES.LAST_UPDATED_DESC);
 	
 	const [colorMode] = useBinaryColorMode();
 	
@@ -74,6 +85,27 @@ export const DrugWiki = () => {
 		}
 	}, [drugSummaryList, isDrugListFetched]);
 	
+	const sortedDrugList = useMemo(() => {
+		const list = [...drugList];
+		
+		switch (sortMode) {
+			case SORT_MODES.LAST_UPDATED_DESC:
+				return list.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+			case SORT_MODES.COMBINED_ASC:
+				return list.sort((a, b) => a.psychologicalDependence + a.physicalDependence - b.psychologicalDependence - b.physicalDependence);
+			case SORT_MODES.COMBINED_DESC:
+				return list.sort((a, b) => b.psychologicalDependence + b.physicalDependence - a.psychologicalDependence - a.physicalDependence);
+			case SORT_MODES.PSYCH_ASC:
+				return list.sort((a, b) => a.psychologicalDependence - b.psychologicalDependence);
+			case SORT_MODES.PSYCH_DESC:
+				return list.sort((a, b) => b.psychologicalDependence - a.psychologicalDependence);
+			case SORT_MODES.PHYS_ASC:
+				return list.sort((a, b) => a.physicalDependence - b.physicalDependence);
+			case SORT_MODES.PHYS_DESC:
+				return list.sort((a, b) => b.physicalDependence - a.physicalDependence);
+		}
+	}, [drugList, sortMode]);
+	
 	if (!isDrugListFetched || !isDrugClassListFetched || !isInited) {
 		return null;
 	}
@@ -97,7 +129,7 @@ export const DrugWiki = () => {
 					selectOnFocus
 					blurOnSelect
 					handleHomeEndKeys
-					options={drugList.map(item => {
+					options={sortedDrugList.map(item => {
 						return {
 							innName: item.innName,
 							displayName: item.displayName,
@@ -147,37 +179,6 @@ export const DrugWiki = () => {
 						}
 					}}
 				/>
-				<FormControl sx={{width: 160}}>
-					<InputLabel id="order-select-label">排序方式</InputLabel>
-					<Select
-						variant="outlined"
-						labelId="order-select-label"
-						label="排序方式"
-						defaultValue="0"
-						onChange={(event) => {
-							setDrugList(list => {
-								switch (event.target.value) {
-									case 0:
-										return drugSummaryList;
-									case 1:
-										return [...list].sort((a, b) => a.psychologicalDependence - b.psychologicalDependence);
-									case 2:
-										return [...list].sort((a, b) => b.psychologicalDependence - a.psychologicalDependence);
-									case 3:
-										return [...list].sort((a, b) => a.physicalDependence - b.physicalDependence);
-									case 4:
-										return [...list].sort((a, b) => b.physicalDependence - a.physicalDependence);
-								}
-							});
-						}}
-					>
-						<MenuItem value={0}>默认排序</MenuItem>
-						<MenuItem value={1}>心理成瘾性升序</MenuItem>
-						<MenuItem value={2}>心理成瘾性降序</MenuItem>
-						<MenuItem value={3}>生理成瘾性升序</MenuItem>
-						<MenuItem value={4}>生理成瘾性降序</MenuItem>
-					</Select>
-				</FormControl>
 				<Autocomplete
 					freeSolo
 					selectOnFocus
@@ -224,6 +225,22 @@ export const DrugWiki = () => {
 						}
 					}}
 				/>
+				<FormControl sx={{width: 160}}>
+					<InputLabel id="order-select-label">排序方式</InputLabel>
+					<Select
+						variant="outlined"
+						labelId="order-select-label"
+						label="排序方式"
+						defaultValue={SORT_MODES.LAST_UPDATED_DESC}
+						onChange={(event) => {
+							setSortMode(event.target.value);
+						}}
+					>
+						{Object.entries(SORT_MODES).map(([key, value]) => (
+							<MenuItem key={key} value={value}>{value}</MenuItem>
+						))}
+					</Select>
+				</FormControl>
 			</FormControl>
 			<Card
 				sx={{
