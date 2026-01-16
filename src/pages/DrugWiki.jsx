@@ -88,7 +88,7 @@ export const DrugWiki = () => {
 					alignSelf: "center",
 					justifyContent: "center",
 					gap: 1,
-					m: 0.75,
+					mt: 0.75,
 					mb: 2,
 				}}
 			>
