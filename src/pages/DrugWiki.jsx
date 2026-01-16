@@ -20,6 +20,7 @@ import MenuItem from "@mui/material/MenuItem";
 import {SortOutlined} from "@mui/icons-material";
 import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
+import Stack from "@mui/material/Stack";
 
 const SORT_MODES = Object.freeze({
 	LAST_UPDATED_DESC: "最新更新",
@@ -30,6 +31,14 @@ const SORT_MODES = Object.freeze({
 	PHYS_ASC: "生理成瘾性升序",
 	PHYS_DESC: "生理成瘾性降序",
 });
+
+const CLASS_TYPE = Object.freeze([
+	{classType: "effect", displayName: "作用分类"},
+	{classType: "pharmacologic", displayName: "药理分类"},
+	{classType: "chemical", displayName: "化学分类"},
+	{classType: "therapeutic", displayName: "医疗用途"},
+	{classType: "legal", displayName: "法律规范"},
+]);
 
 export const DrugWiki = () => {
 	const navigate = useNavigate();
@@ -288,14 +297,6 @@ export const DrugWiki = () => {
 						<Typography variant="h4" fontWeight="bold" mb={1.5}>
 							{drug.get("displayName")}
 						</Typography>
-						<Typography>
-							作用分类：{drug.get("classes").filter(item => item.type === "effect").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
-							药理分类：{drug.get("classes").filter(item => item.type === "pharmacologic").sort((a, b) => a.id - b.id).map(item => item.name).join('、')}<br/>
-							化学分类：{drug.get("classes").filter(item => item.type === "chemical").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
-							医疗用途：{drug.get("classes").filter(item => item.type === "therapeutic").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
-							法律规范：{drug.get("classes").filter(item => item.type === "legal").sort((a, b) => a.id - b.id).map(item => item.name).join('、') || "无"}<br/>
-							危险联用：{drug.get("dangerousInteractions")}
-						</Typography>
 						{drug.get("physicalDependence") <= 100 ? (
 							<Grid container gap={1} alignItems="flex-start" my={1}>
 								<DependenceChip text={"心理成瘾性"} score={drug.get("psychologicalDependence")}/>
@@ -305,18 +306,66 @@ export const DrugWiki = () => {
 						<Box
 							component="img"
 							sx={{
-								my: 2,
-								maxWidth: 250,
-								maxHeight: 250,
+								m: 2,
+								maxWidth: 225,
 								filter: colorMode === "light" ? "" : "invert(1)",
 							}}
 							src={"/api/drug-images/" + drug.get("innName") + ".svg"}
 							alt={drug.get("innName")}
 						/>
-						<Typography>
-							化学式：{drug.get("molecularFormula")}<br/>
-							IUPAC命名：{drug.get("iupacName")}
-						</Typography><br/>
+						<Box>
+							{CLASS_TYPE.map(type => {
+								const items = drug.get("classes")
+									.filter(item => item.type === type.classType)
+									.sort((a, b) => a.id - b.id);
+								
+								return (
+									<Box key={type.classType} sx={{mb: 1.5}}>
+										<Typography variant="h6" sx={{mb: "1px"}}>
+											{type.displayName}
+										</Typography>
+										{items.length > 0 ? (
+											<Stack direction="row" gap={1} flexWrap="wrap">
+												{items.map(item => (
+													<Chip
+														key={item.id}
+														label={item.name}
+														variant="outlined"
+													/>
+												))}
+											</Stack>
+										) : (
+											<Typography variant="body1">
+												无
+											</Typography>
+										)}
+									</Box>
+								);
+							})}
+						</Box>
+						<Card variant="outlined" sx={{my: 2, p: 2}}>
+							<Typography color="text.secondary" fontWeight="bold" gutterBottom>
+								化学信息
+							</Typography>
+							<Stack spacing={1}>
+								<Box>
+									<Typography variant="caption" color="text.secondary">
+										化学式
+									</Typography>
+									<Typography variant="body2">
+										{drug.get("molecularFormula")}
+									</Typography>
+								</Box>
+								<Box>
+									<Typography variant="caption" color="text.secondary">
+										IUPAC 命名
+									</Typography>
+									<Typography variant="body2">
+										{drug.get("iupacName")}
+									</Typography>
+								</Box>
+							</Stack>
+						</Card>
 						<ChatMarkdown useMarkdown={true}>
 							{drug.get("description")}
 						</ChatMarkdown>
