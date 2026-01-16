@@ -5,13 +5,18 @@ import {Autocomplete, InputLabel} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
 import {useNavigate, useParams} from "react-router";
-import {useEffect, useState} from "react";
+import {memo, useEffect, useState} from "react";
 import Box from "@mui/material/Box";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import TextField from "@mui/material/TextField";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import Avatar from "@mui/material/Avatar";
+import Grid from "@mui/material/Grid";
+import {green, orange, red, yellow} from "@mui/material/colors";
+import PropTypes from "prop-types";
 
 export const DrugWiki = () => {
 	const navigate = useNavigate();
@@ -40,7 +45,6 @@ export const DrugWiki = () => {
 	const {data: drugClassList, isFetched: isDrugClassListFetched} = useQuery({
 		queryKey: ["drugs", "getClassList"],
 		queryFn: () => axios.get("/api/drug-classes").then(res => res.data),
-		staleTime: Infinity,
 	});
 	
 	useEffect(() => {
@@ -241,10 +245,10 @@ export const DrugWiki = () => {
 							危险联用：{drug.get("dangerousInteractions")}
 						</Typography>
 						{drug.get("physicalDependence") <= 100 ? (
-							<Typography>
-								心理成瘾性：{drug.get("psychologicalDependence")}<br/>
-								生理成瘾性：{drug.get("physicalDependence")}
-							</Typography>
+							<Grid container gap={1} alignItems="flex-start" my={1}>
+								<DependenceChip text={"心理成瘾性"} score={drug.get("psychologicalDependence")}/>
+								<DependenceChip text={"生理成瘾性"} score={drug.get("physicalDependence")}/>
+							</Grid>
 						) : ""}
 						<Box
 							component="img"
@@ -269,4 +273,32 @@ export const DrugWiki = () => {
 			</Card>
 		</>
 	);
+}
+
+const DependenceChip = memo(function DependenceChip({text, score}) {
+	return (
+		<Chip
+			variant="outlined"
+			label={`${text} ${score}`}
+			sx={{
+				fontSize: 14,
+			}}
+			avatar={
+				<Avatar
+					sx={{
+						bgcolor: score < 40 ? green[500] :
+							(score < 60 ? yellow[600] : (score < 80 ? orange[600] : red[600])),
+						'& svg': {
+							display: "none",
+						}
+					}}
+				/>
+			}
+		/>
+	);
+});
+
+DependenceChip.propTypes = {
+	text: PropTypes.string,
+	score: PropTypes.number.isRequired,
 }
