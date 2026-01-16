@@ -199,16 +199,6 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 					<ListItemText primary="Chat"/>
 				</ListItemButton>
 				<ListItemButton
-					href="/ai-art"
-					onClick={(event) => navigateAndCloseDrawer(event, "/ai-art")}
-					selected={firstLevelLocation === "ai-art"}
-				>
-					<ListItemIcon>
-						<DrawOutlined/>
-					</ListItemIcon>
-					<ListItemText primary="AI绘图"/>
-				</ListItemButton>
-				<ListItemButton
 					href="/drugs"
 					onClick={(event) => navigateAndCloseDrawer(event, "/drugs")}
 					selected={firstLevelLocation === "drugs"}
@@ -217,6 +207,16 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 						<VaccinesOutlined/>
 					</ListItemIcon>
 					<ListItemText primary="DrugWiki"/>
+				</ListItemButton>
+				<ListItemButton
+					href="/ai-art"
+					onClick={(event) => navigateAndCloseDrawer(event, "/ai-art")}
+					selected={firstLevelLocation === "ai-art"}
+				>
+					<ListItemIcon>
+						<DrawOutlined/>
+					</ListItemIcon>
+					<ListItemText primary="AI绘图"/>
 				</ListItemButton>
 				<ListItemButton href="https://creation-hy.com:8080/greedy-snake">
 					<ListItemIcon>
