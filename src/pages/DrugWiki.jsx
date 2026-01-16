@@ -1,7 +1,7 @@
 import axios from "axios";
 import Card from "@mui/material/Card";
 import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
-import {Autocomplete, InputLabel} from "@mui/material";
+import {Autocomplete, InputLabel, useMediaQuery} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
 import {useNavigate, useParams} from "react-router";
@@ -17,6 +17,9 @@ import {green, orange, red, yellow} from "@mui/material/colors";
 import PropTypes from "prop-types";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import {SortOutlined} from "@mui/icons-material";
+import Button from "@mui/material/Button";
+import Menu from "@mui/material/Menu";
 
 const SORT_MODES = Object.freeze({
 	LAST_UPDATED_DESC: "最新更新",
@@ -41,6 +44,9 @@ export const DrugWiki = () => {
 	const [drugList, setDrugList] = useState([]);
 	const [sortMode, setSortMode] = useState(SORT_MODES.LAST_UPDATED_DESC);
 	
+	const [mobileSortMenuAnchorEl, setMobileSortMenuAnchorEl] = useState(null);
+	
+	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
 	const [colorMode] = useBinaryColorMode();
 	
 	const useEnglishDisplayName = /^[a-zA-Z]+$/.test(inputValue) && inputValue !== selectedValue?.displayName;
@@ -225,22 +231,51 @@ export const DrugWiki = () => {
 						}
 					}}
 				/>
-				<FormControl sx={{width: 160}}>
-					<InputLabel id="order-select-label">排序方式</InputLabel>
-					<Select
-						variant="outlined"
-						labelId="order-select-label"
-						label="排序方式"
-						defaultValue={SORT_MODES.LAST_UPDATED_DESC}
-						onChange={(event) => {
-							setSortMode(event.target.value);
-						}}
-					>
-						{Object.entries(SORT_MODES).map(([key, value]) => (
-							<MenuItem key={key} value={value}>{value}</MenuItem>
-						))}
-					</Select>
-				</FormControl>
+				{!isSmallScreen ? (
+					<FormControl sx={{width: 160}}>
+						<InputLabel id="order-select-label">排序方式</InputLabel>
+						<Select
+							variant="outlined"
+							labelId="order-select-label"
+							label="排序方式"
+							defaultValue={SORT_MODES.LAST_UPDATED_DESC}
+							onChange={(event) => {
+								setSortMode(event.target.value);
+							}}
+						>
+							{Object.entries(SORT_MODES).map(([key, value]) => (
+								<MenuItem key={key} value={value}>{value}</MenuItem>
+							))}
+						</Select>
+					</FormControl>
+				) : (
+					<>
+						<Button
+							variant="outlined"
+							onClick={e => setMobileSortMenuAnchorEl(e.currentTarget)}
+						>
+							<SortOutlined/>
+						</Button>
+						<Menu
+							anchorEl={mobileSortMenuAnchorEl}
+							open={Boolean(mobileSortMenuAnchorEl)}
+							onClose={() => setMobileSortMenuAnchorEl(null)}
+						>
+							{Object.entries(SORT_MODES).map(([key, value]) => (
+								<MenuItem
+									key={key}
+									selected={sortMode === value}
+									onClick={() => {
+										setSortMode(value);
+										setMobileSortMenuAnchorEl(null);
+									}}
+								>
+									{value}
+								</MenuItem>
+							))}
+						</Menu>
+					</>
+				)}
 			</FormControl>
 			<Card
 				sx={{
