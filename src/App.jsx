@@ -25,7 +25,7 @@ import Error from "src/pages/Error.jsx";
 import Grid from "@mui/material/Grid";
 import {ClientUserProvider} from "src/components/ClientUser.jsx";
 import axios from "axios";
-import {DrugWiki} from "src/pages/DrugWiki.jsx";
+import {DrugClassWiki, DrugWiki} from "src/pages/DrugWiki.jsx";
 
 const Layout = () => {
 	const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -126,6 +126,7 @@ const router = createBrowserRouter([
 			{path: "/posts/:tab", element: <Posts/>},
 			{path: "/drugs", element: <DrugWiki/>},
 			{path: "/drugs/:innName", element: <DrugWiki/>},
+			{path: "/drug-classes/:className", element: <DrugClassWiki/>},
 			{path: "*", element: <Error/>},
 		],
 	},

@@ -17,10 +17,11 @@ import {green, orange, red, yellow} from "@mui/material/colors";
 import PropTypes from "prop-types";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import {SortOutlined} from "@mui/icons-material";
+import {ArrowBackOutlined, SortOutlined} from "@mui/icons-material";
 import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import Stack from "@mui/material/Stack";
+import IconButton from "@mui/material/IconButton";
 
 const SORT_MODES = Object.freeze({
 	LAST_UPDATED_DESC: "最新更新",
@@ -95,10 +96,18 @@ export const DrugWiki = () => {
 	}, [innName, navigate]);
 	
 	useEffect(() => {
-		if (isDrugListFetched) {
-			setDrugList(drugSummaryList);
+		console.log(selectedClass);
+		if (selectedClass == null) {
+			if (isDrugListFetched) {
+				setDrugList(drugSummaryList);
+			}
+			return;
 		}
-	}, [drugSummaryList, isDrugListFetched]);
+		
+		axios.get(`/api/drug-classes/${selectedClass.id}/drugs`).then(res => {
+			setDrugList(res.data);
+		});
+	}, [drugSummaryList, isDrugListFetched, selectedClass]);
 	
 	const sortedDrugList = useMemo(() => {
 		const list = [...drugList];
@@ -201,7 +210,7 @@ export const DrugWiki = () => {
 					handleHomeEndKeys
 					options={drugClassList}
 					getOptionKey={option => option.id}
-					getOptionLabel={option => option.name ?? option}
+					getOptionLabel={option => option.nameZh ?? option}
 					isOptionEqualToValue={(option, value) => option.id === value.id}
 					renderInput={(params) => <TextField {...params} label="药物分类"/>}
 					inputValue={inputClass}
@@ -209,22 +218,15 @@ export const DrugWiki = () => {
 					value={selectedClass}
 					onChange={(event, newValue) => {
 						if (newValue == null) {
-							setDrugList(drugSummaryList);
 							setSelectedClass(null);
 							return;
 						}
 						
 						if (typeof newValue !== "string") {
-							axios.get(`/api/drug-classes/${newValue.id}/drugs`).then(res => {
-								setSelectedClass(newValue);
-								setDrugList(res.data);
-							});
+							setSelectedClass(newValue);
 						} else {
 							let drugClass = drugClassList.find(item => item.name.toLowerCase() === newValue.toLowerCase());
-							axios.get(`/api/drug-classes/${drugClass.id}/drugs`).then(res => {
-								setSelectedClass(drugClass);
-								setDrugList(res.data);
-							});
+							setSelectedClass(drugClass);
 						}
 					}}
 					sx={{
@@ -329,8 +331,17 @@ export const DrugWiki = () => {
 												{items.map(item => (
 													<Chip
 														key={item.id}
-														label={item.name}
+														label={item.nameZh}
 														variant="outlined"
+														color={item.description ? "primary" : "inherit"}
+														onClick={() => {
+															if (item.description) {
+																navigate(`/drug-classes/${item.nameEn}`);
+															} else {
+																setSelectedClass(item);
+																window.scrollTo({top: 0, behavior: "smooth"});
+															}
+														}}
 													/>
 												))}
 											</Stack>
@@ -402,4 +413,49 @@ const DependenceChip = memo(function DependenceChip({text, score}) {
 DependenceChip.propTypes = {
 	text: PropTypes.string,
 	score: PropTypes.number.isRequired,
+}
+
+export const DrugClassWiki = () => {
+	const {className} = useParams();
+	const [colorMode] = useBinaryColorMode();
+	
+	const {data, isFetched} = useQuery({
+		queryKey: ["drugs", "getClassData"],
+		queryFn: () => axios.get(`/api/drug-classes/${className}`).then(res => res.data),
+	});
+	
+	if (!isFetched) {
+		return null;
+	}
+	
+	return (
+		<Card
+			sx={{
+				p: 3,
+				flex: 1,
+			}}
+		>
+			<Grid container spacing={1}>
+				<IconButton onClick={() => history.back()}>
+					<ArrowBackOutlined/>
+				</IconButton>
+				<Typography variant="h4" fontWeight="bold">
+					{data.nameZh}
+				</Typography>
+			</Grid>
+			<Box
+				component="img"
+				sx={{
+					m: 2,
+					maxWidth: 225,
+					filter: colorMode === "light" ? "" : "invert(1)",
+				}}
+				src={"/api/drug-images/classes/" + className + ".svg"}
+				alt={className}
+			/>
+			<ChatMarkdown useMarkdown>
+				{data.description}
+			</ChatMarkdown>
+		</Card>
+	);
 }
