@@ -201,7 +201,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 				<ListItemButton
 					href="/drugs"
 					onClick={(event) => navigateAndCloseDrawer(event, "/drugs")}
-					selected={firstLevelLocation === "drugs"}
+					selected={firstLevelLocation === "drugs" || firstLevelLocation === "drug-classes"}
 				>
 					<ListItemIcon>
 						<VaccinesOutlined/>
