@@ -301,8 +301,11 @@ export const DrugWiki = () => {
 			>
 				{drug.size > 0 && (
 					<>
-						<Typography variant="h4" fontWeight="bold" mb={1.5}>
+						<Typography variant="h4" fontWeight="bold">
 							{drug.get("displayName")}
+						</Typography>
+						<Typography variant="subtitle1" color="text.secondary" gutterBottom>
+							{drug.get("innName")}
 						</Typography>
 						{drug.get("physicalDependence") <= 100 ? (
 							<Grid container gap={1} alignItems="flex-start" my={1}>
@@ -382,7 +385,7 @@ export const DrugWiki = () => {
 								</Box>
 							</Stack>
 						</Card>
-						<ChatMarkdown useMarkdown={true}>
+						<ChatMarkdown useMarkdown>
 							{drug.get("description")}
 						</ChatMarkdown>
 					</>
@@ -440,13 +443,18 @@ export const DrugClassWiki = () => {
 				flex: 1,
 			}}
 		>
-			<Grid container spacing={1}>
+			<Grid container alignItems="flex-start" gap={1}>
 				<IconButton onClick={() => history.back()}>
 					<ArrowBackOutlined/>
 				</IconButton>
-				<Typography variant="h4" fontWeight="bold">
-					{data.nameZh}
-				</Typography>
+				<Box>
+					<Typography variant="h4" fontWeight="bold">
+						{data.nameZh}
+					</Typography>
+					<Typography variant="subtitle1" color="text.secondary">
+						{data.nameEn}
+					</Typography>
+				</Box>
 			</Grid>
 			<Box
 				component="img"
