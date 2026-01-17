@@ -166,32 +166,29 @@ export const DrugWiki = () => {
 					inputValue={inputValue}
 					onInputChange={(event, newValue) => setInputValue(newValue)}
 					value={selectedValue}
-					onChange={(event, newValue) => {
-						if (newValue == null) {
-							return;
-						}
-						
-						if (selectedValue != null && newValue.innName === selectedValue.innName) {
-							return;
-						}
-						
-						if (typeof newValue !== "string") {
-							setSelectedValue(newValue);
-							navigate(`/drugs/${newValue.innName}`);
-						} else {
-							let lowerCaseValue = newValue.toLowerCase();
-							let drugSummary = drugSummaryList.find(item =>
-								item.displayName.toLowerCase() === lowerCaseValue || item.innName.toLowerCase() === lowerCaseValue);
+					onKeyDown={(event) => {
+						if (event.key === "Enter") {
+							let lowerCaseValue = inputValue.toLowerCase();
+							let drug = sortedDrugList.find(item => item.displayName.toLowerCase().startsWith(lowerCaseValue)
+								|| item.innName.toLowerCase().startsWith(lowerCaseValue));
 							
-							if (drugSummary) {
-								setSelectedValue({innName: drugSummary.innName, displayName: drugSummary.displayName});
-								navigate(`/drugs/${drugSummary.innName}`);
+							if (drug && drug.innName !== selectedValue?.innName) {
+								setSelectedValue({innName: drug.innName, displayName: drug.displayName});
+								navigate(`/drugs/${drug.innName}`);
 							}
 						}
 					}}
-					sx={{
-						width: 225,
+					onChange={(event, newValue) => {
+						if (newValue == null || event.key === "Enter") {
+							return;
+						}
+						
+						if (newValue !== selectedValue) {
+							setSelectedValue(newValue);
+							navigate(`/drugs/${newValue.innName}`);
+						}
 					}}
+					sx={{width: 225}}
 					slotProps={{
 						popper: {
 							sx: {
