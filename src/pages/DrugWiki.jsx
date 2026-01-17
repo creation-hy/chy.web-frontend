@@ -425,6 +425,7 @@ DependenceChip.propTypes = {
 export const DrugClassWiki = () => {
 	const {className} = useParams();
 	const [colorMode] = useBinaryColorMode();
+	const navigate = useNavigate();
 	
 	const {data, isFetched} = useQuery({
 		queryKey: ["drugs", "getClassData", className],
@@ -443,9 +444,11 @@ export const DrugClassWiki = () => {
 			}}
 		>
 			<Grid container alignItems="flex-start" gap={1}>
-				<IconButton onClick={() => history.back()}>
-					<ArrowBackOutlined/>
-				</IconButton>
+				{window.history.state.idx ? (
+					<IconButton onClick={() => navigate(-1)}>
+						<ArrowBackOutlined/>
+					</IconButton>
+				) : null}
 				<Box>
 					<Typography variant="h4" fontWeight="bold">
 						{data.nameZh}
