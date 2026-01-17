@@ -13,7 +13,7 @@ import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
 import Avatar from "@mui/material/Avatar";
 import Grid from "@mui/material/Grid";
-import {green, orange, red, yellow} from "@mui/material/colors";
+import {blue, green, orange, red, yellow} from "@mui/material/colors";
 import PropTypes from "prop-types";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
@@ -33,13 +33,13 @@ const SORT_MODES = Object.freeze({
 	PHYS_DESC: "生理成瘾性降序",
 });
 
-const CLASS_TYPE = Object.freeze([
-	{classType: "effect", displayName: "作用分类"},
-	{classType: "pharmacologic", displayName: "药理分类"},
-	{classType: "chemical", displayName: "化学分类"},
-	{classType: "therapeutic", displayName: "医疗用途"},
-	{classType: "legal", displayName: "法律规范"},
-]);
+const CLASS_TYPE = Object.freeze({
+	effect: "作用分类",
+	pharmacologic: "药理分类",
+	chemical: "化学分类",
+	therapeutic: "医疗用途",
+	legal: "法律规范",
+});
 
 export const DrugWiki = () => {
 	const navigate = useNavigate();
@@ -209,6 +209,7 @@ export const DrugWiki = () => {
 					blurOnSelect
 					handleHomeEndKeys
 					options={drugClassList}
+					groupBy={option => CLASS_TYPE[option.type]}
 					getOptionKey={option => option.id}
 					getOptionLabel={option => option.nameZh ?? option}
 					isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -237,6 +238,10 @@ export const DrugWiki = () => {
 							sx: {
 								'& .MuiAutocomplete-option': {
 									wordBreak: 'break-word',
+								},
+								'& .MuiAutocomplete-groupLabel': {
+									color: theme => theme.palette.primary.main,
+									backgroundColor: colorMode === "light" ? blue[50] : "#1C2831",
 								},
 							}
 						}
@@ -316,15 +321,15 @@ export const DrugWiki = () => {
 							alt={drug.get("innName")}
 						/>
 						<Box>
-							{CLASS_TYPE.map(type => {
+							{Object.entries(CLASS_TYPE).map(([key, value]) => {
 								const items = drug.get("classes")
-									.filter(item => item.type === type.classType)
+									.filter(item => item.type === key)
 									.sort((a, b) => a.id - b.id);
 								
 								return (
-									<Box key={type.classType} sx={{mb: 1.5}}>
-										<Typography variant="h6" sx={{mb: "1px"}}>
-											{type.displayName}
+									<Box key={key} sx={{mb: 1.5}}>
+										<Typography variant="h6" sx={{mb: 0.125}}>
+											{value}
 										</Typography>
 										{items.length > 0 ? (
 											<Stack direction="row" gap={1} flexWrap="wrap">
@@ -420,7 +425,7 @@ export const DrugClassWiki = () => {
 	const [colorMode] = useBinaryColorMode();
 	
 	const {data, isFetched} = useQuery({
-		queryKey: ["drugs", "getClassData"],
+		queryKey: ["drugs", "getClassData", className],
 		queryFn: () => axios.get(`/api/drug-classes/${className}`).then(res => res.data),
 	});
 	
