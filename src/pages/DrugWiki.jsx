@@ -168,7 +168,6 @@ export const DrugWiki = () => {
 					value={selectedValue}
 					onChange={(event, newValue) => {
 						if (newValue == null) {
-							navigate("/drugs");
 							return;
 						}
 						
