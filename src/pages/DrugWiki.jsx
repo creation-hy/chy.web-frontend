@@ -18,7 +18,6 @@ import PropTypes from "prop-types";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import {ArrowBackOutlined, SortOutlined} from "@mui/icons-material";
-import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
@@ -167,7 +166,7 @@ export const DrugWiki = () => {
 					onInputChange={(event, newValue) => setInputValue(newValue)}
 					value={selectedValue}
 					onKeyDown={(event) => {
-						if (event.key === "Enter") {
+						if (event.key === "Enter" && inputValue !== "") {
 							let lowerCaseValue = inputValue.toLowerCase();
 							let drug = sortedDrugList.find(item => item.displayName.toLowerCase().startsWith(lowerCaseValue)
 								|| item.innName.toLowerCase().startsWith(lowerCaseValue));
@@ -262,12 +261,13 @@ export const DrugWiki = () => {
 					</FormControl>
 				) : (
 					<>
-						<Button
+						<IconButton
 							variant="outlined"
+							color="primary"
 							onClick={e => setMobileSortMenuAnchorEl(e.currentTarget)}
 						>
 							<SortOutlined/>
-						</Button>
+						</IconButton>
 						<Menu
 							anchorEl={mobileSortMenuAnchorEl}
 							open={Boolean(mobileSortMenuAnchorEl)}
@@ -313,7 +313,8 @@ export const DrugWiki = () => {
 							component="img"
 							sx={{
 								m: 2,
-								maxWidth: 225,
+								maxHeight: 250,
+								maxWidth: 250,
 								filter: colorMode === "light" ? "" : "invert(1)",
 							}}
 							src={"/api/drug-images/" + drug.get("innName") + ".svg"}
