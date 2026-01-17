@@ -436,6 +436,8 @@ export const DrugClassWiki = () => {
 		return null;
 	}
 	
+	document.title = `${data.nameZh} - DrugWiki - chy.web`;
+	
 	return (
 		<Card
 			sx={{
