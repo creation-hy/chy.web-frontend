@@ -21,6 +21,7 @@ import {ArrowBackOutlined, SortOutlined} from "@mui/icons-material";
 import Menu from "@mui/material/Menu";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
+import {enqueueSnackbar} from "notistack";
 
 const SORT_MODES = Object.freeze({
 	LAST_UPDATED_DESC: "最新更新",
@@ -47,7 +48,7 @@ export const DrugWiki = () => {
 	const [drug, setDrug] = useState(new Map());
 	const [selectedValue, setSelectedValue] = useState(null);
 	const [inputValue, setInputValue] = useState("");
-	const [selectedClass, setSelectedClass] = useState(null);
+	const [selectedClassList, setSelectedClassList] = useState([]);
 	const [inputClass, setInputClass] = useState("");
 	const [isInited, setIsInited] = useState(false);
 	const [drugList, setDrugList] = useState([]);
@@ -95,14 +96,14 @@ export const DrugWiki = () => {
 	}, [innName, navigate]);
 	
 	useEffect(() => {
-		if (selectedClass == null) {
+		if (selectedClassList.length === 0) {
 			if (isDrugListFetched) {
 				setDrugList(drugSummaryList);
 			}
 		} else {
 			axios.get("/api/drugs", {
 				params: {
-					classIds: [selectedClass.id]
+					classIds: selectedClassList.map(item => item.id),
 				},
 				paramsSerializer: {
 					indexes: null,
@@ -111,7 +112,7 @@ export const DrugWiki = () => {
 				setDrugList(res.data);
 			});
 		}
-	}, [drugSummaryList, isDrugListFetched, selectedClass]);
+	}, [drugSummaryList, isDrugListFetched, selectedClassList]);
 	
 	const sortedDrugList = useMemo(() => {
 		const list = [...drugList];
@@ -192,7 +193,7 @@ export const DrugWiki = () => {
 							navigate(`/drugs/${newValue.innName}`);
 						}
 					}}
-					sx={{width: 225}}
+					sx={{width: 225, minWidth: isSmallScreen ? 150 : 225}}
 					slotProps={{
 						popper: {
 							sx: {
@@ -205,8 +206,9 @@ export const DrugWiki = () => {
 				/>
 				<Autocomplete
 					freeSolo
+					multiple
 					selectOnFocus
-					blurOnSelect
+					disableCloseOnSelect
 					handleHomeEndKeys
 					options={drugClassList}
 					groupBy={option => CLASS_TYPE[option.type]}
@@ -216,23 +218,37 @@ export const DrugWiki = () => {
 					renderInput={(params) => <TextField {...params} label="药物分类"/>}
 					inputValue={inputClass}
 					onInputChange={(event, newValue) => setInputClass(newValue)}
-					value={selectedClass}
+					value={selectedClassList}
 					onChange={(event, newValue) => {
 						if (newValue == null) {
-							setSelectedClass(null);
+							setSelectedClassList([]);
 							return;
 						}
 						
+						let newList = [];
+						
 						if (typeof newValue !== "string") {
-							setSelectedClass(newValue);
+							newList = newValue;
 						} else {
 							let drugClass = drugClassList.find(item => item.name.toLowerCase() === newValue.toLowerCase());
-							setSelectedClass(drugClass);
+							
+							if (drugClass) {
+								newList = [...selectedClassList, drugClass];
+							}
+						}
+						
+						if (newList.length > 10) {
+							enqueueSnackbar("最多选择10个分类", {variant: "error"});
+						} else {
+							setSelectedClassList(newList);
 						}
 					}}
-					sx={{
-						width: 175,
+					onKeyDown={(event) => {
+						if (event.key === "Enter") {
+							event.defaultMuiPrevented = true;
+						}
 					}}
+					sx={{width: 175, minWidth: isSmallScreen ? 0 : 175}}
 					slotProps={{
 						popper: {
 							sx: {
@@ -248,7 +264,7 @@ export const DrugWiki = () => {
 					}}
 				/>
 				{!isSmallScreen ? (
-					<FormControl sx={{width: 160}}>
+					<FormControl sx={{width: 160, minWidth: 160}}>
 						<InputLabel id="order-select-label">排序方式</InputLabel>
 						<Select
 							variant="outlined"
@@ -347,8 +363,8 @@ export const DrugWiki = () => {
 														onClick={() => {
 															if (item.description) {
 																navigate(`/drug-classes/${item.nameEn}`);
-															} else {
-																setSelectedClass(item);
+															} else if (selectedClassList.length < 10) {
+																setSelectedClassList(list => [...list, item]);
 																window.scrollTo({top: 0, behavior: "smooth"});
 															}
 														}}
