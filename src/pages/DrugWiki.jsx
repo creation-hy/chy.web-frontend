@@ -95,17 +95,22 @@ export const DrugWiki = () => {
 	}, [innName, navigate]);
 	
 	useEffect(() => {
-		console.log(selectedClass);
 		if (selectedClass == null) {
 			if (isDrugListFetched) {
 				setDrugList(drugSummaryList);
 			}
-			return;
+		} else {
+			axios.get("/api/drugs", {
+				params: {
+					classIds: [selectedClass.id]
+				},
+				paramsSerializer: {
+					indexes: null,
+				},
+			}).then(res => {
+				setDrugList(res.data);
+			});
 		}
-		
-		axios.get(`/api/drug-classes/${selectedClass.id}/drugs`).then(res => {
-			setDrugList(res.data);
-		});
 	}, [drugSummaryList, isDrugListFetched, selectedClass]);
 	
 	const sortedDrugList = useMemo(() => {
