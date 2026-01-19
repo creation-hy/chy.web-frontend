@@ -248,7 +248,12 @@ export const DrugWiki = () => {
 							event.defaultMuiPrevented = true;
 						}
 					}}
-					sx={{width: 175, minWidth: isSmallScreen ? 0 : 175}}
+					limitTags={isSmallScreen ? 0 : 5}
+					sx={{
+						width: isSmallScreen ? 175 : "auto",
+						minWidth: isSmallScreen ? 150 : 175,
+						alignSelf: "flex-start",
+					}}
 					slotProps={{
 						popper: {
 							sx: {
@@ -285,6 +290,10 @@ export const DrugWiki = () => {
 						<IconButton
 							variant="outlined"
 							color="primary"
+							sx={{
+								alignSelf: "flex-start",
+								mt: 1,
+							}}
 							onClick={e => setMobileSortMenuAnchorEl(e.currentTarget)}
 						>
 							<SortOutlined/>
