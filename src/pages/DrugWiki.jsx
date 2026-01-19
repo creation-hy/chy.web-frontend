@@ -4,8 +4,8 @@ import {ChatMarkdown} from "src/components/ChatMarkdown.jsx";
 import {Autocomplete, InputLabel, useMediaQuery} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import {useQuery} from "@tanstack/react-query";
-import {useNavigate, useParams} from "react-router";
-import {memo, useEffect, useMemo, useState} from "react";
+import {useLocation, useNavigate, useParams, useSearchParams} from "react-router";
+import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Box from "@mui/material/Box";
 import {useBinaryColorMode} from "src/components/ColorMode.jsx";
 import TextField from "@mui/material/TextField";
@@ -41,14 +41,26 @@ const CLASS_TYPE = Object.freeze({
 	legal: "法律规范",
 });
 
+const MAX_CLASS_FILTER = 10;
+
 export const DrugWiki = () => {
 	const navigate = useNavigate();
+	const location = useLocation();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const {innName} = useParams();
+	const classIds = useMemo(() => searchParams
+		.getAll("classIds").map(Number).filter(Boolean) ?? [], [searchParams]);
+	
+	const navigateKeepSearch = useCallback((to) => {
+		navigate({
+			pathname: to,
+			search: location.search,
+		});
+	}, [navigate, location.search]);
 	
 	const [drug, setDrug] = useState(new Map());
 	const [selectedValue, setSelectedValue] = useState(null);
 	const [inputValue, setInputValue] = useState("");
-	const [selectedClassList, setSelectedClassList] = useState([]);
 	const [inputClass, setInputClass] = useState("");
 	const [isInited, setIsInited] = useState(false);
 	const [drugList, setDrugList] = useState([]);
@@ -74,10 +86,26 @@ export const DrugWiki = () => {
 		queryFn: () => axios.get("/api/drug-classes").then(res => res.data),
 	});
 	
+	const validClassIdSet = useMemo(
+		() => new Set(drugClassList?.map(item => item.id)), [drugClassList]);
+	
+	const normalizeClassIds = useCallback((ids) => {
+		if (!isDrugClassListFetched) {
+			return [];
+		}
+		
+		return Array.from(new Set(ids))
+			.filter(id => validClassIdSet.has(id))
+			.sort((a, b) => a - b)
+			.slice(0, MAX_CLASS_FILTER);
+	}, [validClassIdSet, isDrugClassListFetched]);
+	
+	const normalizedClassIds = useMemo(
+		() => normalizeClassIds(classIds), [classIds, normalizeClassIds]);
+	
 	useEffect(() => {
 		if (innName == null || innName === "") {
 			setSelectedValue(null);
-			navigate("/drugs");
 			setIsInited(true);
 			return;
 		}
@@ -88,22 +116,22 @@ export const DrugWiki = () => {
 				setSelectedValue({innName: res.data.innName, displayName: res.data.displayName});
 			} else {
 				setDrug(new Map());
-				setSelectedValue(null);
 				navigate("/drugs");
+				setSelectedValue(null);
 			}
 		});
 		setIsInited(true);
 	}, [innName, navigate]);
 	
 	useEffect(() => {
-		if (selectedClassList.length === 0) {
+		if (normalizedClassIds.length === 0) {
 			if (isDrugListFetched) {
 				setDrugList(drugSummaryList);
 			}
 		} else {
 			axios.get("/api/drugs", {
 				params: {
-					classIds: selectedClassList.map(item => item.id),
+					classIds: normalizedClassIds,
 				},
 				paramsSerializer: {
 					indexes: null,
@@ -112,7 +140,7 @@ export const DrugWiki = () => {
 				setDrugList(res.data);
 			});
 		}
-	}, [drugSummaryList, isDrugListFetched, selectedClassList]);
+	}, [normalizedClassIds, drugSummaryList, isDrugListFetched]);
 	
 	const sortedDrugList = useMemo(() => {
 		const list = [...drugList];
@@ -179,7 +207,7 @@ export const DrugWiki = () => {
 							
 							if (drug && drug.innName !== selectedValue?.innName) {
 								setSelectedValue({innName: drug.innName, displayName: drug.displayName});
-								navigate(`/drugs/${drug.innName}`);
+								navigateKeepSearch(`/drugs/${drug.innName}`);
 							}
 						}
 					}}
@@ -190,7 +218,7 @@ export const DrugWiki = () => {
 						
 						if (newValue !== selectedValue) {
 							setSelectedValue(newValue);
-							navigate(`/drugs/${newValue.innName}`);
+							navigateKeepSearch(`/drugs/${newValue.innName}`);
 						}
 					}}
 					sx={{width: 225, minWidth: isSmallScreen ? 150 : 225}}
@@ -218,29 +246,29 @@ export const DrugWiki = () => {
 					renderInput={(params) => <TextField {...params} label="药物分类"/>}
 					inputValue={inputClass}
 					onInputChange={(event, newValue) => setInputClass(newValue)}
-					value={selectedClassList}
+					value={normalizedClassIds.map(id => drugClassList.find(item => item.id === id))}
 					onChange={(event, newValue) => {
 						if (newValue == null) {
-							setSelectedClassList([]);
+							setSearchParams({classIds: null});
 							return;
 						}
 						
 						let newList = [];
 						
 						if (typeof newValue !== "string") {
-							newList = newValue;
+							newList = newValue.map(item => item.id);
 						} else {
 							let drugClass = drugClassList.find(item => item.name.toLowerCase() === newValue.toLowerCase());
 							
 							if (drugClass) {
-								newList = [...selectedClassList, drugClass];
+								newList = [...normalizedClassIds, drugClass.id];
 							}
 						}
 						
-						if (newList.length > 10) {
-							enqueueSnackbar("最多选择10个分类", {variant: "error"});
+						if (newList.length > MAX_CLASS_FILTER) {
+							enqueueSnackbar(`最多选择${MAX_CLASS_FILTER}个分类`, {variant: "error"});
 						} else {
-							setSelectedClassList(newList);
+							setSearchParams({classIds: normalizeClassIds(newList)});
 						}
 					}}
 					onKeyDown={(event) => {
@@ -371,9 +399,9 @@ export const DrugWiki = () => {
 														color={item.description ? "primary" : "inherit"}
 														onClick={() => {
 															if (item.description) {
-																navigate(`/drug-classes/${item.nameEn}`);
-															} else if (selectedClassList.length < 10) {
-																setSelectedClassList(list => [...list, item]);
+																navigateKeepSearch(`/drug-classes/${item.nameEn}`);
+															} else if (normalizedClassIds.length < MAX_CLASS_FILTER) {
+																setSearchParams({classIds: normalizeClassIds([...normalizedClassIds, item.id])});
 																window.scrollTo({top: 0, behavior: "smooth"});
 															}
 														}}
