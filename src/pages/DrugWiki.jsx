@@ -48,9 +48,11 @@ export const DrugWiki = () => {
 	const location = useLocation();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const {innName} = useParams();
+	
 	const classIds = useMemo(() => searchParams
 		.getAll("classIds").map(Number).filter(Boolean) ?? [], [searchParams]);
-	
+	const sortMode = SORT_MODES[searchParams.get("sort")] ?? SORT_MODES.COMBINED_DESC;
+	console.log(sortMode);
 	const navigateKeepSearch = useCallback((to) => {
 		navigate({
 			pathname: to,
@@ -64,7 +66,6 @@ export const DrugWiki = () => {
 	const [inputClass, setInputClass] = useState("");
 	const [isInited, setIsInited] = useState(false);
 	const [drugList, setDrugList] = useState([]);
-	const [sortMode, setSortMode] = useState(SORT_MODES.COMBINED_DESC);
 	
 	const [mobileSortMenuAnchorEl, setMobileSortMenuAnchorEl] = useState(null);
 	
@@ -249,7 +250,11 @@ export const DrugWiki = () => {
 					value={normalizedClassIds.map(id => drugClassList.find(item => item.id === id))}
 					onChange={(event, newValue) => {
 						if (newValue == null) {
-							setSearchParams({classIds: null}, {replace: true});
+							setSearchParams(prev => {
+								const next = new URLSearchParams(prev);
+								next.delete("classIds");
+								return next;
+							}, {replace: true});
 							return;
 						}
 						
@@ -268,7 +273,12 @@ export const DrugWiki = () => {
 						if (newList.length > MAX_CLASS_FILTER) {
 							enqueueSnackbar(`最多选择${MAX_CLASS_FILTER}个分类`, {variant: "error"});
 						} else {
-							setSearchParams({classIds: normalizeClassIds(newList)}, {replace: true});
+							setSearchParams(prev => {
+								const next = new URLSearchParams(prev);
+								next.delete("classIds");
+								normalizeClassIds(newList).forEach(id => next.append("classIds", id.toString()));
+								return next;
+							}, {replace: true});
 						}
 					}}
 					onKeyDown={(event) => {
@@ -303,9 +313,13 @@ export const DrugWiki = () => {
 							variant="outlined"
 							labelId="order-select-label"
 							label="排序方式"
-							defaultValue={SORT_MODES.COMBINED_DESC}
+							value={sortMode}
 							onChange={(event) => {
-								setSortMode(event.target.value);
+								setSearchParams(prev => {
+									const next = new URLSearchParams(prev);
+									next.set("sort", Object.keys(SORT_MODES).find(key => SORT_MODES[key] === event.target.value));
+									return next;
+								});
 							}}
 						>
 							{Object.entries(SORT_MODES).map(([key, value]) => (
@@ -336,7 +350,11 @@ export const DrugWiki = () => {
 									key={key}
 									selected={sortMode === value}
 									onClick={() => {
-										setSortMode(value);
+										setSearchParams(prev => {
+											const next = new URLSearchParams(prev);
+											next.set("sort", key);
+											return next;
+										});
 										setMobileSortMenuAnchorEl(null);
 									}}
 								>
@@ -401,7 +419,14 @@ export const DrugWiki = () => {
 															if (item.description) {
 																navigateKeepSearch(`/drug-classes/${item.nameEn}`);
 															} else if (normalizedClassIds.length < MAX_CLASS_FILTER) {
-																setSearchParams({classIds: normalizeClassIds([...normalizedClassIds, item.id])}, {replace: true});
+																setSearchParams(prev => {
+																	const next = new URLSearchParams(prev);
+																	next.delete("classIds");
+																	normalizeClassIds([...normalizedClassIds, item.id]).forEach(id => {
+																		next.append("classIds", id.toString());
+																	});
+																	return next;
+																}, {replace: true});
 																window.scrollTo({top: 0, behavior: "smooth"});
 															}
 														}}
