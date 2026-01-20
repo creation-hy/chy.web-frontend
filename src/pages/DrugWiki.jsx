@@ -249,7 +249,7 @@ export const DrugWiki = () => {
 					value={normalizedClassIds.map(id => drugClassList.find(item => item.id === id))}
 					onChange={(event, newValue) => {
 						if (newValue == null) {
-							setSearchParams({classIds: null});
+							setSearchParams({classIds: null}, {replace: true});
 							return;
 						}
 						
@@ -268,7 +268,7 @@ export const DrugWiki = () => {
 						if (newList.length > MAX_CLASS_FILTER) {
 							enqueueSnackbar(`最多选择${MAX_CLASS_FILTER}个分类`, {variant: "error"});
 						} else {
-							setSearchParams({classIds: normalizeClassIds(newList)});
+							setSearchParams({classIds: normalizeClassIds(newList)}, {replace: true});
 						}
 					}}
 					onKeyDown={(event) => {
@@ -401,7 +401,7 @@ export const DrugWiki = () => {
 															if (item.description) {
 																navigateKeepSearch(`/drug-classes/${item.nameEn}`);
 															} else if (normalizedClassIds.length < MAX_CLASS_FILTER) {
-																setSearchParams({classIds: normalizeClassIds([...normalizedClassIds, item.id])});
+																setSearchParams({classIds: normalizeClassIds([...normalizedClassIds, item.id])}, {replace: true});
 																window.scrollTo({top: 0, behavior: "smooth"});
 															}
 														}}
