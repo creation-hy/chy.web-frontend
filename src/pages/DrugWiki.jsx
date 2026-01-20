@@ -108,6 +108,7 @@ export const DrugWiki = () => {
 		if (innName == null || innName === "") {
 			setSelectedValue(null);
 			setIsInited(true);
+			setDrug(new Map());
 			return;
 		}
 		
