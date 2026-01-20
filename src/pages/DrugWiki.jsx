@@ -64,7 +64,7 @@ export const DrugWiki = () => {
 	const [inputClass, setInputClass] = useState("");
 	const [isInited, setIsInited] = useState(false);
 	const [drugList, setDrugList] = useState([]);
-	const [sortMode, setSortMode] = useState(SORT_MODES.LAST_UPDATED_DESC);
+	const [sortMode, setSortMode] = useState(SORT_MODES.COMBINED_DESC);
 	
 	const [mobileSortMenuAnchorEl, setMobileSortMenuAnchorEl] = useState(null);
 	
@@ -303,7 +303,7 @@ export const DrugWiki = () => {
 							variant="outlined"
 							labelId="order-select-label"
 							label="排序方式"
-							defaultValue={SORT_MODES.LAST_UPDATED_DESC}
+							defaultValue={SORT_MODES.COMBINED_DESC}
 							onChange={(event) => {
 								setSortMode(event.target.value);
 							}}
