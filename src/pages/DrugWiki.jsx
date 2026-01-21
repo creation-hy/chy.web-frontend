@@ -255,7 +255,7 @@ export const DrugWiki = () => {
 								const next = new URLSearchParams(prev);
 								next.delete("classIds");
 								return next;
-							}, {replace: true});
+							}, {replace: true, preventScrollReset: true});
 							return;
 						}
 						
@@ -279,7 +279,7 @@ export const DrugWiki = () => {
 								next.delete("classIds");
 								normalizeClassIds(newList).forEach(id => next.append("classIds", id.toString()));
 								return next;
-							}, {replace: true});
+							}, {replace: true, preventScrollReset: true});
 						}
 					}}
 					onKeyDown={(event) => {
@@ -320,7 +320,7 @@ export const DrugWiki = () => {
 									const next = new URLSearchParams(prev);
 									next.set("sort", Object.keys(SORT_MODES).find(key => SORT_MODES[key] === event.target.value));
 									return next;
-								});
+								}, {preventScrollReset: true});
 							}}
 						>
 							{Object.entries(SORT_MODES).map(([key, value]) => (
@@ -355,7 +355,7 @@ export const DrugWiki = () => {
 											const next = new URLSearchParams(prev);
 											next.set("sort", key);
 											return next;
-										});
+										}, {preventScrollReset: true});
 										setMobileSortMenuAnchorEl(null);
 									}}
 								>
@@ -427,7 +427,7 @@ export const DrugWiki = () => {
 																		next.append("classIds", id.toString());
 																	});
 																	return next;
-																}, {replace: true});
+																}, {replace: true, preventScrollReset: true});
 																window.scrollTo({top: 0, behavior: "smooth"});
 															}
 														}}
