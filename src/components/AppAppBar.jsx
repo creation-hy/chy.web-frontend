@@ -307,7 +307,7 @@ const LeftBar = memo(function LeftBar({navigateCallback}) {
 										lastCheckInTime: new Date(),
 									}));
 								} else if (res.data.status === 2) {
-									enqueueSnackbar("今天已经签过到了喵～", {variant: "error"});
+									enqueueSnackbar("今天已经签过到了", {variant: "error"});
 								} else {
 									enqueueSnackbar("登录状态错误", {variant: "error"});
 								}
