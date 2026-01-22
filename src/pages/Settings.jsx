@@ -373,7 +373,7 @@ const About = () => {
 					chy.web
 				</Typography>
 				<Typography fontSize={18} align="center">
-					5.2.0
+					5.2.1
 				</Typography>
 			</Box>
 			<Box>
